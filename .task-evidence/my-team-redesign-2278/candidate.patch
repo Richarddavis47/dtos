@@ -68,7 +68,7 @@ index 3068d71..229ccc8 100644
          reason = 'This link does not match a confirmed upcoming bye gap for your selected team.'
          data = selected_state.get('data') or {}
 diff --git a/routes/teams.py b/routes/teams.py
-index b092f5d..d45c5d7 100644
+index b092f5d..bb0c2d0 100644
 --- a/routes/teams.py
 +++ b/routes/teams.py
 @@ -3,12 +3,13 @@ from __future__ import annotations
@@ -132,7 +132,15 @@ index b092f5d..d45c5d7 100644
              for player in starters
          ) or '<div class="ds-empty"><b>No starting lineup is available.</b>Sleeper has not supplied a current starter assignment.</div>'
          from src.ui.team_strength import strength_panel
-@@ -547,21 +562,33 @@ def create_teams_router(
+@@ -540,28 +555,45 @@ def create_teams_router(
+         body = f"""
+ {TEAM_HQ_CSS}
+ <style>
+-.thq-outlook{{padding:12px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface);overflow-wrap:anywhere}}.thq-outlook h2{{font-size:18px;margin:0 0 8px}}.thq-outlook p{{font-size:14px;line-height:1.5;margin:6px 0}}.thq-outlook li{{font-size:14px;line-height:1.5;margin:6px 0}}.thq-outlook .thq-strength-detail{{margin:0}}.thq-outlook .thq-strength-detail>summary{{display:list-item;list-style:disclosure-closed inside}}.thq-outlook .thq-strength-detail[open]>summary{{list-style-type:disclosure-open}}.thq-outlook summary h2{{display:inline;font-size:18px;margin:0}}.thq-outlook summary p{{line-height:1.4;margin:4px 0}}.thq-outlook .thq-actions{{margin:6px 0 0}}.thq-name-row{{display:flex;flex-wrap:wrap;align-items:center;gap:6px}}.thq-name-row>details[open]{{flex-basis:100%}}.thq-header{{margin-bottom:12px;gap:12px}}.thq-header .thq-avatar,.thq-header .franchise-portrait{{width:48px;height:48px;flex-basis:48px;font-size:23px}}.thq-title h1{{font-size:22px;margin:0}}.thq-title p{{margin:0}}.thq-actions{{margin:8px 0;gap:6px}}.thq-section{{margin-top:16px}}.thq-room-head{{padding:4px 10px;font-size:14px}}.thq-player{{padding:8px 10px}}.thq-player>div{{position:relative;padding-right:52px}}.thq-player>div>.thq-action{{position:absolute;right:0;top:0;padding:8px;min-height:44px}}.thq-player .player-summary{{gap:8px}}.thq-player .player-summary img{{width:40px;height:40px}}.thq-player-meta{{font-size:14px;margin-top:4px}}.thq-roster{{gap:10px}}.thq-strategy small{{display:none}}.thq-strategy{{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:6px}}.thq-strategy label{{margin:0}}.thq-strategy select{{min-width:0;margin:0}}#my-team-strategy-feedback{{grid-column:1/-1}}.thq-header{{padding:8px}}#my-team-strategy-feedback:empty{{display:none}}.thq-actions[aria-label="Roster sections"]{{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible;max-width:100%;padding-bottom:4px}}.thq-outlook-next:empty{{display:none}}.thq-outlook-next{{margin:6px 0}}.thq-actions[aria-label="Roster sections"] .thq-action{{min-width:0;padding:8px 6px;font-size:14px;background:var(--surface);color:var(--text)}}.thq-outlook-next>.thq-action{{background:var(--accent);color:#0c1908;border-color:var(--accent)}}.thq-player .player-portrait{{width:40px;height:40px;flex-basis:40px}}.thq-player .player-headshot,.thq-player .player-headshot-fallback{{width:100%;height:100%}}body:has([data-my-team-context]) .ds-header-side{{display:none}}body:has([data-my-team-context]) .ds-page-header{{display:none}}body:has([data-my-team-context]) .ds-page-header h1{{font-size:20px}}
++.thq-outlook{{padding:12px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface);overflow-wrap:anywhere}}.thq-outlook h2{{font-size:18px;margin:0 0 8px}}.thq-outlook p{{font-size:14px;line-height:1.5;margin:6px 0}}.thq-outlook li{{font-size:14px;line-height:1.5;margin:6px 0}}.thq-outlook .thq-strength-detail{{margin:0}}.thq-outlook .thq-strength-detail>summary{{display:list-item;list-style:disclosure-closed inside}}.thq-outlook .thq-strength-detail[open]>summary{{list-style-type:disclosure-open}}.thq-outlook summary h2{{display:inline;font-size:18px;margin:0}}.thq-outlook summary p{{line-height:1.4;margin:4px 0}}.thq-outlook .thq-actions{{margin:6px 0 0}}.thq-name-row{{display:flex;flex-wrap:wrap;align-items:center;gap:6px}}.thq-name-row>details[open]{{flex-basis:100%}}.thq-header{{margin-bottom:12px;gap:12px}}.thq-header .thq-avatar,.thq-header .franchise-portrait{{width:48px;height:48px;flex-basis:48px;font-size:23px}}.thq-title h1{{font-size:22px;margin:0}}.thq-title p{{margin:0}}.thq-actions{{margin:8px 0;gap:6px}}.thq-section{{margin-top:16px}}.thq-room-head{{padding:4px 10px;font-size:14px}}.thq-player{{padding:8px 10px}}.thq-player>div{{position:relative;padding-right:52px}}.thq-player>div>.thq-action{{position:absolute;right:0;top:0;padding:8px;min-height:44px}}.thq-player .player-summary{{gap:8px}}.thq-player .player-summary img{{width:40px;height:40px}}.thq-player-meta{{font-size:14px;margin-top:4px}}.thq-roster{{gap:10px}}.thq-strategy small{{display:none}}.thq-strategy{{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:6px}}.thq-strategy label{{margin:0}}.thq-strategy select{{min-width:0;margin:0}}#my-team-strategy-feedback{{grid-column:1/-1}}.thq-header{{padding:8px}}#my-team-strategy-feedback:empty{{display:none}}.thq-actions[aria-label="Roster sections"]{{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));overflow:visible;max-width:100%;padding-bottom:4px}}.thq-outlook-next:empty{{display:none}}.thq-outlook-next{{margin:6px 0}}.thq-actions[aria-label="Roster sections"] .thq-action{{min-width:0;justify-content:center;padding:8px 2px;overflow-wrap:normal;font-size:14px;background:var(--surface);color:var(--text)}}.thq-outlook-next>.thq-action{{background:var(--accent);color:#0c1908;border-color:var(--accent)}}.thq-player .player-portrait{{width:40px;height:40px;flex-basis:40px}}.thq-player .player-headshot,.thq-player .player-headshot-fallback{{width:100%;height:100%}}body:has([data-my-team-context]) .ds-header-side{{display:none}}body:has([data-my-team-context]) .ds-page-header{{display:none}}body:has([data-my-team-context]) .ds-page-header h1{{font-size:20px}}
+ @media(max-width:760px){{.thq-header{{padding:8px}}#full-roster{{margin-top:12px}}.thq-outlook a,.thq-outlook summary{{scroll-margin-bottom:100px}}body:has([data-my-team-context]) .wrap{{padding-top:8px}}body:has([data-my-team-context]) .account-context{{padding:4px 0;margin-bottom:4px}}.thq-header .thq-title h1,.thq-header .thq-title p{{margin:0}}.thq-header .identity-kicker{{line-height:1.2}}.thq-outlook{{padding:8px}}body:has([data-my-team-context]) .brand p{{display:none}}body:has([data-my-team-context]) .secondary-nav{{margin-bottom:4px}}.thq-header>div:last-child{{margin-top:8px}}.thq-header .thq-title p{{font-size:14px}}.thq-identity{{gap:8px}}}}
+ .thq-strategy{{display:block}}#my-team-goal-form{{display:grid;grid-template-columns:60px minmax(104px,1fr) auto;gap:6px;align-items:center}}#my-team-strategy-feedback{{grid-column:1/-1}}#my-team-goal-help{{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}}#my-team-save-goal{{min-height:44px;min-width:0;padding:8px;white-space:nowrap}}
+ 
  .thq-record-link{{display:inline-flex;align-items:center;min-height:44px;max-width:100%;text-decoration:underline;text-underline-offset:3px}}#season-so-far>summary{{display:list-item;list-style:disclosure-closed inside;align-content:center}}#season-so-far[open]>summary{{list-style-type:disclosure-open}}
  @media(max-width:360px){{.thq-strategy{{grid-template-columns:56px minmax(0,1fr)}}.thq-strategy label{{white-space:normal;overflow-wrap:normal;line-height:1.3}}.thq-strategy select{{padding-left:4px;padding-right:4px}}}}
  </style>
@@ -148,7 +156,12 @@ index b092f5d..d45c5d7 100644
 +<a href="#team-roster">Roster</a><a href="#team-lineup">Lineup</a><a href="#team-byes">Byes</a><a href="#team-picks">Picks</a>
 +</nav>
 +<section id="team-roster" data-team-section aria-label="Roster">
-+<a class="thq-record-link" href="#my-team-outlook">Roster outlook and next step</a>
++<nav class="thq-actions" aria-label="Roster sections">
++<a class="thq-action" href="#full-roster" aria-label="View full roster">Players</a>
++<a class="thq-action" href="#my-team-outlook" aria-label="Roster outlook and next step">Outlook</a>
++<a class="thq-action" href="#positional-depth">Depth</a>
++<a class="thq-action" href="#draft-capital" aria-label="Draft capital">Picks</a>
++</nav>
  <section class="thq-section" id="full-roster"><details class="thq-strength-detail" id="my-team-roster" open><summary>Full Roster · {escape(_roster_projection_coverage(view))}</summary><div class="thq-roster">{_roster_rooms(view)}</div></details><details class="thq-strength-detail" id="my-team-key-players"><summary>Key players by Market value</summary>{_key_players(view)}</details></section>
 -{lineup_fallback}
 -{upcoming_byes}
@@ -279,6 +292,27 @@ index 152e2ee..3383bc8 100644
 -    return _primary_panel(review) + lineup_recheck_panel(recheck, (review or {}).get("fallback"))
 +def review_panel(review, *, recheck=None, show_kickoff=False):
 +    return _primary_panel(review, show_kickoff=show_kickoff) + lineup_recheck_panel(recheck, (review or {}).get("fallback"))
+diff --git a/src/ui/my_team_outlook.py b/src/ui/my_team_outlook.py
+index a2222d8..6a21b2b 100644
+--- a/src/ui/my_team_outlook.py
++++ b/src/ui/my_team_outlook.py
+@@ -17,10 +17,6 @@ def outlook_panel(outlook, *, editable, roster_id):
+                    f'href="{escape(need["href"], quote=True)}">Explore {escape(need["position"])} trades</a>')
+     trade = (f'<a class="thq-action" href="/trades/calculator?front_office={roster_id}">Evaluate a trade</a>'
+              f'<a class="thq-action" href="/trades?front_office={roster_id}">Recommended Trades</a>') if editable else ''
+-    navigation = ('<nav class="thq-actions" aria-label="Roster sections">'
+-                  '<a class="thq-action" href="#full-roster" aria-label="View full roster">Roster</a>'
+-                  '<a class="thq-action" href="#positional-depth">Depth</a>'
+-                  '<a class="thq-action" href="#draft-capital" aria-label="Draft capital">Capital</a></nav>')
+     choices = escape(json.dumps(goal_options(roster_id), separators=(',', ':')), quote=True) if editable else '{}'
+     heading = '<h2 id="my-team-outlook-title">Your roster at a glance</h2>'
+     lead = (f'<p id="my-team-outlook-lead">Comparison pending: lineup and depth. {escape(outlook["future_summary"])}</p>'
+@@ -40,4 +36,4 @@ def outlook_panel(outlook, *, editable, roster_id):
+                + '</details>')
+     return (f'<section id="my-team-outlook" class="thq-outlook" data-outlook-goals="{choices}" data-dtos-component="recommendation" aria-labelledby="my-team-outlook-title">'
+             + (details if unprepared else heading + lead + details)
+-            + '<div class="thq-outlook-next">' + action + '</div>' + navigation + '</section>')
++            + '<div class="thq-outlook-next">' + action + '</div></section>')
 diff --git a/src/ui/upcoming_byes.py b/src/ui/upcoming_byes.py
 index 94d2305..68bd108 100644
 --- a/src/ui/upcoming_byes.py
@@ -598,10 +632,10 @@ index f46241c..b1bd003 100644
        if (focused && focused !== document.body && focused !== document.documentElement && focused !== lastRestoredFocus) {restoring=false;return;}
 diff --git a/static/js/my-team-sections.js b/static/js/my-team-sections.js
 new file mode 100644
-index 0000000..4376c8a
+index 0000000..a25c9bd
 --- /dev/null
 +++ b/static/js/my-team-sections.js
-@@ -0,0 +1,37 @@
+@@ -0,0 +1,36 @@
 +/* Keep section links usable as ordinary anchors without scripting. */
 +(() => {
 +  const team = document.querySelector('[data-my-team-sections]');
@@ -628,12 +662,11 @@ index 0000000..4376c8a
 +      else link.removeAttribute('aria-current');
 +    }
 +
-+    if (!section || target === section) return;
-+    requestAnimationFrame(() => {
-+      if (location.hash === '#' + target.id && !section.hidden) {
-+        target.scrollIntoView({block: 'start'});
-+      }
-+    });
++    if (section && target !== section) {
++      // Finish the jump during selection so a later keyboard focus can scroll
++      // to its own control without a pending jump pulling it off screen.
++      target.scrollIntoView({block: 'start', behavior: 'instant'});
++    }
 +  }
 +
 +  showSection();
@@ -988,10 +1021,10 @@ index b7e2ad0..5471f68 100644
          self.assertIn('Why this outlook?', html)
 diff --git a/tests/test_my_team_sections_browser.py b/tests/test_my_team_sections_browser.py
 new file mode 100644
-index 0000000..8d412ff
+index 0000000..e8b4f38
 --- /dev/null
 +++ b/tests/test_my_team_sections_browser.py
-@@ -0,0 +1,79 @@
+@@ -0,0 +1,86 @@
 +"""My Team section navigation in a prepared, authorized browser fixture."""
 +import unittest
 +from unittest.mock import patch
@@ -1025,6 +1058,13 @@ index 0000000..8d412ff
 +                    self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
 +                    for link in tabs.get_by_role('link').all():
 +                        self.assertGreaterEqual(link.bounding_box()['height'], 44)
++                    shortcuts = page.get_by_role('navigation', name='Roster sections')
++                    for link in shortcuts.get_by_role('link').all():
++                        self.assertEqual(link.evaluate('''e => {
++                            const text = document.createRange();
++                            text.selectNodeContents(e);
++                            return [...text.getClientRects()].filter(r => r.width > 0).length;
++                        }'''), 1, (width, link.inner_text()))
 +
 +                    picks = tabs.get_by_role('link', name='Picks')
 +                    picks.focus()
@@ -1072,11 +1112,24 @@ index 0000000..8d412ff
 +            self.assertEqual(page.locator('[data-bye-week]').count(), 0)
 +            self.assertEqual(writes, [])
 diff --git a/tests/test_premium_hierarchy_browser.py b/tests/test_premium_hierarchy_browser.py
-index 5773b1b..cdf4673 100644
+index 5773b1b..e991b55 100644
 --- a/tests/test_premium_hierarchy_browser.py
 +++ b/tests/test_premium_hierarchy_browser.py
-@@ -239,6 +239,7 @@ class PremiumPreparedBrowserTests(unittest.TestCase):
+@@ -232,13 +232,15 @@ class PremiumPreparedBrowserTests(unittest.TestCase):
                          )
+                         link.focus()
+                         self.assertGreaterEqual(link.bounding_box()["height"], 44)
+-                        self.assertTrue(
+-                            link.evaluate(
+-                                """e=>{const r=e.getBoundingClientRect();const h=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return h===e||e.contains(h)}"""
+-                            )
+-                        )
++                        target = link.evaluate("""element => {
++                          const box=element.getBoundingClientRect();
++                          const hit=document.elementFromPoint(box.x+box.width/2,box.y+box.height/2);
++                          return {hit:element.contains(hit), tag:hit?.tagName, classes:hit?.className, box:box.toJSON()};
++                        }""")
++                        self.assertTrue(target['hit'], (width, fragment, target))
                          link.press("Enter")
                          self.assertTrue(page.url.endswith(fragment))
 +                    page.locator('.thq-tabs a[href="#team-roster"]').click()

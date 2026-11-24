@@ -35,7 +35,16 @@ def clean(value):
 def details(page, selector):
     node = page.locator(selector)
     node.evaluate('e => { if (e.tagName === "DETAILS") e.open = true; for (const d of e.querySelectorAll("details")) d.open = true; }')
-    text = node.inner_text()
+    if selector == '#my-team-outlook':
+        text = node.evaluate('''element => {
+            const rosterNavigation = element.querySelector('nav[aria-label="Roster sections"]');
+            if (rosterNavigation) rosterNavigation.style.display = 'none';
+            const text = element.innerText;
+            if (rosterNavigation) rosterNavigation.style.removeProperty('display');
+            return text;
+        }''')
+    else:
+        text = node.inner_text()
     return clean(text)
 
 
@@ -95,6 +104,10 @@ class Capture(unittest.TestCase):
             for width, height in [(320, 432), (390, 844), (1280, 900)]:
                 page.set_viewport_size(dict(width=width, height=height))
                 self.assertEqual(page.goto('https://dtos.test/teams/1').status, 200)
+                shortcut = page.get_by_role('link', name='View full roster', exact=True)
+                if CANDIDATE:
+                    self.assertLess(shortcut.bounding_box()['y'], height * 1.5)
+                    self.assertLess(page.locator('#full-roster .thq-player').first.bounding_box()['y'], 600)
                 page.screenshot(path=str(OUTPUT / f'roster-{width}.png'))
                 self.assertEqual(page.evaluate('document.documentElement.scrollWidth'), width)
             result.update({

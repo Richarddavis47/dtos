@@ -27,7 +27,7 @@ write_json(BASE / 'my-team-parity.json', {
     'source': source, 'passed': True, 'matched_prepared_families': sorted(before),
     'source_time': (BASE / 'fixture-time.txt').read_text().strip(),
     'scope': 'Rendered Chromium on disposable, matching prepared fixture inputs. Read-only application paths.',
-    'normalization': 'Layout whitespace, relative elapsed display and real run-clock timestamps are normalized. The new rendered confirmed kickoff label is checked by the browser suite. Stable IDs, moves, availability states and reason text are compared.',
+    'normalization': 'Relocated roster navigation, layout whitespace, relative elapsed display and real run-clock timestamps are normalized. The new rendered confirmed kickoff label is checked by the browser suite. Stable IDs, moves, availability states and reason text are compared.',
     'originals': [{'path': str(path.relative_to(BASE)), 'sha256': hashlib.sha256(path.read_bytes()).hexdigest()}
                   for path in result_paths],
 })
