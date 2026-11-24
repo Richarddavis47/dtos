@@ -17,10 +17,6 @@ def outlook_panel(outlook, *, editable, roster_id):
                    f'href="{escape(need["href"], quote=True)}">Explore {escape(need["position"])} trades</a>')
     trade = (f'<a class="thq-action" href="/trades/calculator?front_office={roster_id}">Evaluate a trade</a>'
              f'<a class="thq-action" href="/trades?front_office={roster_id}">Recommended Trades</a>') if editable else ''
-    navigation = ('<nav class="thq-actions" aria-label="Roster sections">'
-                  '<a class="thq-action" href="#full-roster" aria-label="View full roster">Roster</a>'
-                  '<a class="thq-action" href="#positional-depth">Depth</a>'
-                  '<a class="thq-action" href="#draft-capital" aria-label="Draft capital">Capital</a></nav>')
     choices = escape(json.dumps(goal_options(roster_id), separators=(',', ':')), quote=True) if editable else '{}'
     heading = '<h2 id="my-team-outlook-title">Your roster at a glance</h2>'
     lead = (f'<p id="my-team-outlook-lead">Comparison pending: lineup and depth. {escape(outlook["future_summary"])}</p>'
@@ -40,4 +36,4 @@ def outlook_panel(outlook, *, editable, roster_id):
                + '</details>')
     return (f'<section id="my-team-outlook" class="thq-outlook" data-outlook-goals="{choices}" data-dtos-component="recommendation" aria-labelledby="my-team-outlook-title">'
             + (details if unprepared else heading + lead + details)
-            + '<div class="thq-outlook-next">' + action + '</div>' + navigation + '</section>')
+            + '<div class="thq-outlook-next">' + action + '</div></section>')

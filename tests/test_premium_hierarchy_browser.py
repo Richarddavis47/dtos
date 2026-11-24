@@ -232,11 +232,12 @@ class PremiumPreparedBrowserTests(unittest.TestCase):
                         )
                         link.focus()
                         self.assertGreaterEqual(link.bounding_box()["height"], 44)
-                        self.assertTrue(
-                            link.evaluate(
-                                """e=>{const r=e.getBoundingClientRect();const h=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return h===e||e.contains(h)}"""
-                            )
-                        )
+                        target = link.evaluate("""element => {
+                          const box=element.getBoundingClientRect();
+                          const hit=document.elementFromPoint(box.x+box.width/2,box.y+box.height/2);
+                          return {hit:element.contains(hit), tag:hit?.tagName, classes:hit?.className, box:box.toJSON()};
+                        }""")
+                        self.assertTrue(target['hit'], (width, fragment, target))
                         link.press("Enter")
                         self.assertTrue(page.url.endswith(fragment))
                     page.locator('.thq-tabs a[href="#team-roster"]').click()

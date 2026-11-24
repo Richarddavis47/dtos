@@ -24,12 +24,11 @@
       else link.removeAttribute('aria-current');
     }
 
-    if (!section || target === section) return;
-    requestAnimationFrame(() => {
-      if (location.hash === '#' + target.id && !section.hidden) {
-        target.scrollIntoView({block: 'start'});
-      }
-    });
+    if (section && target !== section) {
+      // Finish the jump during selection so a later keyboard focus can scroll
+      // to its own control without a pending jump pulling it off screen.
+      target.scrollIntoView({block: 'start', behavior: 'instant'});
+    }
   }
 
   showSection();
