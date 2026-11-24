@@ -1,0 +1,305 @@
+{
+  "schema": 1,
+  "repository": "Richarddavis47/dtos",
+  "actor": "Richarddavis47",
+  "publisher_ref": "refs/heads/release/2277-actions-publisher",
+  "baseline": "23a11f18f5b95633e90291a9351f258caa3b7f7d",
+  "candidate": "052800524d53736fe998c4f608cc2eddc7d1f051",
+  "tree": "ecf99970f0f3e2a59a8c850fe55fbae630cd1536",
+  "pr": 366,
+  "source_branch": "feat/home-priority-2277",
+  "version": "1.22.62",
+  "build": 2277,
+  "draft_id": 456278797,
+  "prior_immutable_tag": "v1.22.61",
+  "canonical_tests": 4675,
+  "canonical_entries": 920,
+  "local_canonical_entries": 916,
+  "product_tests": 1085,
+  "python_version": "3.14.3",
+  "capital_tests": 14,
+  "market_roster_tests": 21,
+  "recovery_file": ".github/release-plans/2277-recovery.zip",
+  "prior_evidence_file": ".github/release-plans/2277-prior.zip",
+  "runs": [
+    {
+      "name": "Canonical release recovery",
+      "path": ".github/workflows/canonical-release-recovery.yml",
+      "jobs": [
+        "canonical-release"
+      ],
+      "id": 45297086894
+    },
+    {
+      "name": "Product browser journeys",
+      "path": ".github/workflows/product-browser.yml",
+      "jobs": [
+        "product-browser",
+        "my-team-browser",
+        "beginner-navigation",
+        "public-welcome-browser",
+        "historical-trade-timeline",
+        "projection-display-cross-version",
+        "resident-refresh-memory"
+      ],
+      "id": 45297086544
+    },
+    {
+      "name": "Validation tooling",
+      "path": ".github/workflows/validation-tooling.yml",
+      "jobs": [
+        "tooling (ubuntu-24.04)",
+        "tooling (windows-latest)"
+      ],
+      "id": 45297086496
+    },
+    {
+      "name": "Linux Asset Market lifecycle",
+      "path": ".github/workflows/linux-market-lifecycle.yml",
+      "jobs": [
+        "cgroup-lifecycle (ordinary)",
+        "cgroup-lifecycle (archive-warmed)",
+        "cgroup-lifecycle (combined-read)"
+      ],
+      "id": 45297086494
+    }
+  ],
+  "artifacts": [
+    {
+      "id": 14881938142,
+      "name": "canonical-release-2g-python314",
+      "run": 45297086894,
+      "file": "canonical-original.zip",
+      "bytes": 93555273,
+      "sha256": "1d8a1a04d1590f64258bdceb99afdc45e31db1e48b2c5d29ba53145279b0f6eb"
+    },
+    {
+      "id": 14877624700,
+      "name": "current-season-history-browser",
+      "run": 45297086544,
+      "file": "current-history-original.zip",
+      "bytes": 876114,
+      "sha256": "a864cb53437d47ddcc0746b4ea1f675fd3cbe8caff317911ec523445a363a41e"
+    },
+    {
+      "id": 14877953624,
+      "name": "history-followthrough-browser",
+      "run": 45297086544,
+      "file": "history-followthrough-original.zip",
+      "bytes": 987576,
+      "sha256": "b10ddbd8d6a8cdb94ff10f90be9c5129e4c6608458b2d027ae4c3f9d8a638a23"
+    },
+    {
+      "id": 14878048500,
+      "name": "market-history-coverage-browser",
+      "run": 45297086544,
+      "file": "market-history-coverage-original.zip",
+      "bytes": 1422971,
+      "sha256": "e45f4ec864992fcf4b429986993e9f513406ef201bf587d4c46d551cde8af814"
+    },
+    {
+      "id": 14877654649,
+      "name": "current-production-coverage-browser",
+      "run": 45297086544,
+      "file": "current-production-coverage-original.zip",
+      "bytes": 2798621,
+      "sha256": "fef29f96f7e59ffbc3a9ffb1b7c21134419567bac6cb3c8b8843b31f83b1609c"
+    },
+    {
+      "id": 14878681778,
+      "name": "trade-resource-2g",
+      "run": 45297086544,
+      "file": "trade-resource-original.zip",
+      "bytes": 47743874,
+      "sha256": "9f2f130515b770e29a45d9ac6da2e30f2496a545fb49a6edc8a9238bef794e8a"
+    },
+    {
+      "id": 14878267609,
+      "name": "league-entry-2g",
+      "run": 45297086544,
+      "file": "league-entry-original.zip",
+      "bytes": 12205,
+      "sha256": "a16419e892dcaf12450827ae8bd1113225bd59ae4002a15af429bc7b38e850ae"
+    },
+    {
+      "id": 14878392350,
+      "name": "restoration-unused-2g",
+      "run": 45297086544,
+      "file": "restoration-unused-original.zip",
+      "bytes": 7341116,
+      "sha256": "7a79cbbb0831fa8ea7c93d93461c732276cd164d3284f59ff150aa84e1ea7412"
+    },
+    {
+      "id": 14878941586,
+      "name": "actuals-restoration-2g",
+      "run": 45297086544,
+      "file": "actuals-restoration-original.zip",
+      "bytes": 7341403,
+      "sha256": "eb71b760e884e17c61ea3524c136c2c2eb2e43be9136cb71a478c667c8a884b3"
+    },
+    {
+      "id": 14877197240,
+      "name": "restoration-preflight-2g",
+      "run": 45297086544,
+      "file": "preflight-original.zip",
+      "bytes": 3690,
+      "sha256": "731093f5565712d81ada29b573d5314f3682bba27b787b43add3aea59ca0da8b"
+    },
+    {
+      "id": 14877211689,
+      "name": "resident-refresh-ownership-2g",
+      "run": 45297086544,
+      "file": "resident-refresh-original.zip",
+      "bytes": 5642,
+      "sha256": "5bc8723a92be00454e1b63c87fe721088636dd745fd0f837dbe94dd4c9f217e3"
+    },
+    {
+      "id": 14876932230,
+      "name": "linux-market-lifecycle-ordinary-summary",
+      "run": 45297086494,
+      "file": "lifecycle-ordinary.zip",
+      "bytes": 13672,
+      "sha256": "d79c6a50278c41b9d0cd35f62a82c475e274e86b263c006fc9ccc3ba0b8950bc"
+    },
+    {
+      "id": 14877635251,
+      "name": "linux-market-lifecycle-archive-warmed-summary",
+      "run": 45297086494,
+      "file": "lifecycle-archive-warmed.zip",
+      "bytes": 12839,
+      "sha256": "6b23d28bd43f6b82bbe7a01b761c653b4ab340defd31113c644f9bceee0edbfe"
+    },
+    {
+      "id": 14876907956,
+      "name": "linux-market-lifecycle-combined-read-summary",
+      "run": 45297086494,
+      "file": "lifecycle-combined-read.zip",
+      "bytes": 14657,
+      "sha256": "05ef48c4f1b10b2d1dea9c1e6e7875a6e4e05e97223f0ae57b97f179609f84a9"
+    },
+    {
+      "id": 14877142606,
+      "name": "public-welcome-security-browser",
+      "run": 45297086544,
+      "file": "public-welcome-security.zip",
+      "bytes": 53838129,
+      "sha256": "f2876b7124878211b34053a2f20017ba644077cb56b3e9273505a56cb427c7a5"
+    }
+  ],
+  "prior_runs": [],
+  "prior_jobs": [],
+  "prior_attempts": [],
+  "finalized": true,
+  "roster_source_scope_tests": 20,
+  "franchise_progress_tests": 16,
+  "acquisition_tests": 20,
+  "fixture_isolation_tests": 10,
+  "customer_experience_test_ids": [
+    "test_customer_acceptance_followup.CustomerAcceptanceFollowupTests.test_backup_points_translation_preserves_qualification",
+    "test_customer_acceptance_followup.CustomerAcceptanceFollowupTests.test_duplicate_player_notes_keep_zero_and_distinct_risks",
+    "test_customer_acceptance_followup.CustomerAcceptanceFollowupTests.test_repeated_brief_explanation_does_not_erase_a_distinct_risk",
+    "test_customer_experience_journeys.CustomerExperienceJourneyTests.test_authenticated_product_navigation_and_league_switching",
+    "test_customer_history_presentation.CustomerHistoryPresentationTests.test_conflicting_playoff_outcomes_do_not_turn_into_supported_winner",
+    "test_customer_history_presentation.CustomerHistoryPresentationTests.test_current_and_historical_pick_rights_are_distinct_without_duplicate_missing_labels",
+    "test_customer_history_presentation.CustomerHistoryPresentationTests.test_existing_season_page_has_readable_draft_and_playoffs_not_primary_json",
+    "test_customer_history_presentation.CustomerHistoryPresentationTests.test_franchise_coverage_keeps_partial_state_and_activity_but_collapses_week_inventory",
+    "test_customer_history_presentation.CustomerHistoryPresentationTests.test_missing_draft_and_bracket_do_not_become_complete_empty_or_reconstructed",
+    "test_customer_history_presentation.CustomerHistoryPresentationTests.test_pick_actions_require_exact_future_native_right_and_matching_owner",
+    "test_customer_history_presentation.CustomerHistoryPresentationTests.test_raw_draft_user_and_legacy_alias_are_not_presented_as_franchise_origin",
+    "test_customer_history_presentation.CustomerHistoryPresentationTests.test_readable_quote_clock_retains_precise_original_in_source_details",
+    "test_customer_home_team.CustomerHomeFailureBrowserTests.test_capacity_deferral_and_failure_preserve_prior_results_without_false_completion",
+    "test_customer_home_team.CustomerHomeTeamHTTPTests.test_directory_omits_unimplemented_forecasts_but_keeps_prepared_weekly_comparison",
+    "test_customer_home_team.CustomerHomeTeamHTTPTests.test_home_manager_grades_stay_secondary_and_retained_status_is_exact",
+    "test_customer_home_team.CustomerHomeTeamHTTPTests.test_normal_my_team_keeps_supported_comparison_without_internal_market_labels",
+    "test_customer_home_team.CustomerTeamPresentationTests.test_depth_claim_and_uncertainty_are_short_with_original_details_retained",
+    "test_customer_home_team.CustomerTeamPresentationTests.test_depth_missing_totals_are_summarized_once_and_zero_and_negative_stay_visible",
+    "test_customer_home_team.CustomerTeamPresentationTests.test_empty_home_does_not_turn_missing_rosters_into_weakness",
+    "test_customer_home_team.CustomerTeamPresentationTests.test_existing_normalized_transaction_clock_is_not_lost",
+    "test_customer_home_team.CustomerTeamPresentationTests.test_owned_exact_picks_zero_missing_and_unknown_origin",
+    "test_customer_home_team.CustomerTeamPresentationTests.test_roster_coverage_consolidates_unknowns_but_keeps_known_risks_and_scores",
+    "test_customer_home_team.CustomerTeamPresentationTests.test_unknown_pick_range_sentinels_do_not_create_forecast_claims",
+    "test_customer_market_player_experience.CustomerMarketPlayerExperienceTests.test_exact_source_zero_and_negative_remain_unmodified",
+    "test_customer_market_player_experience.CustomerMarketPlayerExperienceTests.test_market_exposes_supported_value_and_actuals_before_model_details",
+    "test_customer_market_player_experience.CustomerMarketPlayerExperienceTests.test_missing_model_stays_explicit_in_optional_evidence",
+    "test_customer_market_player_experience.CustomerMarketPlayerExperienceTests.test_partial_and_failed_refresh_keep_material_qualification_visible",
+    "test_customer_market_player_experience.CustomerMarketPlayerExperienceTests.test_player_leads_with_results_and_actions_not_forecast_placeholders",
+    "test_customer_market_player_experience.CustomerMarketPlayerExperienceTests.test_reading_disclosures_changes_no_source_or_state",
+    "test_customer_market_player_experience.CustomerMarketPlayerExperienceTests.test_selected_market_explains_the_specific_source_gap_not_generic_missing",
+    "test_customer_market_player_experience.CustomerMarketPlayerExperienceTests.test_selected_market_keeps_source_availability_beside_supported_zero",
+    "test_customer_presentation_standard.CustomerPresentationStandardTests.test_account_and_primary_navigation_keep_existing_boundaries",
+    "test_customer_presentation_standard.CustomerPresentationStandardTests.test_aware_clocks_use_explicit_utc_without_changing_exact_source",
+    "test_customer_presentation_standard.CustomerPresentationStandardTests.test_date_only_naive_unknown_clocks_do_not_gain_precision",
+    "test_customer_presentation_standard.CustomerPresentationStandardTests.test_disclosures_are_closed_and_source_text_is_not_reinterpreted",
+    "test_customer_presentation_standard.CustomerPresentationStandardTests.test_translation_preserves_specific_missing_and_unrelated_facts",
+    "test_customer_presentation_standard.SharedRecommendationCopyTests.test_primary_copy_is_plain_with_original_model_record_on_demand",
+    "test_customer_specialist_presentation.CustomerSpecialistPresentationTests.test_account_routes_use_account_language_without_claiming_control_verification",
+    "test_customer_specialist_presentation.CustomerSpecialistPresentationTests.test_commissioner_keeps_zero_and_moves_unsupported_assessments_out_of_default_cards",
+    "test_customer_specialist_presentation.CustomerSpecialistPresentationTests.test_custom_editor_keeps_exact_method_contract_and_does_not_write_on_open",
+    "test_customer_specialist_presentation.CustomerSpecialistPresentationTests.test_fois_pending_missing_and_retained_remain_distinct_without_regrading",
+    "test_customer_specialist_presentation.CustomerSpecialistPresentationTests.test_missing_outlook_is_not_a_franchise_classification_and_original_is_retained",
+    "test_customer_specialist_presentation.CustomerSpecialistPresentationTests.test_recorded_pick_headline_does_not_claim_inventory_completeness",
+    "test_customer_specialist_presentation.CustomerSpecialistPresentationTests.test_supported_profile_preserves_score_and_possible_partner_evidence_without_recalculation",
+    "test_customer_trade_experience.CustomerTradeJourneyTests.test_compact_offer_review_compare_and_back_keeps_original_work",
+    "test_customer_trade_experience.CustomerTradeJourneyTests.test_optional_custom_pricing_stays_collapsed_until_selected_or_opened",
+    "test_customer_trade_experience.CustomerTradeJourneyTests.test_retained_pick_label_does_not_follow_today_franchise_rename",
+    "test_customer_trade_experience.CustomerTradePresentationTests.test_current_effects_and_principal_risk_lead_without_mutating_results",
+    "test_customer_trade_experience.CustomerTradePresentationTests.test_missing_def_remains_incomplete_in_rendered_lineups"
+  ],
+  "baseline_tree": "9bf70f099ca65ea9a137fdda1b8cf60f0335353c",
+  "baseline_snapshot_aliases": [
+    {
+      "commit": "96c9697a865d9725bb8d9e3a5c403530bad80b76",
+      "tree": "9bf70f099ca65ea9a137fdda1b8cf60f0335353c",
+      "pr": 365
+    }
+  ],
+  "template_scope": "Final exact-source local/hosted original receipts. GitHub hosted guarded prepare and publish must still pass.",
+  "source_health_test_ids": [
+    "test_history_period_recovery.HistoryPeriodRecoveryTests.test_concurrent_new_publication_wins_over_old_recovery",
+    "test_history_period_recovery.HistoryPeriodRecoveryTests.test_failed_unavailable_and_malformed_are_not_empty_or_data_loss_and_cool_down",
+    "test_history_period_recovery.HistoryPeriodRecoveryTests.test_foreign_source_identity_is_never_authority_to_recover",
+    "test_history_period_recovery.HistoryPeriodRecoveryTests.test_legacy_missing_week_zero_recovers_only_zero_and_preserves_unknown_old_clocks",
+    "test_history_period_recovery.HistoryPeriodRecoveryTests.test_only_missing_buckets_are_requested_and_valid_zero_empty_is_not_missing",
+    "test_history_period_recovery.HistoryPeriodRecoveryTests.test_ordinary_cache_reads_and_warm_metadata_do_not_call_source_or_decode_again",
+    "test_history_period_recovery.HistoryPeriodRecoveryTests.test_rendered_history_updates_coverage_and_keeps_supporting_events",
+    "test_history_period_recovery.HistoryPeriodRecoveryTests.test_source_bounds_and_refresh_failure_preserve_original_archive",
+    "test_scoped_source_health.ScopedSourceHealthTests.test_aging_and_failed_refresh_preserve_value_and_original_clocks",
+    "test_scoped_source_health.ScopedSourceHealthTests.test_capability_without_context_has_unknown_coverage_and_no_invented_clock",
+    "test_scoped_source_health.ScopedSourceHealthTests.test_default_and_connected_restore_report_same_native_result_coverage",
+    "test_scoped_source_health.ScopedSourceHealthTests.test_foreign_league_season_scoring_and_generation_are_not_admitted",
+    "test_scoped_source_health.ScopedSourceHealthTests.test_one_supported_player_never_marks_another_player_or_catalog_complete",
+    "test_scoped_source_health.ScopedSourceHealthTests.test_partial_native_scores_and_auxiliary_usage_remain_independent",
+    "test_scoped_source_health.ScopedSourceHealthTests.test_prepared_projection_and_actuals_do_not_claim_disabled_or_waiting",
+    "test_scoped_source_health.ScopedSourceHealthTests.test_rendered_api_uses_same_scoped_health_without_refresh_or_mutation",
+    "test_scoped_source_health.ScopedSourceHealthTests.test_rendered_dossier_preserves_supported_actual_results",
+    "test_scoped_source_health.ScopedSourceHealthTests.test_zero_negative_missing_and_placeholder_only_projection_remain_distinct"
+  ],
+  "branch": "feat/home-priority-2277",
+  "expected_test_count": 4675,
+  "recovery_sha256": "3766aa643e791b355bb4fcea405e2fcf11ad2636a957c7855030a97bef801f3b",
+  "recovery_parts": [
+    {
+      "path": ".github/release-plans/2277-recovery-001.part",
+      "bytes": 67108864,
+      "sha256": "a15796e6eea27e45d61ce08714d575d18ca77bec04dac37f0e7b4632fdc86ab8"
+    },
+    {
+      "path": ".github/release-plans/2277-recovery-002.part",
+      "bytes": 67108864,
+      "sha256": "a8abdcf24c5c6217fc25b80e982b4d66eaa4ec29c936c7dc348acce461826e94"
+    },
+    {
+      "path": ".github/release-plans/2277-recovery-003.part",
+      "bytes": 36059195,
+      "sha256": "45eb57b73ea24c932b0e6e1495f9f84a73ca94e35bdd898f8d11152cd5c329a8"
+    }
+  ],
+  "prior_evidence_sha256": "48ce4ec2ffc2150b324e4a97e5c169a4fa0669bc9e76e7148e98aaccd3e37e2d",
+  "prior_evidence_parts": [
+    {
+      "path": ".github/release-plans/2277-prior-001.part",
+      "bytes": 4106047,
+      "sha256": "48ce4ec2ffc2150b324e4a97e5c169a4fa0669bc9e76e7148e98aaccd3e37e2d"
+    }
+  ]
+}
