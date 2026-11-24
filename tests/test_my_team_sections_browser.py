@@ -35,7 +35,7 @@ class MyTeamSectionsBrowserTests(unittest.TestCase):
                     picks = tabs.get_by_role('link', name='Picks')
                     picks.focus()
                     picks.press('Enter')
-                    self.assertTrue(page.locator('#draft-capital').is_visible())
+                    page.locator('#draft-capital').wait_for(state='visible')
                     page.reload()
                     self.assertEqual(tabs.locator('[aria-current]').inner_text(), 'Picks')
 

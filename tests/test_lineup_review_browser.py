@@ -45,7 +45,7 @@ class LineupReviewBrowserTests(unittest.TestCase):
                     self.assertNotIn("If Example R 1", copy)
                     action.click()
                     page.wait_for_url("**/teams/1#lineup-action")
-                    self.assertTrue(page.locator('#team-lineup').is_visible())
+                    page.locator('#team-lineup').wait_for(state='visible')
                     self.assertTrue(page.locator('#lineup-action .thq-lineup-deadline time').is_visible())
                     self.assertIn('Higher-projected lineup available', page.locator('#lineup-action').inner_text())
                 else:
@@ -73,7 +73,7 @@ class LineupReviewBrowserTests(unittest.TestCase):
                         page.screenshot(path=str(Path(directory, "home-long-action-320.png")))
                     action.tap()
                     page.wait_for_url("**/teams/1#lineup-recheck")
-                    self.assertTrue(page.locator('#lineup-recheck [data-lineup-review="fallback"]').is_visible())
+                    page.locator('#lineup-recheck [data-lineup-review="fallback"]').wait_for(state='visible')
             finally:
                 browser.close()
 
@@ -387,7 +387,7 @@ class LineupFallbackBrowserTests(unittest.TestCase):
                     self.assertTrue(page.locator("#full-roster").is_visible())
                     page.locator('.thq-tabs a[href="#team-lineup"]').click()
                     panel = page.get_by_role("region", name="Lineup fallback")
-                    self.assertTrue(panel.is_visible())
+                    panel.wait_for(state="visible")
                     self.assertIn("Example W 1 is ruled out", panel.inner_text())
                     self.assertIn("Example BQ 1 in for Example S 1", panel.inner_text())
                     self.assertIn("starts before the starter", panel.inner_text())

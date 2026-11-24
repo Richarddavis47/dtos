@@ -45,6 +45,7 @@ class MyTeamOutlookBrowserTests(unittest.TestCase):
                         detail = page.locator('#my-team-outlook-evidence')
                         self.assertFalse(detail.evaluate('e => e.open'))
                         summary = detail.locator('summary')
+                        page.keyboard.press('Tab')
                         summary.focus()
                         self.assertNotEqual(summary.evaluate('e => getComputedStyle(e).outlineStyle'), 'none')
                         summary.press('Enter')
@@ -76,7 +77,7 @@ class MyTeamOutlookBrowserTests(unittest.TestCase):
                             link = page.get_by_role('navigation', name='Roster sections').get_by_role('link', name=label, exact=True)
                             self.assertEqual(link.get_attribute('href'), target)
                             link.click()
-                            self.assertTrue(page.locator(target).is_visible())
+                            page.locator(target).wait_for(state='visible')
                             if target == '#draft-capital':
                                 page.locator('.thq-tabs a[href="#team-roster"]').click()
                         page.locator('#my-team-strategy').select_option('WIN NOW')
