@@ -137,7 +137,8 @@ body:has(#trade-builder) .ds-page-header>div:first-child{display:flex;flex-wrap:
 .tw-workspace .tw-intent-nav a{justify-content:center;text-align:center;border:0;border-radius:8px;padding:6px;line-height:1.2}
 .tw-workspace .tw-intent-nav a[aria-current=page]{background:var(--accent);color:#0c1908}
 .tw-workspace .tw-calculator{border-color:var(--border);background:var(--surface);padding:12px}
-.tw-draft-packages,.tw-review-packages,.tw-gauge-totals{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.tw-draft-packages,.tw-gauge-totals{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.tw-review-packages{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(160px,100%),1fr));gap:8px}
 .tw-draft-packages>section,.tw-review-packages>section,.tw-gauge-totals>div{padding:10px;border:1px solid var(--border);border-radius:10px;min-width:0;overflow-wrap:anywhere;background:var(--surface-elevated)}
 .tw-draft-packages h3,.tw-review-packages h4{margin:0 0 4px}
 .tw-draft-packages .tw-add-asset{width:100%;color:var(--accent);border-color:var(--accent);padding-inline:6px}
@@ -166,7 +167,6 @@ body:has(#trade-builder) .ds-page-header>div:first-child{display:flex;flex-wrap:
 .tw-offer-summary .tw-offer-verdict{font-weight:700;margin:0;color:var(--text-primary)}
 .tw-offer-summary .tw-offer-effects{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 @media(max-width:540px){.tw-draft-packages{grid-template-columns:1fr}.tw-workspace .tw-valuation-gauge{padding:8px}.tw-gauge-totals>div{padding:5px}.tw-gauge-labels{font-size:.9rem}}
-@media(max-width:360px){.tw-review-packages{grid-template-columns:1fr}}
 @media(max-width:540px){
   .tw-workspace .tw-intent-nav{padding:0}
   .tw-workspace .tw-side-tabs{margin:8px 0}

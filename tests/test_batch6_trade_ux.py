@@ -86,7 +86,8 @@ class TradeUXTests(unittest.TestCase):
                             else:
                                 self.assertEqual(page.evaluate('document.activeElement.id'), 'trade-result')
                             card = page.locator('.tw-offer')
-                            self.assertEqual(card.locator('h3').first.inner_text(), offer['evaluation']['recommendation'] or 'Recommendation unavailable')
+                            self.assertEqual(card.locator('h3.tw-offer-partner').inner_text(), 'Team 2')
+                            self.assertEqual(card.locator('.tw-offer-verdict').inner_text(), offer['evaluation']['recommendation'] or 'Recommendation unavailable')
                             self.assertEqual(card.locator(':scope > .tw-lineup-details').count(), 0)
                             self.assertEqual(card.locator('.tw-draft-capital').count(), 0)
                             original_count = page.locator('#trade-sent-chips .tw-asset').count()
