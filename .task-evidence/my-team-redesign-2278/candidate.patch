@@ -68,7 +68,7 @@ index 3068d71..229ccc8 100644
          reason = 'This link does not match a confirmed upcoming bye gap for your selected team.'
          data = selected_state.get('data') or {}
 diff --git a/routes/teams.py b/routes/teams.py
-index b092f5d..bb0c2d0 100644
+index b092f5d..a42a877 100644
 --- a/routes/teams.py
 +++ b/routes/teams.py
 @@ -3,12 +3,13 @@ from __future__ import annotations
@@ -86,6 +86,15 @@ index b092f5d..bb0c2d0 100644
  
  from config import LEAGUE_ID
  from services.asset_intelligence import contextual_player_url
+@@ -20,7 +21,7 @@ from src.core.historical_memory.read_model import historical_graph
+ from src.core.history_context import canonical_history_store
+ from src.core.request_execution import run_manager_read
+ from src.ui import player_summary
+-from src.ui.my_team_outlook import outlook_panel
++from src.ui.my_team_outlook import outlook_panel, roster_shortcuts
+ from src.ui.season_performance import season_panel
+ from src.ui.league_gm_diagnostics import team_observations
+ from src.ui.badges import champion_badge, defending_champion, you_badge
 @@ -36,6 +37,8 @@ EnsureFresh = Callable[[], Awaitable[None]]
  RequireData = Callable[[], dict[str, Any]]
  PageRenderer = Callable[[str, str], HTMLResponse]
@@ -132,7 +141,7 @@ index b092f5d..bb0c2d0 100644
              for player in starters
          ) or '<div class="ds-empty"><b>No starting lineup is available.</b>Sleeper has not supplied a current starter assignment.</div>'
          from src.ui.team_strength import strength_panel
-@@ -540,28 +555,45 @@ def create_teams_router(
+@@ -540,28 +555,40 @@ def create_teams_router(
          body = f"""
  {TEAM_HQ_CSS}
  <style>
@@ -156,12 +165,7 @@ index b092f5d..bb0c2d0 100644
 +<a href="#team-roster">Roster</a><a href="#team-lineup">Lineup</a><a href="#team-byes">Byes</a><a href="#team-picks">Picks</a>
 +</nav>
 +<section id="team-roster" data-team-section aria-label="Roster">
-+<nav class="thq-actions" aria-label="Roster sections">
-+<a class="thq-action" href="#full-roster" aria-label="View full roster">Players</a>
-+<a class="thq-action" href="#my-team-outlook" aria-label="Roster outlook and next step">Outlook</a>
-+<a class="thq-action" href="#positional-depth">Depth</a>
-+<a class="thq-action" href="#draft-capital" aria-label="Draft capital">Picks</a>
-+</nav>
++{roster_shortcuts()}
  <section class="thq-section" id="full-roster"><details class="thq-strength-detail" id="my-team-roster" open><summary>Full Roster · {escape(_roster_projection_coverage(view))}</summary><div class="thq-roster">{_roster_rooms(view)}</div></details><details class="thq-strength-detail" id="my-team-key-players"><summary>Key players by Market value</summary>{_key_players(view)}</details></section>
 -{lineup_fallback}
 -{upcoming_byes}
@@ -293,10 +297,26 @@ index 152e2ee..3383bc8 100644
 +def review_panel(review, *, recheck=None, show_kickoff=False):
 +    return _primary_panel(review, show_kickoff=show_kickoff) + lineup_recheck_panel(recheck, (review or {}).get("fallback"))
 diff --git a/src/ui/my_team_outlook.py b/src/ui/my_team_outlook.py
-index a2222d8..6a21b2b 100644
+index a2222d8..ace7a1c 100644
 --- a/src/ui/my_team_outlook.py
 +++ b/src/ui/my_team_outlook.py
-@@ -17,10 +17,6 @@ def outlook_panel(outlook, *, editable, roster_id):
+@@ -5,6 +5,15 @@ import json
+ from services.my_team_outlook import goal_options
+ 
+ 
++def roster_shortcuts():
++    return '''<nav class="thq-actions" aria-label="Roster sections">
++<a class="thq-action" href="#full-roster" aria-label="View full roster">Players</a>
++<a class="thq-action" href="#my-team-outlook" aria-label="Roster outlook and next step">Outlook</a>
++<a class="thq-action" href="#positional-depth">Depth</a>
++<a class="thq-action" href="#draft-capital" aria-label="Draft capital">Picks</a>
++</nav>'''
++
++
+ def outlook_panel(outlook, *, editable, roster_id):
+     rows = [('Current position', outlook['brief']), ('Main strength', outlook['strength']),
+             ('Depth and uncertainty', outlook['concern']), ('Future flexibility', outlook['future'])]
+@@ -17,10 +26,6 @@ def outlook_panel(outlook, *, editable, roster_id):
                     f'href="{escape(need["href"], quote=True)}">Explore {escape(need["position"])} trades</a>')
      trade = (f'<a class="thq-action" href="/trades/calculator?front_office={roster_id}">Evaluate a trade</a>'
               f'<a class="thq-action" href="/trades?front_office={roster_id}">Recommended Trades</a>') if editable else ''
@@ -307,7 +327,7 @@ index a2222d8..6a21b2b 100644
      choices = escape(json.dumps(goal_options(roster_id), separators=(',', ':')), quote=True) if editable else '{}'
      heading = '<h2 id="my-team-outlook-title">Your roster at a glance</h2>'
      lead = (f'<p id="my-team-outlook-lead">Comparison pending: lineup and depth. {escape(outlook["future_summary"])}</p>'
-@@ -40,4 +36,4 @@ def outlook_panel(outlook, *, editable, roster_id):
+@@ -40,4 +45,4 @@ def outlook_panel(outlook, *, editable, roster_id):
                 + '</details>')
      return (f'<section id="my-team-outlook" class="thq-outlook" data-outlook-goals="{choices}" data-dtos-component="recommendation" aria-labelledby="my-team-outlook-title">'
              + (details if unprepared else heading + lead + details)
@@ -632,10 +652,10 @@ index f46241c..b1bd003 100644
        if (focused && focused !== document.body && focused !== document.documentElement && focused !== lastRestoredFocus) {restoring=false;return;}
 diff --git a/static/js/my-team-sections.js b/static/js/my-team-sections.js
 new file mode 100644
-index 0000000..a25c9bd
+index 0000000..367e17ad
 --- /dev/null
 +++ b/static/js/my-team-sections.js
-@@ -0,0 +1,36 @@
+@@ -0,0 +1,52 @@
 +/* Keep section links usable as ordinary anchors without scripting. */
 +(() => {
 +  const team = document.querySelector('[data-my-team-sections]');
@@ -643,7 +663,10 @@ index 0000000..a25c9bd
 +  const panels = Array.from(team.querySelectorAll('[data-team-section]'));
 +  const links = team.querySelectorAll('.thq-tabs a');
 +
++  let shownHash;
++
 +  function showSection() {
++    shownHash = location.hash;
 +    const target = document.getElementById(location.hash.slice(1));
 +    const section = target && team.contains(target) && target.closest('[data-team-section]');
 +    const missingWeek = !target && /^#bye-week-(?:[1-9]|1[0-8])$/.test(location.hash);
@@ -670,7 +693,20 @@ index 0000000..a25c9bd
 +  }
 +
 +  showSection();
-+  addEventListener('hashchange', showSection);
++  addEventListener('hashchange', () => {
++    if (location.hash !== shownHash) showSection();
++  });
++  addEventListener('click', event => {
++    if (event.defaultPrevented || event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
++    const link = event.target.closest?.('a[href^="#"]');
++    const target = link && document.getElementById(link.hash.slice(1));
++    if (!target || !team.contains(link) || !team.contains(target) || !target.closest('[data-team-section]')) return;
++    // The normal document click handler has recorded the prior view. Finish
++    // this fragment jump now so hashchange cannot interrupt the next focus.
++    event.preventDefault();
++    location.hash = link.hash;
++    showSection();
++  });
 +})();
 diff --git a/tests/test_bye_pickups.py b/tests/test_bye_pickups.py
 index ff81497..602ac6c 100644
@@ -1112,7 +1148,7 @@ index 0000000..e8b4f38
 +            self.assertEqual(page.locator('[data-bye-week]').count(), 0)
 +            self.assertEqual(writes, [])
 diff --git a/tests/test_premium_hierarchy_browser.py b/tests/test_premium_hierarchy_browser.py
-index 5773b1b..e991b55 100644
+index 5773b1b..dfcc2d6 100644
 --- a/tests/test_premium_hierarchy_browser.py
 +++ b/tests/test_premium_hierarchy_browser.py
 @@ -232,13 +232,15 @@ class PremiumPreparedBrowserTests(unittest.TestCase):
@@ -1136,6 +1172,28 @@ index 5773b1b..e991b55 100644
                      page.evaluate("scrollTo(0,0)")
                      row = capture(page, "prepared-my-team", width, height)
                      self.assertLessEqual(row["boxes"]["shortcuts"]["height"], 64)
+@@ -354,7 +356,7 @@ class PremiumPreparedBrowserTests(unittest.TestCase):
+         from components.asset_intelligence import player_dossier
+         from src.core.asset_intelligence import AssetContext, evaluate_player
+         from src.ui.front_office_brief import cards
+-        from src.ui.my_team_outlook import outlook_panel
++        from src.ui.my_team_outlook import outlook_panel, roster_shortcuts
+         from services.my_team_outlook import goal_options
+ 
+         report = evaluate_player(
+@@ -392,10 +394,8 @@ class PremiumPreparedBrowserTests(unittest.TestCase):
+                     "Player decision summary", player_dossier(report, owner, [owner])
+                 )
+                 self.assertEqual(cards([]), "")
+-                self.assertIn(
+-                    "Roster sections",
+-                    outlook_panel(outlook, editable=True, roster_id=1),
+-                )
++                self.assertIn("Roster sections", roster_shortcuts())
++                self.assertIn("Missing evidence", outlook_panel(outlook, editable=True, roster_id=1))
+                 self.assertTrue(goal_options(1))
+             self.assertTrue(all(g.call_count == 0 for g in guards.values()))
+         self.assertEqual(report, original)
 diff --git a/tests/test_projection_coverage_browser.py b/tests/test_projection_coverage_browser.py
 index fde45b9..482c2ba 100644
 --- a/tests/test_projection_coverage_browser.py
