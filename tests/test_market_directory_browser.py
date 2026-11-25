@@ -77,6 +77,10 @@ class MarketDirectoryBrowserTests(unittest.TestCase):
         page, requests, _, _, errors = fixture.helper.page(device, fixture.f, width, height)
         page.goto(fixture.helper.origin + "/market?position=RB&availability=rostered&sort=market&direction=asc&limit=100")
         self.assertEqual(page.locator('.market-position-tabs [aria-current="true"]').inner_text(), "RB")
+        brand = page.locator(".market-top .brand-mark").bounding_box()
+        switcher = page.locator(".market-top .account-context summary").bounding_box()
+        self.assertLessEqual(brand["x"] + brand["width"], switcher["x"])
+        self.assertLessEqual(switcher["x"] + switcher["width"], width)
         other = page.locator(".market-result:not([data-asset-id='" + fixture.asset_id + "']) .market-row-change").first
         self.assertIn("No change data", other.inner_text())
         row = page.locator(f'[data-asset-id="{fixture.asset_id}"] > a')
