@@ -11,13 +11,12 @@ from src.ui.market_roster_relevance import relevance_reason
 POSITIONS = (("", "All"), ("QB", "QB"), ("RB", "RB"), ("WR", "WR"), ("TE", "TE"), ("PICK", "Picks"))
 
 
-def mode_links(neutral_url, personal_url, *, personal=False):
-    current = ' aria-current="page"'
+def mode_links(neutral_url, personal_url):
     return (
         '<link rel="stylesheet" href="/static/css/market_directory.css">'
         '<nav class="market-mode market-mode-switch" aria-label="Valuation views">'
-        f'<a class="ds-action" href="{escape(neutral_url)}"{"" if personal else current}>Neutral Market</a>'
-        f'<a class="ds-action" href="{escape(personal_url)}"{current if personal else ""}>My DTOS</a></nav>'
+        f'<a class="ds-action" href="{escape(neutral_url)}" aria-current="page">Neutral Market</a>'
+        f'<a class="ds-action" href="{escape(personal_url)}">My DTOS</a></nav>'
     )
 
 

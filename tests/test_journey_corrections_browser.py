@@ -227,7 +227,7 @@ class DetailRouteBrowserTests(unittest.TestCase):
                             self.assertEqual(technical.locator('code').filter(has_text='ROOT:franchise:2').inner_text(), 'ROOT:franchise:2')
                             self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
                             page.goto('https://dtos.test/market')
-                            page.get_by_role('link').filter(has_text='View asset').click()
+                            page.get_by_role('link').filter(has_text='Darius Slayton').click()
                             self.assertTrue(page.locator('#selected-asset').is_visible())
                             self.assertIn('Asset details unavailable', page.locator('#selected-asset').inner_text())
                             self.assertEqual(page.get_by_role('link', name='Browse current Market').get_attribute('href'), '/market')
