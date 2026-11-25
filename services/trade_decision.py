@@ -69,7 +69,7 @@ def lineup_comparisons(result, side="active", *, _admissions=None):
 
 
 def decision_context(result, *, incoming=(), outgoing=(), _admissions=None, _lineup_view=None):
-    from services.trade_lineup_evidence import completed_lineup_admissions, counterparty_summary_display
+    from services.trade_lineup_evidence import completed_lineup_admissions, counterparty_summary_display, remaining_lineup_points
     admissions = _admissions or completed_lineup_admissions(result)
     dimensions = result.get("dimensions") or {}
     strategy = (dimensions.get("strategic_fit") or {}).get("active") or {}
@@ -248,6 +248,7 @@ def decision_context(result, *, incoming=(), outgoing=(), _admissions=None, _lin
         },
         "lineup": {**current, "delta": delta, "state": numeric_state, "explanation": lineup},
         "lineup_comparisons": comparisons,
+        "remaining_lineup_points": remaining_lineup_points(result, admissions),
         "partner_lineup_comparisons": {name: {key: row.get(key) for key in
             ('delta', 'state', 'weeks', 'pre_total', 'post_total', 'subtotal', 'comparable_weeks')}
             for name, row in partner_admitted['horizons'].items()},

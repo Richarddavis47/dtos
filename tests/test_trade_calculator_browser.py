@@ -1,5 +1,7 @@
 """Responsive Chromium calculator editing, preview/adoption and navigation."""
 import copy
+import os
+from pathlib import Path
 import unittest
 
 from tests import test_trade_scout_state_browser as scout
@@ -73,6 +75,9 @@ class CalculatorBrowserTests(unittest.TestCase):
             page.click('[data-side=sent]')
             page.locator('#trade-sent-board button[data-asset-id="player:b"]').click()
             self.assertIn('Approximately balanced', page.locator('#calculator-verdict').inner_text())
+            gauge = page.locator('#trade-balance > .tw-valuation-gauge')
+            self.assertEqual(gauge.get_attribute('data-balance'), 'even')
+            self.assertEqual(gauge.locator('.tw-gauge-pointer').evaluate('e=>e.style.left'), '50%')
         data['teams'][0]['assets'][1]['trade_value'] = None
         with self.fixture.page(workspace=data) as (page, requests):
             self.build(page)
@@ -80,8 +85,144 @@ class CalculatorBrowserTests(unittest.TestCase):
             page.locator('#trade-sent-board button[data-asset-id="player:b"]').click()
             self.assertIn('Cannot determine reliably', page.locator('#calculator-verdict').inner_text())
             self.assertIn('Partial · known subtotal 0.1', page.locator('#trade-balance').inner_text())
+            gauge = page.locator('#trade-balance > .tw-valuation-gauge')
+            self.assertEqual(gauge.get_attribute('data-balance'), 'incomplete')
+            self.assertEqual(gauge.locator('.tw-gauge-pointer').count(), 0)
             self.assertTrue(page.locator('#trade-balance-offer').is_disabled())
             self.assertEqual(requests, [])
+
+    def test_shared_value_gauge_and_selected_week_review_on_phone_and_desktop(self):
+        for width, mode, expected in ((320, 'neutral', 'receive'), (390, 'custom', 'give'), (1280, 'neutral', 'receive')):
+            data = copy.deepcopy(self.data)
+            owned = data['teams'][0]['assets']
+            owned.extend([
+                {**owned[0], 'asset_id': 'player:c', 'label': 'C', 'trade_value': 400},
+                {**owned[0], 'asset_id': 'player:missing', 'label': 'Missing value', 'trade_value': None},
+            ])
+            owned.reverse()
+            data['personalization'] = {
+                'mode': mode, 'revision': 1, 'available': True, 'method_label': 'Absolute Slot',
+                'values': {'player:a': 800, 'player:x': 200},
+            }
+            def values(sent, received):
+                return {'availability': 'full', 'sent': {'total': sent}, 'received': {'total': received}}
+            def evaluate(route, payload):
+                self.assertEqual(payload['assets_sent'], ['player:a'])
+                self.assertEqual(payload['assets_received'], ['player:x'])
+                self.assertEqual(payload['valuation_mode'], mode)
+                evaluation = {
+                    'recommendation': 'REJECT', 'personalization': {'mode': mode, 'method': 'personal-current-market-slot-curve-v1'},
+                    'market_evidence': values(400, 600), 'personal_value_evidence': values(800, 200),
+                    'assessment_state': {'state': 'fresh_complete', 'recommendation_supported': True},
+                    'decision_context': {
+                        'lineup_comparisons': {'current_week': {'weeks': [13], 'delta': 0, 'state': 'supported'}},
+                        'partner_lineup_comparisons': {'current_week': {'weeks': [13], 'delta': -2, 'state': 'unavailable'}},
+                        'remaining_lineup_points': {'selected_week': 13, 'sides': {
+                            'active': {'weeks': [14, 15], 'compared': [14, 15], 'subtotal': 4, 'calendar_complete': True},
+                            'partner': {'weeks': [14, 15], 'compared': [14], 'subtotal': 0, 'calendar_complete': True,
+                                        'selected_reason': 'missing_after', 'future_reason': 'missing_week'},
+                        }},
+                    },
+                }
+                route.fulfill(json={'evaluation': evaluation, 'assessment_source_identity': {'fixture': True}})
+
+            with self.subTest(width=width), self.fixture.page(width, workspace=data, api=evaluate) as (page, requests):
+                self.fixture.ready(page, '/trades/calculator?front_office=1')
+                page.select_option('#trade-partner', '2')
+                self.assertEqual(page.locator('#trade-board + .tw-calculator').count(), 1)
+                picker = page.locator('#trade-sent-board')
+                self.assertEqual(picker.locator('[data-picker-group]').all_text_contents(), ['WR', 'Draft picks'])
+                self.assertEqual(picker.locator('button[data-asset-id]').evaluate_all(
+                    'els=>els.map(e=>e.dataset.assetId)'), ['player:a', 'player:c', 'player:b', 'player:d', 'player:missing',
+                                                          'pick:2028:1:3', 'pick:2028:2:3'])
+                for side, asset in (('sent', 'player:a'), ('received', 'player:x')):
+                    page.locator(f'[data-add-side="{side}"]').click()
+                    self.assertEqual(page.locator(f'#trade-{side}-board input').evaluate('e=>e===document.activeElement'), True)
+                    page.locator(f'#trade-{side}-board button[data-asset-id="{asset}"]').click()
+                self.assertEqual(page.locator('.tw-calculator + #trade-board').count(), 1)
+                gauge = page.locator('#trade-balance > .tw-valuation-gauge')
+                difference = '−600 Custom points' if mode == 'custom' else '+200 Market points'
+                self.assertEqual(gauge.get_attribute('data-balance'), expected)
+                self.assertIn(difference, gauge.inner_text())
+                offset = float(gauge.locator('.tw-gauge-pointer').evaluate('e=>parseFloat(e.style.left)'))
+                self.assertTrue(offset < 38 if expected == 'give' else offset > 62)
+                target = os.environ.get('DTOS_TRADE_REDESIGN_EVIDENCE')
+                if target:
+                    page.locator('.tw-calculator').screenshot(path=str(Path(target, f'build-{width}.png')))
+                self.assertEqual(requests, [])
+                original = self.state(page)['currentProposal']
+                page.locator('#trade-run').click()
+                result = page.locator('#trade-result')
+                result.locator('.tw-projected-points > summary').wait_for()
+                self.assertIn('REJECT', result.inner_text())
+                if width == 320:
+                    packages = result.locator('.tw-review-packages > section')
+                    sent, received = (packages.nth(index).bounding_box() for index in range(2))
+                    self.assertGreaterEqual(received['y'], sent['y'] + sent['height'])
+                    self.assertAlmostEqual(received['width'], sent['width'], delta=1)
+                self.assertIn(difference, result.locator('.tw-valuation-gauge').inner_text())
+                result.locator('.tw-projected-points > summary').press('Enter')
+                table = result.locator('.tw-projected-table')
+                self.assertIn('0.00', table.inner_text())
+                self.assertIn('The projected lineup after the trade', table.locator('tbody tr').first.inner_text())
+                self.assertIn('0.00 · partial total', table.locator('tbody tr').last.inner_text())
+                self.assertIn('Partial · weeks 14', table.inner_text())
+                self.assertIn('Missing weeks 15', table.inner_text())
+                self.assertIn('No projected lineups were recorded.', table.inner_text())
+                self.assertIn('Weeks 14, 15', table.inner_text())
+                self.assertNotIn('Unavailable', table.inner_text())
+                self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
+                if target:
+                    result.locator('.tw-evaluation-overview').screenshot(path=str(Path(target, f'evaluated-{width}.png')))
+                page.locator('#trade-edit').click()
+                self.assertEqual(self.state(page)['currentProposal'], original)
+                self.assertEqual([path for path, _ in requests], ['evaluate'])
+
+    def test_even_band_boundaries_have_the_same_exact_value_in_build_and_review(self):
+        cases = [
+            (99, 100, 'even', '+1'), (100, 99, 'even', '−1'),
+            (95, 100, 'even', '+5'), (100, 95, 'even', '−5'),
+            (94.999, 100, 'receive', '+5.001'), (100, 94.999, 'give', '−5.001'),
+        ]
+        for mode, width in [('neutral', 320), ('custom', 390)]:
+            for sent, received, expected, signed in cases:
+                with self.subTest(mode=mode, sent=sent, received=received):
+                    data = copy.deepcopy(self.data)
+                    data['teams'][0]['assets'][0]['trade_value'] = sent
+                    data['teams'][1]['assets'][0]['trade_value'] = received
+                    data['personalization'] = {
+                        'mode': mode, 'revision': 1, 'available': True, 'method_label': 'Absolute Slot',
+                        'values': {'player:a': sent, 'player:x': received},
+                    }
+                    values = {'availability': 'full', 'sent': {'total': sent}, 'received': {'total': received}}
+
+                    def evaluate(route, payload):
+                        self.assertEqual(payload['valuation_mode'], mode)
+                        route.fulfill(json={'evaluation': {
+                            'recommendation': 'REJECT', 'assessment_state': {'state': 'fresh_complete', 'recommendation_supported': True},
+                            'personalization': {'mode': mode, 'method': 'personal-current-market-slot-curve-v1'},
+                            'market_evidence': values, 'personal_value_evidence': values,
+                        }})
+
+                    with self.fixture.page(width, workspace=data, api=evaluate) as (page, requests):
+                        self.build(page)
+                        draft = page.locator('#trade-balance > .tw-valuation-gauge')
+                        page.locator('#trade-run').click()
+                        review = page.locator('#trade-result .tw-valuation-gauge')
+                        review.wait_for()
+                        for gauge in (draft, review):
+                            self.assertEqual(gauge.get_attribute('data-balance'), expected)
+                            self.assertEqual(gauge.locator('.tw-gauge-difference').inner_text().split()[0], signed)
+                            position = float(gauge.locator('.tw-gauge-pointer').evaluate('e=>parseFloat(e.style.left)'))
+                            self.assertEqual('Even' in gauge.locator('.tw-market-verdict').inner_text(), expected == 'even')
+                            if expected == 'even':
+                                self.assertTrue(38 < position < 62)
+                                self.assertEqual(position > 50, received > sent)
+                            elif expected == 'receive':
+                                self.assertGreater(position, 62)
+                            else:
+                                self.assertLess(position, 38)
+                        self.assertEqual([path for path, _ in requests], ['evaluate'])
 
     def test_preview_keep_adopt_reload_exact_pick_and_advanced_preserve_package(self):
         with self.fixture.page(workspace=self.data, api=self.balancing) as (page, requests):

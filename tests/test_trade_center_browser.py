@@ -198,7 +198,7 @@ class TradeCenterBrowserTests(unittest.TestCase):
             page.keyboard.press("Enter")
             self.assertEqual(page.locator("#trade-sent-chips .tw-asset").count(), 2)
             page.click("#trade-run")
-            page.locator('#trade-result h3').wait_for()
+            page.locator('#trade-result[data-assessment=true] > .tw-evaluation-overview').wait_for()
             self.assertEqual(requests[0]["assets_sent"], ["a", "p"])
             self.assertEqual(requests[0]["assets_received"], ["x", "y"])
 
@@ -207,7 +207,7 @@ class TradeCenterBrowserTests(unittest.TestCase):
             page.get_by_role("button", name="My assets", exact=True).click()
             page.locator('#trade-sent-board button[data-asset-id="d"]').click()
             page.click("#trade-run")
-            page.locator('#trade-result h3').wait_for()
+            page.locator('#trade-result[data-assessment=true] > .tw-evaluation-overview').wait_for()
             self.assertEqual(requests[1]["assets_sent"], ["a", "p", "d"])
 
             page.click("#trade-adjust")

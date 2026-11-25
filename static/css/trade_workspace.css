@@ -131,3 +131,44 @@ body:has(#trade-builder) .ds-page-header>div:first-child{display:flex;flex-wrap:
 .tw-owner-header{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:12px}.tw-owner-header>h3{flex:1 1 12rem;min-width:0;margin:0;overflow-wrap:anywhere}.tw-owner-header>a{flex:0 0 auto;min-height:44px;display:flex;align-items:center}
 
 .tw-target-actions{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start}.tw-target-actions>a{min-width:0;max-width:100%;overflow-wrap:anywhere}
+
+/* Build and review share the same package and valuation hierarchy. */
+.tw-workspace .tw-intent-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;padding:4px;background:var(--surface-elevated);border:1px solid var(--border);border-radius:12px}
+.tw-workspace .tw-intent-nav a{justify-content:center;text-align:center;border:0;border-radius:8px;padding:6px;line-height:1.2}
+.tw-workspace .tw-intent-nav a[aria-current=page]{background:var(--accent);color:#0c1908}
+.tw-workspace .tw-calculator{border-color:var(--border);background:var(--surface);padding:12px}
+.tw-draft-packages,.tw-gauge-totals{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.tw-review-packages{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(160px,100%),1fr));gap:8px}
+.tw-draft-packages>section,.tw-review-packages>section,.tw-gauge-totals>div{padding:10px;border:1px solid var(--border);border-radius:10px;min-width:0;overflow-wrap:anywhere;background:var(--surface-elevated)}
+.tw-draft-packages h3,.tw-review-packages h4{margin:0 0 4px}
+.tw-draft-packages .tw-add-asset{width:100%;color:var(--accent);border-color:var(--accent);padding-inline:6px}
+.tw-draft-packages .tw-calculator-asset{padding:6px 0;border-bottom:1px solid var(--border)}
+.tw-draft-packages .tw-calculator-asset button{padding-inline:7px}
+.tw-workspace .tw-calculator #trade-balance{margin-top:10px}
+.tw-workspace .tw-calculator .tw-primary-actions>.tw-primary-action{width:100%}
+.tw-valuation-gauge{padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--surface-elevated);margin:8px 0;overflow-wrap:anywhere}
+.tw-valuation-gauge h3{margin:0}
+.tw-gauge-totals{margin:8px 0;text-align:center}
+.tw-gauge-totals dt{color:var(--muted)}
+.tw-gauge-totals dd{margin:0;font-size:1.35rem;font-weight:750;font-variant-numeric:tabular-nums}
+.tw-gauge-difference{margin:6px 0 0;font-size:1.55rem;font-weight:800;text-align:center}
+.tw-valuation-gauge .tw-market-verdict{margin:0 0 8px;text-align:center}
+.tw-valuation-gauge .tw-gauge-track{position:relative;display:block;height:27px;border:1px solid #798286;border-radius:20px;overflow:visible;background:linear-gradient(180deg,#0006,transparent 52%,#0005),linear-gradient(90deg,#843e37 0 38%,#515b62 38% 62%,#367845 62%);box-shadow:inset 0 1px 4px #000b;margin:8px 0 4px}
+.tw-valuation-gauge .tw-gauge-track::before{content:"";position:absolute;inset:auto 10px 4px;height:6px;background:repeating-linear-gradient(90deg,#fff7 0 1px,transparent 1px 12.5%)}
+.tw-valuation-gauge .tw-gauge-pointer{position:absolute;top:50%;width:12px;height:12px;background:#15191b;border:2px solid #fff;transform:translate(-50%,-50%) rotate(45deg);box-shadow:0 0 3px #000}
+.tw-gauge-labels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;text-align:center}
+.tw-trade-essentials{padding:8px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface)}
+.tw-trade-essentials p{margin:4px 0}
+.tw-projected-table{border-collapse:collapse;width:100%;table-layout:fixed;margin:4px 0}
+.tw-projected-table caption,.tw-projected-table small{color:var(--muted)}
+.tw-projected-table td,.tw-projected-table th{padding:6px;border:1px solid var(--border);vertical-align:top;overflow-wrap:anywhere}
+.tw-projected-table small{display:block;margin-top:4px}
+.tw-review-packages ul{margin:6px 0;padding-inline-start:16px}
+.tw-offer-summary .tw-offer-verdict{font-weight:700;margin:0;color:var(--text-primary)}
+.tw-offer-summary .tw-offer-effects{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+@media(max-width:540px){.tw-draft-packages{grid-template-columns:1fr}.tw-workspace .tw-valuation-gauge{padding:8px}.tw-gauge-totals>div{padding:5px}.tw-gauge-labels{font-size:.9rem}}
+@media(max-width:540px){
+  .tw-workspace .tw-intent-nav{padding:0}
+  .tw-workspace .tw-side-tabs{margin:8px 0}
+  .tw-workspace .tw-owner-header{margin-bottom:6px}
+}

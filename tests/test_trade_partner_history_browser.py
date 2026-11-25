@@ -155,7 +155,13 @@ class TradePartnerHistoryBrowserTests(TestCase):
                 self.assertTrue(item['label'])
                 if item['kind'] == 'pick':
                     self.assertEqual(item['asset_id'], f"{item['year']}-R{item['round']}-{item['original_franchise']}")
-        self.assertEqual(page.locator('#trade-result .tw-offer-review').first.locator(':scope > p').filter(has_text=re.compile(r'^You (send|receive):')).all_text_contents(), package)
+        def reviewed_package():
+            sections = page.locator('#trade-result .tw-offer-review').first.locator('.tw-review-packages > section')
+            return [
+                f"{section.locator('h4').inner_text()}: " + ' + '.join(section.locator('li').all_text_contents())
+                for section in sections.all()
+            ]
+        self.assertEqual(reviewed_package(), package)
         rows = []
         with patch('services.sleeper.sleeper_get', side_effect=AssertionError('navigation must not acquire a provider')):
             for width, height in [(320,432), (375,667), (390,844), (1280,900)]:
@@ -171,7 +177,7 @@ class TradePartnerHistoryBrowserTests(TestCase):
                 exact = {k:proposal[k] for k in ('partner_roster_id','assets_sent','assets_received')}
                 self.assertEqual(exact, expected)
                 self.assertEqual(proposal['preview_presentation'], recorded)
-                retained_package = page.locator('#trade-result .tw-offer').first.locator(':scope > p').filter(has_text=re.compile(r'^You (send|receive):')).all_text_contents()
+                retained_package = reviewed_package()
                 self.assertEqual(len(retained_package), 2)
                 for index, (side, prefix) in enumerate((('send', 'You send: '), ('receive', 'You receive: '))):
                     text = retained_package[index]

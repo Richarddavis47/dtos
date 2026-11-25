@@ -77,7 +77,7 @@ class BuilderPlainEnglishBrowserTests(unittest.TestCase):
                 self.assertIn('Active league · Day Traders & Friends <not markup>', page.locator('#trade-context').inner_text())
                 self.assertNotIn('league-1', page.locator('#trade-context').inner_text())
                 self.assertEqual(page.locator('#trade-context not').count(), 0)
-                balance = page.locator('#trade-balance').inner_text()
+                balance = ' '.join(page.locator('#trade-balance').inner_text().split())
                 self.assertIn('Market comparison', balance)
                 self.assertIn('You send: 611', balance)
                 self.assertIn('You receive: 929', balance)
