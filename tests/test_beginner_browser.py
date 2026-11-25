@@ -204,6 +204,7 @@ class BeginnerBrowserTests(unittest.TestCase):
                 self.assertEqual(page.get_by_label('Player or pick', exact=True).input_value(), '')
                 page.reload()
                 page.get_by_label('Player or pick', exact=True).fill('2029 Round 2')
+                page.get_by_text("Ownership and sorting", exact=True).click()
                 page.get_by_label('Position', exact=True).select_option('PICK')
                 page.get_by_role('button', name='Search market').click()
                 self.assertEqual(page.locator('.market-asset').count(), 3)

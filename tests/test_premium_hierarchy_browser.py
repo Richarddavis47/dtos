@@ -103,20 +103,24 @@ class PremiumSharedJourneyTests(journey.ProductBrowserJourneyTests):
                 row["boxes"]["searchHeading"]["y"], 400 if width < 760 else 560
             )
             keyboard_disclosure(self, page, page.locator(".ds-page-guide>summary"))
-            for rank in page.locator(".market-rank").all():
-                fit = rank.evaluate("""e=>{const r=e.getBoundingClientRect(),t=document.createRange();t.selectNodeContents(e);const b=t.getBoundingClientRect(),p=e.parentElement.querySelector('.player-portrait');return {width:e.clientWidth,scroll:e.scrollWidth,textLeft:b.left,textRight:b.right,left:r.left,right:r.right,bottom:r.bottom,portraitLeft:p?.getBoundingClientRect().left,portraitTop:p?.getBoundingClientRect().top,font:parseFloat(getComputedStyle(e).fontSize)}}""")
-                self.assertLessEqual(fit["scroll"], fit["width"])
-                self.assertGreaterEqual(fit["textLeft"], fit["left"])
-                self.assertLessEqual(fit["textRight"], fit["right"])
-                self.assertGreaterEqual(fit["font"], 12)
-                word = rank.evaluate("""e=>{const s=getComputedStyle(e),c=document.createElement('canvas').getContext('2d');c.font=s.font;return c.measureText('Result').width+parseFloat(s.paddingLeft)+parseFloat(s.paddingRight)}""")
-                self.assertLessEqual(word, fit["width"], "Result label must fit as a whole word")
-                if fit["portraitLeft"] is not None:
-                    self.assertTrue(
-                        fit["right"] <= fit["portraitLeft"]
-                        or fit["bottom"] <= fit["portraitTop"],
-                        "Result label must not overlap the player portrait",
-                    )
+            for asset in page.locator(".market-row").all():
+                fit = asset.evaluate("""e=>{
+                    const name=e.querySelector('.market-row-name'), price=e.querySelector('.market-row-price'),
+                          change=e.querySelector('.market-row-change');
+                    const nameBox=name.getBoundingClientRect(), priceBox=price.getBoundingClientRect(),
+                          changeBox=change.getBoundingClientRect(), rowBox=e.getBoundingClientRect();
+                    return {height:rowBox.height,nameRight:nameBox.right,priceLeft:priceBox.left,
+                            priceRight:priceBox.right,changeLeft:changeBox.left,
+                            nameWidth:name.clientWidth,nameScroll:name.scrollWidth,
+                            changeWidth:change.clientWidth,changeScroll:change.scrollWidth,
+                            font:parseFloat(getComputedStyle(name.querySelector('b')).fontSize)};
+                }""")
+                self.assertGreaterEqual(fit["height"], 44)
+                self.assertLessEqual(fit["nameRight"], fit["priceLeft"])
+                self.assertLessEqual(fit["priceRight"], fit["changeLeft"])
+                self.assertLessEqual(fit["nameScroll"], fit["nameWidth"])
+                self.assertLessEqual(fit["changeScroll"], fit["changeWidth"])
+                self.assertGreaterEqual(fit["font"], 14)
         if path == "/":
             home_tools = page.locator("#home-more-tools > summary")
             keyboard_disclosure(self, page, home_tools)
@@ -333,7 +337,7 @@ class PremiumPreparedBrowserTests(unittest.TestCase):
                         "Neutral Market",
                     )
                     self.assertIn(
-                        "200", page.locator(".market-value").first.inner_text()
+                        "200", page.locator(".market-row-price").first.inner_text()
                     )
                     page.locator("#market-search").fill("Player")
                     page.get_by_role("button", name="Search market", exact=True).click()

@@ -7,18 +7,22 @@ from urllib.parse import urlencode
 from src.ui.customer_experience import plain_reason, readable_time
 
 
+def relevance_reason(original):
+    reason = plain_reason(original)
+    if reason.startswith('Roster evidence is provisional or incomplete;'):
+        reason = 'Your roster comparison is provisional or incomplete, so personalized matches are not shown. Neutral prices and movement are still available.'
+    reason = reason.replace('Compatible prepared roster projections are unavailable for this league.', 'Roster projections are not ready for this league.').replace('A matching prepared roster comparison is unavailable for this league, week, scoring and availability.', 'This week’s roster comparison cannot yet be verified.')
+    return reason
+
+
 def movement_panel(view, market_query):
     def text(value):
         return escape(str(value))
 
-    reason = plain_reason(view["reason"])
-    if reason.startswith('Roster evidence is provisional or incomplete;'):
-        reason = 'Your roster comparison is provisional or incomplete, so personalized matches are not shown. Neutral prices and movement are still available.'
-    reason = reason.replace('Compatible prepared roster projections are unavailable for this league.', 'Roster projections are not ready for this league.').replace('A matching prepared roster comparison is unavailable for this league, week, scoring and availability.', 'This week’s roster comparison cannot yet be verified.')
     html = [
         '<section class="card" id="market-roster-movement" style="min-width:0;overflow-wrap:anywhere" aria-labelledby="market-roster-title" tabindex="-1">',
         '<h2 id="market-roster-title">Market movement and your roster</h2>',
-        "<p>" + text(reason) + "</p>",
+        "<p>" + text(relevance_reason(view["reason"])) + "</p>",
         "<details><summary>Roster relevance sources</summary><p>" + text(view["reason"]) + "</p></details>",
         f'<p class="muted">Showing up to three from {view["sampled"]} assets on this page. No trade has been evaluated.</p>',
     ]

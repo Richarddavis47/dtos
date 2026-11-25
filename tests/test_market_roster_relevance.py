@@ -93,7 +93,7 @@ class MarketNeedFixture:
 
         def market_route(route):
             path = getattr(route, "path", "")
-            if path == "/market" or path.startswith("/api/market/"):
+            if path in {"/market", "/static/css/market_directory.css"} or path.startswith("/api/market/"):
                 return True
             original = getattr(route, "original_router", None)
             return bool(

@@ -1,3 +1,9 @@
+## v1.22.65 / build 2280 — Phone-first Market
+
+- Scan neutral prices, league owners and dated changes, then open a row for evidence or an editable Trade For target.
+- Market sorts the full filtered result before pagination. My DTOS keeps the saved order and existing valuation methods.
+- Back returns to the same Market view and expanded asset.
+
 ## v1.22.64 / build 2279 — Phone-first Trade Center
 
 Trade Center puts editable packages, exact picks and the active valuation comparison up front. Reviews show both teams’ selected-week and later-week projected lineup changes where supported, with the weeks and coverage listed. Existing decisions, search controls and supporting evidence remain available.

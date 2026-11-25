@@ -7,26 +7,18 @@ identify evidence; existing manager membership and target ownership authorize it
 from datetime import datetime, timezone
 from hashlib import sha256
 import json
-from math import isfinite
 from urllib.parse import urlencode
 
 from services.team_trade_need import prepared_need
 from src.core.intelligence.roster_diagnostics import prepared_diagnostics
 from src.core.market_trends.current import current_comparison
+from src.core.market_trends.models import has_comparable_movement
 from src.core.player_ownership import PlayerOwnershipIndex
 from src.platform.account_context import current_account
 from src.platform.league_context import current_league_context
 
 SAMPLE_LIMIT = 10
 CARD_LIMIT = 3
-
-
-def _number(value):
-    return (
-        isinstance(value, (int, float))
-        and not isinstance(value, bool)
-        and isfinite(value)
-    )
 
 
 def need_context(data, roster_id, *, snapshot=None, reader=None):
@@ -140,7 +132,7 @@ def _age(stamp):
         return "Observation age unknown"
 
 
-def movement_inputs(rows):
+def movement_inputs(rows, selected=""):
     """Neutral, bounded DTO alongside the existing cached page; no runtime owner."""
     fields = (
         "asset_id",
@@ -154,7 +146,7 @@ def movement_inputs(rows):
         "current_qualification",
     )
     result = []
-    for row in rows[:SAMPLE_LIMIT]:
+    for row in _sample(rows, selected):
         trend = row.get("market_trend") or {}
         provenance = trend.get("provenance") or {}
         result.append(
@@ -184,24 +176,25 @@ def movement_inputs(rows):
     return result
 
 
+def _sample(rows, selected):
+    sample = rows[:SAMPLE_LIMIT]
+    if selected:
+        sample += [row for row in rows[SAMPLE_LIMIT:] if row.get("asset_id") == selected][:1]
+    return sample
+
+
 def movement_view(
-    data, rows, roster_id, ownership, *, market_data=None, snapshot=None, reader=None
+    data, rows, roster_id, ownership, *, market_data=None, snapshot=None, reader=None,
+    selected="",
 ):
     need, reason = need_context(data, roster_id, snapshot=snapshot, reader=reader)
     sample = rows[:SAMPLE_LIMIT]
     candidates = []
-    for row in sample:
+    selected_card = None
+    for index, row in enumerate(_sample(rows, selected)):
         trend = row.get("market_trend") or {}
-        if (
-            not _number(trend.get("magnitude"))
-            or trend.get("comparison_reasons")
-            or trend.get("comparison_units") != "0-1000"
-            or not trend.get("comparison_start_at")
-            or not trend.get("comparison_end_at")
-        ):
-            continue
         identity = str(row.get("asset_id") or "")
-        if trend.get("asset_id") != identity:
+        if not has_comparable_movement(trend, identity):
             continue
         resolved = (
             ownership.resolve(identity[7:], roster_id)
@@ -238,18 +231,20 @@ def movement_view(
             if token
             else None
         )
-        candidates.append(
-            dict(
-                asset_id=identity,
-                name=str(row.get("display_name") or identity)[:100],
-                trend=trend,
-                related=related,
-                href=href,
-                source=source,
-                age=_age(trend["comparison_end_at"]),
-                value=(row.get("values") or {}).get("market_value"),
-            )
+        card = dict(
+            asset_id=identity,
+            name=str(row.get("display_name") or identity)[:100],
+            trend=trend,
+            related=related,
+            href=href,
+            source=source,
+            age=_age(trend["comparison_end_at"]),
+            value=(row.get("values") or {}).get("market_value"),
         )
+        if index < SAMPLE_LIMIT:
+            candidates.append(card)
+        if identity == selected:
+            selected_card = card
     related = [row for row in candidates if row["related"]]
     return dict(
         need=need,
@@ -257,4 +252,5 @@ def movement_view(
         sampled=len(sample),
         cards=(related or candidates)[:CARD_LIMIT],
         has_related=bool(related),
+        selected_card=selected_card,
     )

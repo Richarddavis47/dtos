@@ -11,6 +11,7 @@ from typing import Any, Callable
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 
+from services.market_navigation import market_return
 from src.core.request_execution import run_manager_read
 from src.platform.account_context import current_account, SESSION_COOKIE
 
@@ -79,7 +80,7 @@ def create_personal_rankings_router(*, service: Any, require_data: Callable,
                         media_type='text/css', headers={'Cache-Control': 'no-cache'})
 
     @router.get('/account/my-dtos', response_class=HTMLResponse)
-    async def editor(request: Request):
+    async def editor(request: Request, from_market: str = "", market_league: str = ""):
         account = account_context(request, allow_no_league=True)
         if account.membership is None:
             return RedirectResponse('/account/leagues', status_code=303, headers=_HEADERS)
@@ -111,7 +112,7 @@ def create_personal_rankings_router(*, service: Any, require_data: Callable,
 <details id="personal-settings" class="personal-explanation"><summary>Ranking settings &amp; explanation</summary>
 <p>Rank players and exact draft picks in your own order. Neutral keeps Market values; Custom uses your saved order.</p>
 <p id="personal-scope" class="muted"></p><p id="personal-mode-description">Neutral values. Your saved rankings are preserved.</p>
-<div class="personal-actions"><button class="btn" id="personal-reload" type="button">Reload rankings</button><button class="btn" id="personal-restart" type="button" disabled>Restart Rankings</button><a class="btn" href="/trades">Trade Center</a><a class="btn" href="/market">Market</a></div>
+<div class="personal-actions"><button class="btn" id="personal-reload" type="button">Reload rankings</button><button class="btn" id="personal-restart" type="button" disabled>Restart Rankings</button><a class="btn" href="/trades">Trade Center</a><a class="btn" href="<!--neutral-market-link-->">Market</a></div>
 <p id="personal-method">How personal values are assigned will appear here when rankings load.</p><p>Target and Avoid guide suggestions. Protect keeps an exact owned asset out of generated outgoing offers. These saved choices are separate from temporary Trade choices; you can still evaluate a manual offer with a conflict warning.</p><p>Tier breaks organize your list without making unlike assets equally valuable. Restart Rankings replaces your order and tiers with the latest Market order only after confirmation.</p></details>
 <ol id="personal-list" class="personal-list" aria-label="Overall asset rankings"></ol>
 <nav class="personal-pagination" aria-label="Ranking pages at end"><button class="btn" id="personal-previous-bottom" type="button" disabled>Previous</button><span id="personal-page-bottom"></span><button class="btn" id="personal-next-bottom" type="button" disabled>Next</button></nav>
@@ -123,6 +124,8 @@ def create_personal_rankings_router(*, service: Any, require_data: Callable,
 <dialog id="personal-remove-dialog" aria-labelledby="personal-remove-title" aria-describedby="personal-remove-description"><h3 id="personal-remove-title">Remove this asset from Custom ordering?</h3><p id="personal-remove-description"></p><p>This removes only this asset’s saved rank and tier break. Other assets keep their relative order and tier breaks. All Target/Avoid/Protect choices stay saved. Personal values are recalculated from the remaining ranked assets’ current Market prices. This does not change your roster or Market prices.</p><p>To include this asset in your ranking list again, use the separate Restart Rankings action. You can keep your order and retry instead if its evidence may return.</p><div class="personal-actions"><button class="btn" id="personal-remove-cancel" type="button">Keep this asset</button><button class="btn" id="personal-remove-confirm" type="button">Remove from Custom ordering</button></div></dialog>
 <dialog id="personal-restart-dialog" aria-labelledby="personal-restart-title"><h3 id="personal-restart-title">Restart Rankings?</h3><p>This replaces your customized order and tier changes with the latest available Market rankings. Your Target, Avoid and Protect preferences are preserved unless you choose to reset them too.</p><label><input id="personal-reset-flags" type="checkbox"> Also reset Target, Avoid and Protect preferences</label><div class="personal-actions"><button class="btn" id="personal-restart-cancel" type="button">Keep my rankings</button><button class="btn" id="personal-restart-confirm" type="button">Replace with latest Market rankings</button></div></dialog>
 </section><script src="/static/js/personal_rankings.js" defer></script>'''
+        neutral = market_return(from_market, market_league, account.membership.league_id) or "/market"
+        body = body.replace("<!--neutral-market-link-->", escape(neutral), 1)
         # Pin the rendered shell to the same scope as the first asynchronous read.
         body = body.replace('id="my-dtos"', 'id="my-dtos" data-league-id="' +
                             escape(str(account.membership.league_id), quote=True) +
