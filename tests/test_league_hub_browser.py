@@ -137,7 +137,9 @@ class LeagueHubBrowserTests(unittest.TestCase):
                         self.assertIn("L1", table.inner_text())
                         self.assertIn("Through completed Week 2", page.locator(".league-reporting-week").inner_text())
                         self.assertLessEqual(page.evaluate("document.documentElement.scrollWidth"), width)
-                        self.assertTrue(table.locator("td, th").evaluate_all("rows=>rows.every(r=>r.scrollWidth<=r.clientWidth+1)"))
+                        overflows = table.locator("td, th").evaluate_all(
+                            "cells=>cells.filter(e=>e.scrollWidth>e.clientWidth+1).map(e=>e.textContent)")
+                        self.assertEqual(overflows, [])
                         self.assertIn("Projected points", page.locator(".league-matchup-preview").inner_text())
                         self.assertIn("0.00", page.locator(".league-matchup-preview").inner_text())
                         self.assertIn("57.25", page.locator(".league-matchup-preview").inner_text())
