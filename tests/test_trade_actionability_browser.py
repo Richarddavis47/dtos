@@ -19,10 +19,21 @@ class TradeActionabilityBrowserTests(unittest.TestCase):
         return h, f
 
     def test_qualified_offer_preview_evaluate_and_return_at_four_widths(self):
-        h, f = self.fixture()
         evidence = []
         for width, height in ((320, 432), (375, 667), (390, 844), (1280, 900)):
-            with self.subTest(width=width), sync_playwright() as pw:
+            with self.subTest(width=width):
+                evidence.append(self._qualified_offer_journey(width, height))
+        target = os.environ.get('DTOS_TRADE_ACTIONABILITY_EVIDENCE')
+        if target:
+            Path(target, 'matched-journeys.json').write_text(json.dumps(evidence, indent=2) + '\n')
+
+    def _qualified_offer_journey(self, width, height):
+        # Each viewport is an independent account, runtime fixture and browser.
+        # End the viewport's request ledger and browser before setting up the next.
+        h = workflows.TradeWorkflowExperienceTests()
+        try:
+            f = h.fixture()
+            with sync_playwright() as pw:
                 browser = launch_chromium(pw, headless=True)
                 try:
                     page, records, _, errors, _ = h.page(browser, f, width, height)
@@ -92,16 +103,15 @@ class TradeActionabilityBrowserTests(unittest.TestCase):
                     self.assertIn(d['verdict'], page.locator('#trade-result').inner_text())
                     self.assertEqual(len([r for r in records if r['path'] == '/api/trades/generate']), 1)
                     self.assertEqual(errors, [])
-                    evidence.append({'viewport': [width, height], 'geometry': geometry, 'proposal': proposal, 'verdict': d['verdict'], 'matched_numeric_fields': True, 'errors': errors})
                     target = os.environ.get('DTOS_TRADE_ACTIONABILITY_EVIDENCE')
                     if target:
                         Path(target).mkdir(parents=True, exist_ok=True)
                         page.screenshot(path=str(Path(target, f'evaluate-{width}.png')), full_page=True)
+                    return {'viewport': [width, height], 'geometry': geometry, 'proposal': proposal, 'verdict': d['verdict'], 'matched_numeric_fields': True, 'errors': errors}
                 finally:
                     browser.close()
-        target = os.environ.get('DTOS_TRADE_ACTIONABILITY_EVIDENCE')
-        if target:
-            Path(target, 'matched-journeys.json').write_text(json.dumps(evidence, indent=2) + '\n')
+        finally:
+            h.doCleanups()
 
     def test_completed_zero_qualified_has_recorded_diagnosis_and_separate_alternatives(self):
         h, f = self.fixture()
