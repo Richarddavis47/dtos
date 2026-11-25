@@ -1,0 +1,40 @@
+{
+  "container": "1cfcc87e31027f9cc43b4dc165be4a67d7c8dffd0d9080a434b5b0bcfc291a44",
+  "source": {
+    "candidate": "ec25e5287f16755851ad094f185554905dfa3e6b",
+    "tree": "17e8b186eef8fe907b898c42db2bedc72d00b90a",
+    "baseline": "36c1628f80fbc55977f9ffc2f6efc07d250155c3",
+    "baseline_tree": "1e2cbab1823bd647021d1c3c72f05329af0f7178",
+    "branch": "feat/league-redesign-2281",
+    "version": "1.22.66",
+    "build": 2281,
+    "expected_test_count": 4683,
+    "pr": 370
+  },
+  "files": [
+    {
+      "name": "runner.py",
+      "sha256": "574308d9f64252575970aa19ce113f603ccb9927f2c6a523e8c228869fd37cac"
+    },
+    {
+      "name": "observer/sitecustomize.py",
+      "sha256": "3f43288a099e49a3ed2dea36f977b596707589eaefd2656b40a3b9c6533be2d4"
+    }
+  ],
+  "created_at": "2026-11-25T17:55:52.342927+00:00",
+  "command": [
+    "bash",
+    "/workspace/2281-league/docker-validation.sh",
+    "create",
+    "dtos-canonical-2281",
+    "/workspace/dtos-league-2281",
+    "/tmp/dtos-2281-canonical-original-wBpN",
+    "/dev/shm/dtos-2281-canonical-ec25e528",
+    "python",
+    "/output/runner.py"
+  ],
+  "wrapper_sha256": "fb089799ab3daedeafb8a45171df05d827e04a35742826fd2d1012125a789c94",
+  "fixture_free_after_container_creation": 8865034240,
+  "toolchain": "Read-only /usr and browser settings mounts from the pinned existing matching image. Thin bookworm container root avoids needless VFS copies. Real 2 GiB, 2 CPUs and no network.",
+  "status": "RUNNING_NOT_PASSED"
+}
