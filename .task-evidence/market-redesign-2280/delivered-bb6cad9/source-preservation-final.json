@@ -1,0 +1,49 @@
+{
+  "source": {
+    "candidate": "bb6cad9c2e790d216c7498b6ab919d6be7d7770a",
+    "tree": "1e2cbab1823bd647021d1c3c72f05329af0f7178",
+    "baseline": "c3e0981f3730dbde46f53b4b18901da5cd7d3f72",
+    "baseline_tree": "c4f5ae5d29bb996b1af780e2513fa27d7df34c1d",
+    "branch": "feat/market-redesign-2280",
+    "version": "1.22.65",
+    "build": 2280,
+    "expected_test_count": 4681,
+    "pr": 369
+  },
+  "passed": true,
+  "changed": [
+    "CHANGELOG.md",
+    "RELEASE_NOTES.md",
+    "app_metadata.py",
+    "dtos_app.py",
+    "routes/market.py",
+    "routes/personal_rankings.py",
+    "services/market_roster_relevance.py",
+    "src/core/asset_market/read_model.py",
+    "src/core/market_trends/models.py",
+    "src/ui/design_system.py",
+    "src/ui/market_directory.py",
+    "src/ui/market_roster_relevance.py",
+    "static/css/market_directory.css",
+    "tests/test_beginner_browser.py",
+    "tests/test_beginner_final_browser.py",
+    "tests/test_journey_corrections_browser.py",
+    "tests/test_market_directory_browser.py",
+    "tests/test_market_roster_relevance.py",
+    "tests/test_premium_hierarchy_browser.py",
+    "tests/test_trade_actionability_browser.py",
+    "tests/test_trade_conditional_summary_browser.py",
+    "tests/test_trade_workspace_browser.py"
+  ],
+  "identical_sha256": {
+    ".github/workflows/canonical-release-recovery.yml": "c824664de0eeeb0d6d1162c1e9c8fa54a0b69971545d6ede69b963287bda0492",
+    ".github/workflows/linux-market-lifecycle.yml": "ed374f7fa6d474923e85e890fb28a5d4433b8759dfd4d91466775f8eb6d63b35",
+    ".github/workflows/validation-tooling.yml": "8c7c62569c61e423cfe3f6e00b99f4e460bfe5c9b2d38885bf35eff06f60d132",
+    "routes/api.py": "afa1e7ec901f1cb83024f83fe146271ab43433802f79df6371a5837b4a9fcf70",
+    "routes/matchups.py": "4e649a9f4ec19d47b8a023653c2d6bfcc5fdca7e511f876972cb6f80f9635dd4",
+    "src/core/intelligence/lineup_fallback.py": "12ed1a977ad2fa83e059871861d6f5494479f8f46093164718c2d4b7b6d0c867",
+    "src/core/trade_intelligence/lineup.py": "3a73449b4c9c61257eb57e067bd1336c0c0e9532341a2e7ecba8066e809c1adc",
+    "src/platform/lifecycle.py": "0f0802d3cc802a91432bee0af2753d26c21ec655414cab230398720c1a1dcd36"
+  },
+  "changed_prior_paths": {}
+}

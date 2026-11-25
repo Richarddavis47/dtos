@@ -1,0 +1,24 @@
+{
+  "source": {
+    "candidate": "bb6cad9c2e790d216c7498b6ab919d6be7d7770a",
+    "tree": "1e2cbab1823bd647021d1c3c72f05329af0f7178",
+    "baseline": "c3e0981f3730dbde46f53b4b18901da5cd7d3f72",
+    "baseline_tree": "c4f5ae5d29bb996b1af780e2513fa27d7df34c1d",
+    "branch": "feat/market-redesign-2280",
+    "version": "1.22.65",
+    "build": 2280,
+    "expected_test_count": 4681,
+    "pr": 369
+  },
+  "passed": true,
+  "fixture_only": true,
+  "physical_safari": false,
+  "checks": [
+    "The 64 byte-decoded pixel matches reuse the accepted build 2279 visual inspection with unchanged layouts.",
+    "All 12 changed Market, custom rankings and Commissioner pairs were visually inspected at 320, 375, 390 and 1280 px.",
+    "Market puts mode, search and position controls above the rows. On narrow screens long names wrap, the league selector stays separate from DTOS, and the rows retain explicit missing-value and missing-movement text.",
+    "Current matched 320, 390 and 1280 captures show viewable full details, named roster relevance, dated movement, supported zero, exact Trade For and the limitations disclosure with keyboard focus.",
+    "Custom rankings retains the existing editor and updates only the active Market navigation state. Commissioner changes in the paired pixels are the fixture last-visit dates.",
+    "Rendered Chromium fixtures only. Authenticated signed-in production and physical iPhone Safari remain unverified."
+  ]
+}
