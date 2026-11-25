@@ -1,0 +1,32 @@
+{
+  "timestamp": "2026-11-25T07:24:39.797050+00:00",
+  "level": "INFO",
+  "logger": "dtos.trade_resources",
+  "message": "trade_admission",
+  "request_id": "system",
+  "event": "trade_admission",
+  "diagnostic": {
+    "schema": "trade-resource-v1",
+    "observation": {
+      "admitted": false,
+      "reason": "capacity",
+      "current_bytes": 1819353088,
+      "limit_bytes": 2147483648,
+      "raw_headroom_bytes": 328130560,
+      "clean_inactive_file_bytes": 129003520,
+      "conditional_file_credit_bytes": 64501760,
+      "admission_headroom_bytes": 392632320,
+      "working_bytes": 268435456,
+      "safety_bytes": 134217728,
+      "events": {
+        "oom": 0,
+        "oom_kill": 0
+      }
+    },
+    "recovery": {
+      "expired_entries": 0,
+      "idle_worker_retired": false,
+      "allocator_trimmed": true
+    }
+  }
+}
