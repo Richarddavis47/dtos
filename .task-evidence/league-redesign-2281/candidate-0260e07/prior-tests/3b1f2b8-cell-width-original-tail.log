@@ -1,0 +1,22 @@
+ok
+
+======================================================================
+FAIL: test_tables_and_selected_matchup_scores_through_normal_routes (tests.test_league_hub_browser.LeagueHubBrowserTests.test_tables_and_selected_matchup_scores_through_normal_routes) (width=320)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_league_hub_browser.py", line 142, in test_tables_and_selected_matchup_scores_through_normal_routes
+    self.assertEqual(overflows, [])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+AssertionError: Lists differ: ['Record', 'Streak'] != []
+
+First list contains 2 additional elements.
+First extra element 0:
+'Record'
+
+- ['Record', 'Streak']
++ []
+
+----------------------------------------------------------------------
+Ran 85 tests in 78.368s
+
+FAILED (failures=1)

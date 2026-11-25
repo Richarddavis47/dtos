@@ -1,0 +1,22 @@
+{"timestamp":"2026-11-25T17:19:15.771634+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-25T17:19:15.783588+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/home-opportunities.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-25T17:19:15.793740+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-25T17:19:15.806760+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-25T17:19:15.878925+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/home-opportunities?front_office=1&protected=%5B%5D&excluded=%5B%5D \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-25T17:19:17.031386+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/league \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-25T17:19:17.059363+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/league_hub.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+
+======================================================================
+FAIL: test_tables_and_selected_matchup_scores_through_normal_routes (tests.test_league_hub_browser.LeagueHubBrowserTests.test_tables_and_selected_matchup_scores_through_normal_routes) (width=320)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/tests/test_league_hub_browser.py", line 140, in test_tables_and_selected_matchup_scores_through_normal_routes
+    self.assertTrue(table.locator("td, th").evaluate_all("rows=>rows.every(r=>r.scrollWidth<=r.clientWidth+1)"))
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true
+
+----------------------------------------------------------------------
+Ran 85 tests in 81.745s
+
+FAILED (failures=1)
