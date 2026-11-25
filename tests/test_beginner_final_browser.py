@@ -607,6 +607,8 @@ class FinalNavigationBrowserTests(unittest.TestCase):
                     page.reload()
                     back = page.get_by_role("link", name="← Back to Market results")
                     back.click()
+                    page.wait_for_url(selected)
+                    page.locator(".market-asset").first.wait_for()
                     self.assertEqual(page.url, selected)
                     self.assertEqual(page.locator(".market-asset").count(), 3)
                     page.go_back()
