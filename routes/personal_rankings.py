@@ -86,7 +86,7 @@ def create_personal_rankings_router(*, service: Any, require_data: Callable,
             return RedirectResponse('/account/leagues', status_code=303, headers=_HEADERS)
         body = '''<link rel="stylesheet" href="/static/css/personal_rankings.css">
 <section id="my-dtos" class="personal-rankings" aria-labelledby="my-dtos-heading">
-<div class="personal-heading"><h1 id="my-dtos-heading">My DTOS</h1><div class="personal-heading-actions"><a class="btn" aria-label="Neutral Market" href="<!--neutral-market-link-->">Market</a><a class="btn" href="/account">Account</a></div></div>
+<div class="personal-heading"><h1 id="my-dtos-heading">My DTOS</h1><a class="btn" href="/account">Account</a></div>
 <div class="personal-mode" role="group" aria-label="DTOS valuation mode"><button class="btn" id="personal-neutral" type="button" aria-pressed="true" disabled>Neutral DTOS</button><button class="btn" id="personal-custom" type="button" aria-pressed="false" disabled>Custom DTOS</button></div>
 <details class="personal-method-choice" id="personal-method-choice">
 <summary id="personal-active-method">Custom pricing: Absolute Slot · compare methods</summary>
@@ -112,7 +112,7 @@ def create_personal_rankings_router(*, service: Any, require_data: Callable,
 <details id="personal-settings" class="personal-explanation"><summary>Ranking settings &amp; explanation</summary>
 <p>Rank players and exact draft picks in your own order. Neutral keeps Market values; Custom uses your saved order.</p>
 <p id="personal-scope" class="muted"></p><p id="personal-mode-description">Neutral values. Your saved rankings are preserved.</p>
-<div class="personal-actions"><button class="btn" id="personal-reload" type="button">Reload rankings</button><button class="btn" id="personal-restart" type="button" disabled>Restart Rankings</button><a class="btn" href="/trades">Trade Center</a><a class="btn" href="/market">Market</a></div>
+<div class="personal-actions"><button class="btn" id="personal-reload" type="button">Reload rankings</button><button class="btn" id="personal-restart" type="button" disabled>Restart Rankings</button><a class="btn" href="/trades">Trade Center</a><a class="btn" href="<!--neutral-market-link-->">Market</a></div>
 <p id="personal-method">How personal values are assigned will appear here when rankings load.</p><p>Target and Avoid guide suggestions. Protect keeps an exact owned asset out of generated outgoing offers. These saved choices are separate from temporary Trade choices; you can still evaluate a manual offer with a conflict warning.</p><p>Tier breaks organize your list without making unlike assets equally valuable. Restart Rankings replaces your order and tiers with the latest Market order only after confirmation.</p></details>
 <ol id="personal-list" class="personal-list" aria-label="Overall asset rankings"></ol>
 <nav class="personal-pagination" aria-label="Ranking pages at end"><button class="btn" id="personal-previous-bottom" type="button" disabled>Previous</button><span id="personal-page-bottom"></span><button class="btn" id="personal-next-bottom" type="button" disabled>Next</button></nav>
