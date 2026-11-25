@@ -64,7 +64,8 @@ class TrackerPhase2BrowserTests(unittest.TestCase):
                 production_requests = []
                 page.on('request', lambda request: production_requests.append(request.url) if '/production?' in request.url else None)
                 page.goto('http://fixture/league')
-                page.get_by_role('link', name='Transactions', exact=False).filter(has=page.locator('h3')).click()
+                page.get_by_role('navigation', name='Explore your league').get_by_role(
+                    'link', name='Transactions', exact=True).click()
                 page.locator('select[name="scope"]').select_option('all_history')
                 page.locator('select[name="type"]').select_option('trade')
                 page.get_by_role('button', name='Apply filters', exact=False).click()

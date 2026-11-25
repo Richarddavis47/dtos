@@ -79,11 +79,14 @@ class SharedPhoneDesignBrowserTests(journey.ProductBrowserJourneyTests):
         if path == "/league":
             # Complete source records now support explicitly statistical placements.
             self.assertEqual(
-                page.locator(".compact-standings .standing-rank").all_text_contents(),
-                ["#1", "#2", "#3"],
+                page.locator(".league-standings-table .league-rank").all_text_contents(),
+                ["1", "2", "3"],
             )
             self.assertEqual(page.locator(".standings-explanations").count(), 0)
-            self.assertEqual(page.locator(".standing-inline").all_text_contents(), ["🥇", "🥈", "🥉"])
+            self.assertEqual(
+                page.locator(".league-rank").evaluate_all("cells=>cells.map(e=>e.getAttribute('aria-label'))"),
+                ["#1", "#2", "#3"],
+            )
             page.locator("#standings-evidence > summary").click()
             self.assertIn("DTOS-organized", page.locator("#standings-evidence").inner_text())
             # Absent championship/source-rank evidence still cannot be manufactured.

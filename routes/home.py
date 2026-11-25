@@ -334,9 +334,8 @@ def create_home_router(
         ) + '</nav>'
         body = ('<link rel="stylesheet" href="/static/css/league_hub.css"><div class="league-hub">'
                 + league_week_heading(data, selected) + visual_standings + matchup_preview(selected, view, viewer)
-                + recap + links + preseason_analysis
+                + recap + links + preseason_analysis + observations_html
                 + '<details class="cx-evidence"><summary>Manager grades and specialist tools</summary>'
-                + observations_html
                 + '<a class="ds-action" href="/fois">Manager grades (FOIS)</a><!--league-secondary-chrome--></details></div>')
         return page("League", body)
 
