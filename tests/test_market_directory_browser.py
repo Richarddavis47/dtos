@@ -1,6 +1,5 @@
 """Exercise Market against the real indexed read model and signed-in browser routes."""
 
-import json
 import os
 from pathlib import Path
 import re
