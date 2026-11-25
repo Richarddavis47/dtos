@@ -27,14 +27,6 @@ def create_navigation_router():
             headers={"Cache-Control": "no-cache"},
         )
 
-    @router.get("/static/css/market_directory.css", include_in_schema=False)
-    async def market_stylesheet():
-        return Response(
-            (_STATIC / "css/market_directory.css").read_text(encoding="utf-8"),
-            media_type="text/css",
-            headers={"Cache-Control": "no-cache"},
-        )
-
     @router.get("/api/account/navigation-context")
     async def context():
         value = navigation_context()

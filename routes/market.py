@@ -8,6 +8,7 @@ from src.ui.customer_experience import plain_reason, readable_time
 import re
 import json
 from math import isfinite
+from pathlib import Path
 from datetime import datetime
 from html import escape
 from typing import Any, Callable
@@ -16,7 +17,7 @@ from urllib.parse import urlencode
 
 from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.encoders import jsonable_encoder
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, Response
 from starlette.concurrency import run_in_threadpool
 
 from app_metadata import BUILD_NUMBER, VERSION
@@ -159,6 +160,12 @@ def create_market_router(
 ) -> APIRouter:
     router = APIRouter(tags=["asset-market"])
     trend_service = MarketTrendService(intelligence_checkpoint_store)
+
+    @router.get("/static/css/market_directory.css", include_in_schema=False)
+    async def directory_stylesheet():
+        source = Path(__file__).resolve().parents[1] / "static/css/market_directory.css"
+        return Response(source.read_text(encoding="utf-8"), media_type="text/css",
+                        headers={"Cache-Control": "no-cache"})
 
     def current_trend_evidence(market: Any, assets: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
         return {str(asset["asset_id"]): current_comparison(

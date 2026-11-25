@@ -337,7 +337,7 @@ class PremiumPreparedBrowserTests(unittest.TestCase):
                         "Neutral Market",
                     )
                     self.assertIn(
-                        "200", page.locator(".market-value").first.inner_text()
+                        "200", page.locator(".market-row-price").first.inner_text()
                     )
                     page.locator("#market-search").fill("Player")
                     page.get_by_role("button", name="Search market", exact=True).click()
