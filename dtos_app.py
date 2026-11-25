@@ -929,6 +929,7 @@ def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLRespon
     league_name = str(((selected_state.get("data") or {}).get("league") or {}).get("name") or "Sleeper League")
     account = current_account()
     account_html = ""
+    market_screen = title == "Asset Market" and 'class="market-directory"' in body
     home_switch = title == "Home" and "<!--home-league-switch-->" in body
     csrf_html = ""
     navigation_roster_id = None
@@ -953,7 +954,7 @@ def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLRespon
         body = body.replace('<div class="thq-identity">', '<div class="thq-identity dtos-page-title">' + back, 1)
     elif own_heading:
         body = with_back(body, back)
-    header = with_back(page_header(title, league_name=league_name, last_updated=str(sync)), '' if own_heading else back)
+    header = with_back(page_header("Market" if market_screen else title, league_name=league_name, last_updated=str(sync)), '' if own_heading else back)
     sync_control = f'<form method="post" action="/sync">{csrf_html}<button class="btn" type="submit">Sync League</button></form>'
     tools = secondary_navigation()
     brand_mark = f'<a class="brand-mark" href="/" aria-label="DTOS Home">{APPLICATION_NAME}</a>'
@@ -963,10 +964,14 @@ def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLRespon
         top = f'<header class="top home-top"><div class="brand">{brand_mark}</div>{account_html}</header>'
         account_html = ""
         header = back
+    elif market_screen:
+        top = (f'<header class="top home-top market-top"><div class="brand">{brand_mark}</div>{account_html}</header>'
+               f'<div class="market-chrome-tools">{sync_control}{tools}</div>')
+        account_html = ""
     else:
         top = f'<header class="top"><div class="brand">{brand_mark}<p>{escape(league_name)} Front Office</p></div>{sync_control}{tools}</header>'
     standard_chrome = f"""<div class="ds-shell">{top}{account_html}
-{manager_navigation(title, roster_id=navigation_roster_id, include_tools=False)}</div>{header}"""
+{manager_navigation("Market" if 'id="my-dtos"' in body else title, roster_id=navigation_roster_id, include_tools=False)}</div>{header}"""
     footer = f'<footer class="footer"><details class="cx-evidence"><summary>League data · {escape(readable_time(sync))}</summary><p>Last recorded league sync: <code>{escape(str(sync))}</code>. Automatic refresh is scheduled every {SYNC_MINUTES} minutes while the service is active. Projections, results and Market prices keep their own source dates and qualifications.</p></details></footer>'
     html = f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{escape(title)} · {APPLICATION_NAME}</title><style>{CSS}</style>{navigation_head}</head>
 <body><main class="wrap">{"" if commissioner_chrome else standard_chrome}{error_html}{body}{"" if commissioner_chrome else footer}</main></body></html>"""

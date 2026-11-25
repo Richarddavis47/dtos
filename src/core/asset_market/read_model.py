@@ -396,7 +396,7 @@ class MarketReadModel:
     ) -> tuple[int, list[dict[str, Any]]]:
         clause = " AND ".join(where) if where else "1=1"
         order = "ASC" if direction.casefold() == "asc" else "DESC"
-        null_order = "ASC" if order == "DESC" else "DESC"
+        null_order = "ASC" if order == "DESC" or order_column == "market_value" else "DESC"
         with self.connection() as connection:
             total = int(connection.execute(
                 f"SELECT COUNT(*) FROM assets WHERE {clause}", parameters,

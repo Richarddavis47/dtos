@@ -11,7 +11,9 @@ from typing import Any, Callable
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 
+from services.market_navigation import market_return
 from src.core.request_execution import run_manager_read
+from src.ui.market_directory import mode_links
 from src.platform.account_context import current_account, SESSION_COOKIE
 
 _STATIC = Path(__file__).resolve().parents[1] / 'static'
@@ -79,14 +81,14 @@ def create_personal_rankings_router(*, service: Any, require_data: Callable,
                         media_type='text/css', headers={'Cache-Control': 'no-cache'})
 
     @router.get('/account/my-dtos', response_class=HTMLResponse)
-    async def editor(request: Request):
+    async def editor(request: Request, from_market: str = "", market_league: str = ""):
         account = account_context(request, allow_no_league=True)
         if account.membership is None:
             return RedirectResponse('/account/leagues', status_code=303, headers=_HEADERS)
         body = '''<link rel="stylesheet" href="/static/css/personal_rankings.css">
 <section id="my-dtos" class="personal-rankings" aria-labelledby="my-dtos-heading">
 <div class="personal-heading"><h1 id="my-dtos-heading">My DTOS</h1><a class="btn" href="/account">Account</a></div>
-<div class="personal-mode" role="group" aria-label="DTOS valuation mode"><button class="btn" id="personal-neutral" type="button" aria-pressed="true" disabled>Neutral DTOS</button><button class="btn" id="personal-custom" type="button" aria-pressed="false" disabled>Custom DTOS</button></div>
+<!--market-mode-switch--><div class="personal-mode" role="group" aria-label="DTOS valuation mode"><button class="btn" id="personal-neutral" type="button" aria-pressed="true" disabled>Neutral DTOS</button><button class="btn" id="personal-custom" type="button" aria-pressed="false" disabled>Custom DTOS</button></div>
 <details class="personal-method-choice" id="personal-method-choice">
 <summary id="personal-active-method">Custom pricing: Absolute Slot · compare methods</summary>
 <p>Your order sets your personal values. Absolute Slot uses each saved rank; Relative Priced-Order uses the order of assets with Market prices. Preview either method before choosing. Your order and saved choices stay intact.</p>
@@ -123,6 +125,8 @@ def create_personal_rankings_router(*, service: Any, require_data: Callable,
 <dialog id="personal-remove-dialog" aria-labelledby="personal-remove-title" aria-describedby="personal-remove-description"><h3 id="personal-remove-title">Remove this asset from Custom ordering?</h3><p id="personal-remove-description"></p><p>This removes only this asset’s saved rank and tier break. Other assets keep their relative order and tier breaks. All Target/Avoid/Protect choices stay saved. Personal values are recalculated from the remaining ranked assets’ current Market prices. This does not change your roster or Market prices.</p><p>To include this asset in your ranking list again, use the separate Restart Rankings action. You can keep your order and retry instead if its evidence may return.</p><div class="personal-actions"><button class="btn" id="personal-remove-cancel" type="button">Keep this asset</button><button class="btn" id="personal-remove-confirm" type="button">Remove from Custom ordering</button></div></dialog>
 <dialog id="personal-restart-dialog" aria-labelledby="personal-restart-title"><h3 id="personal-restart-title">Restart Rankings?</h3><p>This replaces your customized order and tier changes with the latest available Market rankings. Your Target, Avoid and Protect preferences are preserved unless you choose to reset them too.</p><label><input id="personal-reset-flags" type="checkbox"> Also reset Target, Avoid and Protect preferences</label><div class="personal-actions"><button class="btn" id="personal-restart-cancel" type="button">Keep my rankings</button><button class="btn" id="personal-restart-confirm" type="button">Replace with latest Market rankings</button></div></dialog>
 </section><script src="/static/js/personal_rankings.js" defer></script>'''
+        neutral = market_return(from_market, market_league, account.membership.league_id) or "/market"
+        body = body.replace("<!--market-mode-switch-->", mode_links(neutral, "#my-dtos", personal=True))
         # Pin the rendered shell to the same scope as the first asynchronous read.
         body = body.replace('id="my-dtos"', 'id="my-dtos" data-league-id="' +
                             escape(str(account.membership.league_id), quote=True) +

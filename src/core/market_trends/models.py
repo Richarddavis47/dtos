@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
 from enum import Enum
+from math import isfinite
 from typing import Any
 
 TREND_SCHEMA_VERSION = "market-trend-1"
@@ -25,6 +26,17 @@ COMPACT_TREND_FIELDS = (
     "current_qualification",
     "comparison_units",
 )
+
+
+def has_comparable_movement(trend: dict[str, Any], asset_id: str) -> bool:
+    """Recognize a dated canonical Market-points difference, including zero."""
+    value = trend.get("magnitude")
+    return bool(
+        isinstance(value, (int, float)) and not isinstance(value, bool) and isfinite(value)
+        and asset_id and trend.get("asset_id") == asset_id and not trend.get("comparison_reasons")
+        and trend.get("comparison_units") == "0-1000"
+        and trend.get("comparison_start_at") and trend.get("comparison_end_at")
+    )
 
 
 class TrendDirection(str, Enum):

@@ -1,3 +1,9 @@
+## v1.22.65 / build 2280 — Phone-first Market
+
+- Scan neutral prices, league owners and dated changes, then open a row for evidence or an editable Trade For target.
+- Market sorts the full filtered result before pagination. My DTOS keeps the saved order and existing valuation methods.
+- Back returns to the same Market view and expanded asset.
+
 ## v1.22.64 / build 2279 — Phone-first Trade Center
 
 Build a trade by adding owned players and exact picks from either side. The live value preview uses the selected Neutral or Custom method. Recommended offers can be reviewed in the same format as a manually evaluated offer. The projected-points table separates the selected week from later league weeks and identifies partial coverage.

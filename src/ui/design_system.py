@@ -24,7 +24,7 @@ class PagePresentation:
 
 def _presentation(title: str) -> PagePresentation:
     normalized = title.casefold()
-    if normalized == "asset market":
+    if normalized in ("asset market", "market"):
         return PagePresentation("Find players and exact draft picks using neutral Market prices and your league's ownership context.", "Asset Market", "View teams", "/teams", variant="search")
     if "executive profile" in normalized:
         return PagePresentation("Review this manager's process, results, confidence, and historical evidence in the active league.", "General Manager profile", "GM Leaderboard", "/fois", "League History", "/history")
