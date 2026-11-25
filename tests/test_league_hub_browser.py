@@ -124,6 +124,8 @@ class LeagueHubBrowserTests(unittest.TestCase):
                         membership.league_id = "fixture-10"
                         navigation["scope"] = "a" * 64
                         page.goto("https://dtos.test/league")
+                        expect(page.locator('[data-dtos-component="page-header"] h1')).to_have_text("League")
+                        expect(page.locator('[data-dtos-action="primary"]')).to_have_text("View matchup")
                         table = page.locator(".league-standings-table")
                         rows = table.locator("tr[data-roster-id]")
                         self.assertEqual(rows.count(), 10)

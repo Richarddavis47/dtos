@@ -4,6 +4,7 @@ from urllib.parse import urlencode
 
 from src.core.intelligence.season_calendar import matchup_calendar
 from src.core.player_value_projection.sleeper_actuals import actual_display
+from src.ui.design_system import DESIGN_SYSTEM_VERSION
 
 
 def league_week_heading(data, selected):
@@ -20,16 +21,18 @@ def league_week_heading(data, selected):
 
     previous = arrow("Previous matchup week", "‹", weeks[index - 1] if index else None)
     following = arrow("Next matchup week", "›", weeks[index + 1] if index + 1 < len(weeks) else None)
-    return ('<header class="league-heading"><h1>League</h1>'
+    return (f'<header class="league-heading" data-dtos-component="page-header" data-design-system="{DESIGN_SYSTEM_VERSION}"><h1>League</h1>'
             f'<nav aria-label="Matchup preview week">{previous}<strong>Week {selected}</strong>{following}</nav></header>')
 
 
 def matchup_preview(week, view, viewer):
     all_href = f'/matchups?week={week}'
-    heading = (f'<div class="league-section-heading"><h2 id="league-matchup-title">Week {week} matchups</h2>'
-               f'<a href="{all_href}">All matchups</a></div>')
     identity, sides = next(iter(view.get("groups", {}).items()), (None, []))
-    if identity is None or view.get("availability") != "available":
+    has_matchup = identity is not None and view.get("availability") == "available"
+    all_action = '' if has_matchup else ' data-dtos-action="primary"'
+    heading = (f'<div class="league-section-heading"><h2 id="league-matchup-title">Week {week} matchups</h2>'
+               f'<a href="{all_href}"{all_action}>All matchups</a></div>')
+    if not has_matchup:
         if not viewer:
             note = "Select your franchise to see its matchup here."
         elif not view["opponents_locked"]:
@@ -60,5 +63,5 @@ def matchup_preview(week, view, viewer):
         future = '<small>Based on the source-listed lineup. Future submissions may change.</small>' if view["period"] == "future" else ''
         content = (f'<div class="card league-matchup-preview" data-game-state="{state}">'
                    f'<div class="league-score-pair">{"".join(scores)}</div><p>{label}</p>{future}'
-                   f'<a class="ux-primary-action" href="{href}">View matchup</a></div>')
+                   f'<a class="ux-primary-action" data-dtos-action="primary" href="{href}">View matchup</a></div>')
     return f'<section class="league-matchup" aria-labelledby="league-matchup-title">{heading}{content}</section>'
