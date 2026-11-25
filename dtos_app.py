@@ -930,6 +930,7 @@ def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLRespon
     account = current_account()
     account_html = ""
     market_screen = title == "Asset Market" and 'class="market-directory"' in body
+    league_screen = title == "League" and '<!--league-secondary-chrome-->' in body
     home_switch = title == "Home" and "<!--home-league-switch-->" in body
     csrf_html = ""
     navigation_roster_id = None
@@ -964,6 +965,11 @@ def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLRespon
         top = f'<header class="top home-top"><div class="brand">{brand_mark}</div>{account_html}</header>'
         account_html = ""
         header = back
+    elif league_screen:
+        top = f'<header class="top home-top league-top"><div class="brand">{brand_mark}</div>{account_html}</header>'
+        body = with_back(body.replace("<!--league-secondary-chrome-->", sync_control + tools, 1), back)
+        account_html = ""
+        header = ""
     elif market_screen:
         top = (f'<header class="top home-top market-top"><div class="brand">{brand_mark}</div>{account_html}</header>'
                f'<div class="market-chrome-tools">{sync_control}{tools}</div>')

@@ -126,7 +126,7 @@ class StandingsPositioningBrowserTests(unittest.TestCase):
                                     summary.focus()
                                     summary.press("Enter")
                                     self.assertTrue(detail.evaluate("e=>e.open"))
-                                table = page.locator(".compact-standings")
+                                table = page.locator(".compact-standings" if path == "/" else ".league-standings-table")
                                 self.assertTrue(table.is_visible())
                                 ids = table.locator("tr[data-roster-id]").evaluate_all(
                                     "(rows)=>rows.map(e=>Number(e.dataset.rosterId))"
@@ -136,8 +136,8 @@ class StandingsPositioningBrowserTests(unittest.TestCase):
                                     table.locator(".standings-you").count(), 1
                                 )
                                 self.assertEqual(
-                                    table.locator(".playoff-boundary").count(),
-                                    1 if index == 0 else 0,
+                                    table.locator(".playoff-boundary" if path == "/" else ".league-cutoff").count(),
+                                    (1 if index == 0 else 0) if path == "/" else 1,
                                 )
                                 self.assertIn(
                                     "Sleeper records and points · DTOS-organized order",
@@ -151,7 +151,7 @@ class StandingsPositioningBrowserTests(unittest.TestCase):
                                         f"{team['wins']}-{team['losses']}-0",
                                         row.inner_text(),
                                     )
-                                    for key in ("points_for", "points_against"):
+                                    for key in (("points_for", "points_against") if path == "/" else ("points_for",)):
                                         self.assertIn(
                                             f"{team[key]:.2f}", row.inner_text()
                                         )
@@ -169,6 +169,12 @@ class StandingsPositioningBrowserTests(unittest.TestCase):
                                 evidence = page.get_by_text('Standings and playoff evidence', exact=True)
                                 evidence.focus()
                                 evidence.press('Enter')
+                                if path == "/league":
+                                    for team in active["data"]["teams"]:
+                                        self.assertIn(
+                                            f'Points Against: {team["points_against"]:.2f}',
+                                            evidence.locator("..").locator(f'#standing-evidence-{team["roster_id"]}').inner_text(),
+                                        )
                                 trophy = panel.locator(
                                     '[data-badge="champion"] summary'
                                 )

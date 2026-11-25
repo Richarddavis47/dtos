@@ -254,7 +254,7 @@ def remaining_regular_opponents(data: dict, roster_id: int) -> dict:
 
 
 def season_week_view(data: dict, week: int, projection_service, *, evidence_through_week: int | None = None,
-                     review_roster_id: int | None = None) -> dict:
+                     review_roster_id: int | None = None, preview_roster_id: int | None = None) -> dict:
     """Pin one projection generation; never substitute another week/league."""
     league = data.get("league") or {}
     current = int(data.get("week") or 0)
@@ -293,13 +293,22 @@ def season_week_view(data: dict, week: int, projection_service, *, evidence_thro
                 and candidate.get('scoring_settings', {}) == scoring):
             snapshot = candidate
     teams = {int(t["roster_id"]): t for t in data.get("teams") or [] if str(t.get("roster_id")).isdecimal()}
-    strength = compatible_profile(data, pinned) if snapshot and not historical else None
-    refresh = (projection_service.refresh_evidence(pinned) if pinned and hasattr(projection_service, 'refresh_evidence') else {})
+    preview = preview_roster_id is not None
+    strength = compatible_profile(data, pinned) if snapshot and not historical and not preview else None
+    refresh = (projection_service.refresh_evidence(pinned) if not preview and pinned and hasattr(projection_service, 'refresh_evidence') else {})
     players = data.get("players") or {}
     slots = [slot for slot in data.get("roster_positions") or league.get('roster_positions') or []
              if slot not in {"BN", "BENCH", "IR", "TAXI", "RESERVE"}]
     groups: dict[str, list] = {}
-    for row in evidence.get("rows") or []:
+    rows = evidence.get("rows") or []
+    if preview:
+        own = [row for row in rows if row["roster_id"] == preview_roster_id]
+        identity = own[0].get("matchup_id") if len(own) == 1 else None
+        pair = [row for row in rows if row.get("matchup_id") == identity] if identity is not None else []
+        ids = {row["roster_id"] for row in pair}
+        rows = pair if len(pair) == len(ids) == 2 and ids <= teams.keys() else []
+        rows.sort(key=lambda row: row["roster_id"] != preview_roster_id)
+    for row in rows:
         if component and not locked:
             continue
         rid = row["roster_id"]
@@ -341,6 +350,19 @@ def season_week_view(data: dict, week: int, projection_service, *, evidence_thro
         for index, pid in enumerate(starter_ids):
             actual = source_player_actual(row, pid, index)
             lineup.append(player_row(pid, slots[index] if index < len(slots) else "Source starter", actual))
+        supported = [p["projection"] for p in lineup if p["projection"] is not None]
+        total = float(sum((Decimal(str(value)) for value in supported), Decimal(0))) if supported else None
+        complete = bool(slots) and len(lineup) == len(slots) and len(supported) == len(slots)
+        score = number(row.get("custom_points"))
+        if score is None:
+            score = number(row.get("points"))
+        if preview:
+            groups.setdefault(str(row["matchup_id"]), []).append({
+                "roster_id": rid, "team": team.get("team_name") or f"Franchise {rid}",
+                "actual": score, "projection": total if complete else None,
+                "known_subtotal": total, "supported_slots": len(supported), "expected_slots": len(slots),
+            })
+            continue
         bench = [player_row(str(pid), "Non-starter", source_player_actual(row, str(pid)))
                  for pid in row.get("players") or [] if str(pid) not in starter_ids]
         # Weekly sources do not retain historical IR/taxi assignments. Current
@@ -356,18 +378,12 @@ def season_week_view(data: dict, week: int, projection_service, *, evidence_thro
             reserve = [p for p in bench if classifications.get(p['player_id']) == 'IR']
             taxi = [p for p in bench if classifications.get(p['player_id']) == 'Taxi']
             bench = [p for p in bench if classifications.get(p['player_id']) not in {'IR', 'Taxi'}]
-        supported = [p["projection"] for p in lineup if p["projection"] is not None]
         empty = sum(p['player_id'] == '0' for p in lineup)
-        total = float(sum((Decimal(str(value)) for value in supported), Decimal(0))) if supported else None
-        complete = bool(slots) and len(lineup) == len(slots) and len(supported) == len(slots)
         # Keep the existing full-lineup projection contract: an empty slot is
         # incomplete. A separate review baseline may account for an explicit
         # empty slot's lack of contribution; never for an unknown projection.
         accounted = bool(slots) and len(lineup) == len(slots) and len(supported) + empty == len(slots)
         review_baseline = (total if total is not None else 0.0) if accounted else None
-        score = number(row.get("custom_points"))
-        if score is None:
-            score = number(row.get("points"))
         side = {"roster_id": rid, "team": team.get("team_name") or f"Franchise {rid}", "lineup": lineup, "bench": bench,
                 "owner": team.get("owner"), "avatar": team.get("avatar"),
                 "reserve": reserve, "taxi": taxi, "roster_sections_available": roster_sections_available,
@@ -446,7 +462,7 @@ def season_week_view(data: dict, week: int, projection_service, *, evidence_thro
     states = {key: "final" if historical else "pregame" if week > current else matchup_game_state(
         {'week': week}, [{"points": side["actual"]} for side in sides]) for key, sides in groups.items()}
     overview = []
-    for selected, source in (prepared.get("weeks") or {}).items() if compatible else []:
+    for selected, source in (prepared.get("weeks") or {}).items() if compatible and not preview else []:
         target = int(selected)
         postseason_week = any(target in group for group in rounds)
         label = "Week evidence unavailable" if source.get("availability") != "available" else "No matchups published"

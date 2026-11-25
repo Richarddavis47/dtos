@@ -1,3 +1,9 @@
+## v1.22.66 / build 2281 — Phone-first League
+
+- Adds complete League standings with rank, record, Points For, supported head-to-head streak and change versus the previous completed week.
+- Uses the league’s reported playoff count and distinguishes that line from division or wildcard qualification.
+- Keeps the selected week’s prepared matchup and the latest completed recap alongside the standings and league tools.
+
 ## v1.22.65 / build 2280 — Phone-first Market
 
 - Scan neutral prices, league owners and dated changes, then open a row for evidence or an editable Trade For target.
