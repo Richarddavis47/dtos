@@ -1,0 +1,1337 @@
+{
+  "source": {
+    "candidate": "c910a3a4c7c97a63c400ec80cc8f604cc421d6fb",
+    "tree": "353feba0c022a750229e748a04ebdab43eac71da",
+    "baseline": "36c1628f80fbc55977f9ffc2f6efc07d250155c3",
+    "baseline_tree": "1e2cbab1823bd647021d1c3c72f05329af0f7178",
+    "branch": "feat/league-redesign-2281",
+    "version": "1.22.66",
+    "build": 2281,
+    "expected_test_count": 4683,
+    "pr": 370
+  },
+  "same_discovery_start_order": true,
+  "memory_sample_units": "bytes",
+  "records": [
+    {
+      "run": "local attempt 1",
+      "test_events": {
+        "start": 4683,
+        "stop": 4683,
+        "failure": 1,
+        "error": 3
+      },
+      "run_passed": false,
+      "kernel_peak_bytes": 1981927424,
+      "report_at_test_start_bytes": 1326116864,
+      "first_affected_test": "test_rebuild_roster_space_browser.RebuildRosterSpaceBrowserTests.test_full_rosters_unseeded_strategies_and_qualified_zero_states_at_four_sizes",
+      "test_order_zero_based": 3422,
+      "first_affected_test_shmem_peak_bytes": 34324480,
+      "first_affected_test_cgroup_peak_sample": {
+        "time": 1795637129.1297612,
+        "anon": 1598894080,
+        "file": 274583552,
+        "shmem": 30621696,
+        "inactive_file": 150073344,
+        "active_file": 93888512,
+        "kernel": 34402304,
+        "current": 1908527104
+      },
+      "run_max_sampled_active_file_bytes": 158564352,
+      "capacity_deferrals": [
+        {
+          "timestamp": "2026-11-25T20:05:30.407489+00:00",
+          "test_in_progress": "test_rebuild_roster_space_browser.RebuildRosterSpaceBrowserTests.test_full_rosters_unseeded_strategies_and_qualified_zero_states_at_four_sizes",
+          "admission": {
+            "admitted": false,
+            "reason": "capacity",
+            "current_bytes": 1822138368,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 325345280,
+            "clean_inactive_file_bytes": 149565440,
+            "conditional_file_credit_bytes": 74782720,
+            "admission_headroom_bytes": 400128000,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": {
+            "expired_entries": 80,
+            "idle_worker_retired": false,
+            "allocator_trimmed": true
+          },
+          "nearby_memory": [
+            {
+              "time": 1795637130.2156312,
+              "anon": 1597575168,
+              "file": 269987840,
+              "shmem": 25919488,
+              "inactive_file": 150179840,
+              "active_file": 93888512,
+              "kernel": 34549760,
+              "current": 1902907392
+            },
+            {
+              "time": 1795637130.7576156,
+              "anon": 1506381824,
+              "file": 278392832,
+              "shmem": 34324480,
+              "inactive_file": 150179840,
+              "active_file": 93888512,
+              "kernel": 34557952,
+              "current": 1820045312
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-11-25T20:17:04.959286+00:00",
+          "test_in_progress": "test_source_evidence_browser.SourceEvidenceBrowserTests.test_trade_high_cardinality_provenance",
+          "admission": {
+            "admitted": false,
+            "reason": "capacity",
+            "current_bytes": 1804988416,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 342495232,
+            "clean_inactive_file_bytes": 116887552,
+            "conditional_file_credit_bytes": 58443776,
+            "admission_headroom_bytes": 400939008,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": {
+            "expired_entries": 8,
+            "idle_worker_retired": false,
+            "allocator_trimmed": true
+          },
+          "nearby_memory": [
+            {
+              "time": 1795637824.6277342,
+              "anon": 1448321024,
+              "file": 295006208,
+              "shmem": 25583616,
+              "inactive_file": 118235136,
+              "active_file": 151187456,
+              "kernel": 38645760,
+              "current": 1782812672
+            },
+            {
+              "time": 1795637825.2082999,
+              "anon": 1464958976,
+              "file": 303636480,
+              "shmem": 34213888,
+              "inactive_file": 118235136,
+              "active_file": 151187456,
+              "kernel": 38862848,
+              "current": 1808216064
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-11-25T20:18:40.373410+00:00",
+          "test_in_progress": "test_team_trade_need_browser.TeamTradeNeedBrowserTests.test_existing_real_results_stay_separate_and_search_is_explicit",
+          "admission": {
+            "admitted": false,
+            "reason": "capacity",
+            "current_bytes": 1811492864,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 335990784,
+            "clean_inactive_file_bytes": 122478592,
+            "conditional_file_credit_bytes": 61239296,
+            "admission_headroom_bytes": 397230080,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": {
+            "expired_entries": 160,
+            "idle_worker_retired": false,
+            "allocator_trimmed": true
+          },
+          "nearby_memory": [
+            {
+              "time": 1795637920.1695406,
+              "anon": 1512898560,
+              "file": 297193472,
+              "shmem": 15962112,
+              "inactive_file": 122929152,
+              "active_file": 158302208,
+              "kernel": 39018496,
+              "current": 1849720832
+            },
+            {
+              "time": 1795637920.7056584,
+              "anon": 1476423680,
+              "file": 296804352,
+              "shmem": 15568896,
+              "inactive_file": 122933248,
+              "active_file": 158302208,
+              "kernel": 39051264,
+              "current": 1813008384
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-11-25T20:20:36.979269+00:00",
+          "test_in_progress": "test_trade_actionability_browser.TradeActionabilityBrowserTests.test_qualified_offer_preview_evaluate_and_return_at_four_widths",
+          "admission": {
+            "admitted": false,
+            "reason": "capacity",
+            "current_bytes": 1816256512,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 331227136,
+            "clean_inactive_file_bytes": 116776960,
+            "conditional_file_credit_bytes": 58388480,
+            "admission_headroom_bytes": 389615616,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": {
+            "expired_entries": 0,
+            "idle_worker_retired": false,
+            "allocator_trimmed": true
+          },
+          "nearby_memory": [
+            {
+              "time": 1795638036.5072074,
+              "anon": 1506873344,
+              "file": 308994048,
+              "shmem": 37224448,
+              "inactive_file": 117104640,
+              "active_file": 154660864,
+              "kernel": 37228544,
+              "current": 1853911040
+            },
+            {
+              "time": 1795638037.039651,
+              "anon": 1297227776,
+              "file": 282857472,
+              "shmem": 11087872,
+              "inactive_file": 117104640,
+              "active_file": 154664960,
+              "kernel": 31707136,
+              "current": 1612230656
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-11-25T20:31:37.664130+00:00",
+          "test_in_progress": "test_trade_resource_admission.TradeResourceHTTPTests.test_deferral_is_503_not_zero_results_and_never_exposes_telemetry",
+          "admission": {
+            "admitted": false,
+            "reason": "capacity",
+            "current_bytes": 2097152000,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 50331648,
+            "clean_inactive_file_bytes": 0,
+            "conditional_file_credit_bytes": 0,
+            "admission_headroom_bytes": 50331648,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": {
+            "expired_entries": 0,
+            "idle_worker_retired": false,
+            "allocator_trimmed": true
+          },
+          "nearby_memory": [
+            {
+              "time": 1795638697.210935,
+              "anon": 1129205760,
+              "file": 211664896,
+              "shmem": 4186112,
+              "inactive_file": 70430720,
+              "active_file": 137048064,
+              "kernel": 21790720,
+              "current": 1363394560
+            },
+            {
+              "time": 1795638697.7275462,
+              "anon": 1103474688,
+              "file": 211668992,
+              "shmem": 4186112,
+              "inactive_file": 70434816,
+              "active_file": 137048064,
+              "kernel": 21778432,
+              "current": 1337708544
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-11-25T20:31:55.450902+00:00",
+          "test_in_progress": "test_trade_resource_browser.TradeResourceBrowserTests.test_four_sizes_distinguish_capacity_source_and_completed_search_without_losing_work",
+          "admission": {
+            "admitted": false,
+            "reason": "capacity",
+            "current_bytes": 2097152000,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 50331648,
+            "clean_inactive_file_bytes": 0,
+            "conditional_file_credit_bytes": 0,
+            "admission_headroom_bytes": 50331648,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": {
+            "expired_entries": 0,
+            "idle_worker_retired": false,
+            "allocator_trimmed": true
+          },
+          "nearby_memory": [
+            {
+              "time": 1795638715.1075196,
+              "anon": 1376567296,
+              "file": 216457216,
+              "shmem": 10514432,
+              "inactive_file": 69607424,
+              "active_file": 136335360,
+              "kernel": 36917248,
+              "current": 1630797824
+            },
+            {
+              "time": 1795638715.71101,
+              "anon": 1371922432,
+              "file": 222699520,
+              "shmem": 16756736,
+              "inactive_file": 69607424,
+              "active_file": 136335360,
+              "kernel": 37277696,
+              "current": 1633005568
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-11-25T20:31:59.358870+00:00",
+          "test_in_progress": "test_trade_resource_browser.TradeResourceBrowserTests.test_four_sizes_distinguish_capacity_source_and_completed_search_without_losing_work",
+          "admission": {
+            "admitted": false,
+            "reason": "capacity",
+            "current_bytes": 2097152000,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 50331648,
+            "clean_inactive_file_bytes": 0,
+            "conditional_file_credit_bytes": 0,
+            "admission_headroom_bytes": 50331648,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": {
+            "expired_entries": 0,
+            "idle_worker_retired": false,
+            "allocator_trimmed": true
+          },
+          "nearby_memory": [
+            {
+              "time": 1795638718.9424028,
+              "anon": 1409306624,
+              "file": 216891392,
+              "shmem": 10928128,
+              "inactive_file": 69627904,
+              "active_file": 136335360,
+              "kernel": 36564992,
+              "current": 1662849024
+            },
+            {
+              "time": 1795638719.628282,
+              "anon": 1377955840,
+              "file": 225300480,
+              "shmem": 19337216,
+              "inactive_file": 69627904,
+              "active_file": 136335360,
+              "kernel": 36839424,
+              "current": 1640390656
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-11-25T20:32:02.923434+00:00",
+          "test_in_progress": "test_trade_resource_browser.TradeResourceBrowserTests.test_four_sizes_distinguish_capacity_source_and_completed_search_without_losing_work",
+          "admission": {
+            "admitted": false,
+            "reason": "capacity",
+            "current_bytes": 2097152000,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 50331648,
+            "clean_inactive_file_bytes": 0,
+            "conditional_file_credit_bytes": 0,
+            "admission_headroom_bytes": 50331648,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": {
+            "expired_entries": 0,
+            "idle_worker_retired": false,
+            "allocator_trimmed": true
+          },
+          "nearby_memory": [
+            {
+              "time": 1795638722.8584094,
+              "anon": 1494470656,
+              "file": 222253056,
+              "shmem": 16269312,
+              "inactive_file": 69648384,
+              "active_file": 136335360,
+              "kernel": 36638720,
+              "current": 1754107904
+            },
+            {
+              "time": 1795638723.4366055,
+              "anon": 1453748224,
+              "file": 222244864,
+              "shmem": 16257024,
+              "inactive_file": 69652480,
+              "active_file": 136335360,
+              "kernel": 36708352,
+              "current": 1713278976
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-11-25T20:32:06.459538+00:00",
+          "test_in_progress": "test_trade_resource_browser.TradeResourceBrowserTests.test_four_sizes_distinguish_capacity_source_and_completed_search_without_losing_work",
+          "admission": {
+            "admitted": false,
+            "reason": "capacity",
+            "current_bytes": 2097152000,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 50331648,
+            "clean_inactive_file_bytes": 0,
+            "conditional_file_credit_bytes": 0,
+            "admission_headroom_bytes": 50331648,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": {
+            "expired_entries": 8,
+            "idle_worker_retired": false,
+            "allocator_trimmed": true
+          },
+          "nearby_memory": [
+            {
+              "time": 1795638726.1215987,
+              "anon": 1413595136,
+              "file": 220663808,
+              "shmem": 14659584,
+              "inactive_file": 69668864,
+              "active_file": 136335360,
+              "kernel": 36511744,
+              "current": 1671352320
+            },
+            {
+              "time": 1795638726.7215083,
+              "anon": 1393119232,
+              "file": 237682688,
+              "shmem": 31674368,
+              "inactive_file": 69672960,
+              "active_file": 136335360,
+              "kernel": 36691968,
+              "current": 1668050944
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "run": "local attempt 2",
+      "test_events": {
+        "start": 4683,
+        "stop": 4683,
+        "error": 4
+      },
+      "run_passed": false,
+      "kernel_peak_bytes": 2024640512,
+      "report_at_test_start_bytes": 1381363712,
+      "first_affected_test": "test_rebuild_roster_space_browser.RebuildRosterSpaceBrowserTests.test_full_rosters_unseeded_strategies_and_qualified_zero_states_at_four_sizes",
+      "test_order_zero_based": 3422,
+      "first_affected_test_shmem_peak_bytes": 35241984,
+      "first_affected_test_cgroup_peak_sample": {
+        "time": 1795642733.3561187,
+        "anon": 1638440960,
+        "file": 258109440,
+        "shmem": 31965184,
+        "inactive_file": 146378752,
+        "active_file": 79765504,
+        "kernel": 34906112,
+        "current": 1932091392
+      },
+      "run_max_sampled_active_file_bytes": 137687040,
+      "capacity_deferrals": [
+        {
+          "timestamp": "2026-11-25T21:38:53.439186+00:00",
+          "test_in_progress": "test_rebuild_roster_space_browser.RebuildRosterSpaceBrowserTests.test_full_rosters_unseeded_strategies_and_qualified_zero_states_at_four_sizes",
+          "admission": {
+            "admitted": false,
+            "reason": "capacity",
+            "current_bytes": 1853739008,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 293744640,
+            "clean_inactive_file_bytes": 145731584,
+            "conditional_file_credit_bytes": 72865792,
+            "admission_headroom_bytes": 366610432,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": {
+            "expired_entries": 16,
+            "idle_worker_retired": false,
+            "allocator_trimmed": true
+          },
+          "nearby_memory": [
+            {
+              "time": 1795642733.3561187,
+              "anon": 1638440960,
+              "file": 258109440,
+              "shmem": 31965184,
+              "inactive_file": 146378752,
+              "active_file": 79765504,
+              "kernel": 34906112,
+              "current": 1932091392
+            },
+            {
+              "time": 1795642733.8980744,
+              "anon": 1557209088,
+              "file": 261394432,
+              "shmem": 35241984,
+              "inactive_file": 146386944,
+              "active_file": 79765504,
+              "kernel": 34877440,
+              "current": 1853988864
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-11-25T21:41:04.824747+00:00",
+          "test_in_progress": "test_roster_diagnostic_aging_browser.DiagnosticAgingBrowserTests.test_team_clock_and_incoming_package_evidence",
+          "admission": {
+            "admitted": false,
+            "reason": "capacity",
+            "current_bytes": 1860124672,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 287358976,
+            "clean_inactive_file_bytes": 147644416,
+            "conditional_file_credit_bytes": 73822208,
+            "admission_headroom_bytes": 361181184,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": {
+            "expired_entries": 0,
+            "idle_worker_retired": false,
+            "allocator_trimmed": true
+          },
+          "nearby_memory": [
+            {
+              "time": 1795642864.750886,
+              "anon": 1526169600,
+              "file": 299470848,
+              "shmem": 65396736,
+              "inactive_file": 152358912,
+              "active_file": 81715200,
+              "kernel": 37482496,
+              "current": 1863704576
+            },
+            {
+              "time": 1795642865.2966132,
+              "anon": 1521692672,
+              "file": 287846400,
+              "shmem": 53768192,
+              "inactive_file": 152363008,
+              "active_file": 81715200,
+              "kernel": 37330944,
+              "current": 1847484416
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-11-25T21:49:54.230790+00:00",
+          "test_in_progress": "test_source_evidence_browser.SourceEvidenceBrowserTests.test_trade_high_cardinality_provenance",
+          "admission": {
+            "admitted": false,
+            "reason": "capacity",
+            "current_bytes": 1832849408,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 314634240,
+            "clean_inactive_file_bytes": 146964480,
+            "conditional_file_credit_bytes": 73482240,
+            "admission_headroom_bytes": 388116480,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": {
+            "expired_entries": 0,
+            "idle_worker_retired": false,
+            "allocator_trimmed": true
+          },
+          "nearby_memory": [
+            {
+              "time": 1795643393.7150264,
+              "anon": 1495785472,
+              "file": 290242560,
+              "shmem": 13250560,
+              "inactive_file": 148160512,
+              "active_file": 128831488,
+              "kernel": 37298176,
+              "current": 1823969280
+            },
+            {
+              "time": 1795643394.262569,
+              "anon": 1498030080,
+              "file": 296476672,
+              "shmem": 19415040,
+              "inactive_file": 148180992,
+              "active_file": 128831488,
+              "kernel": 37715968,
+              "current": 1833050112
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-11-25T21:51:23.944202+00:00",
+          "test_in_progress": "test_team_trade_need_browser.TeamTradeNeedBrowserTests.test_existing_real_results_stay_separate_and_search_is_explicit",
+          "admission": {
+            "admitted": false,
+            "reason": "capacity",
+            "current_bytes": 1883480064,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 264003584,
+            "clean_inactive_file_bytes": 147509248,
+            "conditional_file_credit_bytes": 73754624,
+            "admission_headroom_bytes": 337758208,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": {
+            "expired_entries": 0,
+            "idle_worker_retired": false,
+            "allocator_trimmed": true
+          },
+          "nearby_memory": [
+            {
+              "time": 1795643483.859616,
+              "anon": 1570885632,
+              "file": 296624128,
+              "shmem": 16142336,
+              "inactive_file": 148144128,
+              "active_file": 132337664,
+              "kernel": 39452672,
+              "current": 1907425280
+            },
+            {
+              "time": 1795643484.3920746,
+              "anon": 1546747904,
+              "file": 296230912,
+              "shmem": 15749120,
+              "inactive_file": 148144128,
+              "active_file": 132337664,
+              "kernel": 39464960,
+              "current": 1883058176
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-11-25T21:52:57.686963+00:00",
+          "test_in_progress": "test_trade_actionability_browser.TradeActionabilityBrowserTests.test_qualified_offer_preview_evaluate_and_return_at_four_widths",
+          "admission": {
+            "admitted": false,
+            "reason": "capacity",
+            "current_bytes": 1845116928,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 302366720,
+            "clean_inactive_file_bytes": 124375040,
+            "conditional_file_credit_bytes": 62187520,
+            "admission_headroom_bytes": 364554240,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": {
+            "expired_entries": 48,
+            "idle_worker_retired": false,
+            "allocator_trimmed": true
+          },
+          "nearby_memory": [
+            {
+              "time": 1795643577.643068,
+              "anon": 1578328064,
+              "file": 280502272,
+              "shmem": 18427904,
+              "inactive_file": 124477440,
+              "active_file": 137592832,
+              "kernel": 37253120,
+              "current": 1896910848
+            },
+            {
+              "time": 1795643578.1920865,
+              "anon": 1128796160,
+              "file": 265932800,
+              "shmem": 3858432,
+              "inactive_file": 124440576,
+              "active_file": 137633792,
+              "kernel": 22179840,
+              "current": 1417773056
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-11-25T21:53:04.536084+00:00",
+          "test_in_progress": "test_trade_actionability_browser.TradeActionabilityBrowserTests.test_qualified_offer_preview_evaluate_and_return_at_four_widths",
+          "admission": {
+            "admitted": false,
+            "reason": "capacity",
+            "current_bytes": 1833439232,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 314044416,
+            "clean_inactive_file_bytes": 124325888,
+            "conditional_file_credit_bytes": 62162944,
+            "admission_headroom_bytes": 376207360,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": {
+            "expired_entries": 40,
+            "idle_worker_retired": false,
+            "allocator_trimmed": true
+          },
+          "nearby_memory": [
+            {
+              "time": 1795643584.153145,
+              "anon": 1559003136,
+              "file": 281305088,
+              "shmem": 19202048,
+              "inactive_file": 124461056,
+              "active_file": 137641984,
+              "kernel": 37330944,
+              "current": 1878237184
+            },
+            {
+              "time": 1795643584.6852071,
+              "anon": 1116512256,
+              "file": 265961472,
+              "shmem": 3858432,
+              "inactive_file": 124444672,
+              "active_file": 137658368,
+              "kernel": 22192128,
+              "current": 1405313024
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-11-25T21:53:17.450264+00:00",
+          "test_in_progress": "test_trade_actionability_browser.TradeActionabilityBrowserTests.test_qualified_offer_preview_evaluate_and_return_at_four_widths",
+          "admission": {
+            "admitted": false,
+            "reason": "capacity",
+            "current_bytes": 1849094144,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 298389504,
+            "clean_inactive_file_bytes": 118706176,
+            "conditional_file_credit_bytes": 59353088,
+            "admission_headroom_bytes": 357742592,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": {
+            "expired_entries": 0,
+            "idle_worker_retired": false,
+            "allocator_trimmed": true
+          },
+          "nearby_memory": [
+            {
+              "time": 1795643596.9783337,
+              "anon": 1566535680,
+              "file": 291958784,
+              "shmem": 40189952,
+              "inactive_file": 118902784,
+              "active_file": 132866048,
+              "kernel": 37580800,
+              "current": 1896730624
+            },
+            {
+              "time": 1795643597.520949,
+              "anon": 1296990208,
+              "file": 257290240,
+              "shmem": 5521408,
+              "inactive_file": 118861824,
+              "active_file": 132907008,
+              "kernel": 30322688,
+              "current": 1585303552
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-11-25T22:00:31.132599+00:00",
+          "test_in_progress": "test_trade_navigation_browser.TradeNavigationBrowserTests.test_cheaper_build_own_dossier_trade_for_recovers_without_reload",
+          "admission": {
+            "admitted": false,
+            "reason": "capacity",
+            "current_bytes": 1788063744,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 359419904,
+            "clean_inactive_file_bytes": 81788928,
+            "conditional_file_credit_bytes": 40894464,
+            "admission_headroom_bytes": 400314368,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": {
+            "expired_entries": 16,
+            "idle_worker_retired": false,
+            "allocator_trimmed": true
+          },
+          "nearby_memory": [
+            {
+              "time": 1795644030.7396863,
+              "anon": 1525084160,
+              "file": 215150592,
+              "shmem": 12931072,
+              "inactive_file": 82235392,
+              "active_file": 119984128,
+              "kernel": 39571456,
+              "current": 1780445184
+            },
+            {
+              "time": 1795644031.2941477,
+              "anon": 1529982976,
+              "file": 227061760,
+              "shmem": 24838144,
+              "inactive_file": 82239488,
+              "active_file": 119984128,
+              "kernel": 39784448,
+              "current": 1797566464
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-11-25T22:00:40.215794+00:00",
+          "test_in_progress": "test_trade_navigation_browser.TradeNavigationBrowserTests.test_cheaper_build_own_dossier_trade_for_recovers_without_reload",
+          "admission": {
+            "admitted": false,
+            "reason": "capacity",
+            "current_bytes": 1791631360,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 355852288,
+            "clean_inactive_file_bytes": 81793024,
+            "conditional_file_credit_bytes": 40896512,
+            "admission_headroom_bytes": 396748800,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": {
+            "expired_entries": 32,
+            "idle_worker_retired": false,
+            "allocator_trimmed": true
+          },
+          "nearby_memory": [
+            {
+              "time": 1795644040.0646815,
+              "anon": 1543749632,
+              "file": 219820032,
+              "shmem": 17510400,
+              "inactive_file": 82276352,
+              "active_file": 120033280,
+              "kernel": 39690240,
+              "current": 1803624448
+            },
+            {
+              "time": 1795644040.6068728,
+              "anon": 1534545920,
+              "file": 226639872,
+              "shmem": 24330240,
+              "inactive_file": 82276352,
+              "active_file": 120033280,
+              "kernel": 39813120,
+              "current": 1801740288
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-11-25T22:00:49.696335+00:00",
+          "test_in_progress": "test_trade_navigation_browser.TradeNavigationBrowserTests.test_cheaper_build_own_dossier_trade_for_recovers_without_reload",
+          "admission": {
+            "admitted": false,
+            "reason": "capacity",
+            "current_bytes": 1804075008,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 343408640,
+            "clean_inactive_file_bytes": 82116608,
+            "conditional_file_credit_bytes": 41058304,
+            "admission_headroom_bytes": 384466944,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": {
+            "expired_entries": 120,
+            "idle_worker_retired": false,
+            "allocator_trimmed": true
+          },
+          "nearby_memory": [
+            {
+              "time": 1795644049.278024,
+              "anon": 1539571712,
+              "file": 224595968,
+              "shmem": 22253568,
+              "inactive_file": 82268160,
+              "active_file": 120074240,
+              "kernel": 39743488,
+              "current": 1804443648
+            },
+            {
+              "time": 1795644049.819958,
+              "anon": 1545166848,
+              "file": 224083968,
+              "shmem": 21741568,
+              "inactive_file": 82268160,
+              "active_file": 120074240,
+              "kernel": 39927808,
+              "current": 1809952768
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-11-25T22:04:22.245948+00:00",
+          "test_in_progress": "test_trade_resource_admission.TradeResourceHTTPTests.test_deferral_is_503_not_zero_results_and_never_exposes_telemetry",
+          "admission": {
+            "admitted": false,
+            "reason": "capacity",
+            "current_bytes": 2097152000,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 50331648,
+            "clean_inactive_file_bytes": 0,
+            "conditional_file_credit_bytes": 0,
+            "admission_headroom_bytes": 50331648,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": {
+            "expired_entries": 0,
+            "idle_worker_retired": false,
+            "allocator_trimmed": true
+          },
+          "nearby_memory": [
+            {
+              "time": 1795644262.079629,
+              "anon": 1191784448,
+              "file": 184983552,
+              "shmem": 4186112,
+              "inactive_file": 63963136,
+              "active_file": 116834304,
+              "kernel": 22032384,
+              "current": 1399668736
+            },
+            {
+              "time": 1795644262.5977597,
+              "anon": 1167872000,
+              "file": 184991744,
+              "shmem": 4186112,
+              "inactive_file": 63971328,
+              "active_file": 116834304,
+              "kernel": 22085632,
+              "current": 1375690752
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-11-25T22:04:38.145802+00:00",
+          "test_in_progress": "test_trade_resource_browser.TradeResourceBrowserTests.test_four_sizes_distinguish_capacity_source_and_completed_search_without_losing_work",
+          "admission": {
+            "admitted": false,
+            "reason": "capacity",
+            "current_bytes": 2097152000,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 50331648,
+            "clean_inactive_file_bytes": 0,
+            "conditional_file_credit_bytes": 0,
+            "admission_headroom_bytes": 50331648,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": {
+            "expired_entries": 0,
+            "idle_worker_retired": false,
+            "allocator_trimmed": true
+          },
+          "nearby_memory": [
+            {
+              "time": 1795644277.6429615,
+              "anon": 1433190400,
+              "file": 189624320,
+              "shmem": 10579968,
+              "inactive_file": 62640128,
+              "active_file": 116404224,
+              "kernel": 37126144,
+              "current": 1660608512
+            },
+            {
+              "time": 1795644278.227227,
+              "anon": 1437306880,
+              "file": 196706304,
+              "shmem": 17657856,
+              "inactive_file": 62644224,
+              "active_file": 116404224,
+              "kernel": 37507072,
+              "current": 1672302592
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-11-25T22:04:41.317059+00:00",
+          "test_in_progress": "test_trade_resource_browser.TradeResourceBrowserTests.test_four_sizes_distinguish_capacity_source_and_completed_search_without_losing_work",
+          "admission": {
+            "admitted": false,
+            "reason": "capacity",
+            "current_bytes": 2097152000,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 50331648,
+            "clean_inactive_file_bytes": 0,
+            "conditional_file_credit_bytes": 0,
+            "admission_headroom_bytes": 50331648,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": {
+            "expired_entries": 0,
+            "idle_worker_retired": false,
+            "allocator_trimmed": true
+          },
+          "nearby_memory": [
+            {
+              "time": 1795644280.9330697,
+              "anon": 1454497792,
+              "file": 189526016,
+              "shmem": 10457088,
+              "inactive_file": 62664704,
+              "active_file": 116404224,
+              "kernel": 36646912,
+              "current": 1681321984
+            },
+            {
+              "time": 1795644281.531713,
+              "anon": 1431375872,
+              "file": 196362240,
+              "shmem": 17293312,
+              "inactive_file": 62664704,
+              "active_file": 116404224,
+              "kernel": 36761600,
+              "current": 1665474560
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-11-25T22:04:44.566519+00:00",
+          "test_in_progress": "test_trade_resource_browser.TradeResourceBrowserTests.test_four_sizes_distinguish_capacity_source_and_completed_search_without_losing_work",
+          "admission": {
+            "admitted": false,
+            "reason": "capacity",
+            "current_bytes": 2097152000,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 50331648,
+            "clean_inactive_file_bytes": 0,
+            "conditional_file_credit_bytes": 0,
+            "admission_headroom_bytes": 50331648,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": {
+            "expired_entries": 0,
+            "idle_worker_retired": false,
+            "allocator_trimmed": true
+          },
+          "nearby_memory": [
+            {
+              "time": 1795644284.215521,
+              "anon": 1461174272,
+              "file": 190050304,
+              "shmem": 10960896,
+              "inactive_file": 62685184,
+              "active_file": 116404224,
+              "kernel": 36769792,
+              "current": 1688797184
+            },
+            {
+              "time": 1795644284.7615547,
+              "anon": 1434103808,
+              "file": 194805760,
+              "shmem": 15716352,
+              "inactive_file": 62685184,
+              "active_file": 116404224,
+              "kernel": 36765696,
+              "current": 1666187264
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-11-25T22:04:48.152539+00:00",
+          "test_in_progress": "test_trade_resource_browser.TradeResourceBrowserTests.test_four_sizes_distinguish_capacity_source_and_completed_search_without_losing_work",
+          "admission": {
+            "admitted": false,
+            "reason": "capacity",
+            "current_bytes": 2097152000,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 50331648,
+            "clean_inactive_file_bytes": 0,
+            "conditional_file_credit_bytes": 0,
+            "admission_headroom_bytes": 50331648,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": {
+            "expired_entries": 0,
+            "idle_worker_retired": false,
+            "allocator_trimmed": true
+          },
+          "nearby_memory": [
+            {
+              "time": 1795644288.0178325,
+              "anon": 1461800960,
+              "file": 205594624,
+              "shmem": 26484736,
+              "inactive_file": 62705664,
+              "active_file": 116404224,
+              "kernel": 36823040,
+              "current": 1704873984
+            },
+            {
+              "time": 1795644288.5541558,
+              "anon": 1430581248,
+              "file": 209641472,
+              "shmem": 30527488,
+              "inactive_file": 62709760,
+              "active_file": 116404224,
+              "kernel": 36925440,
+              "current": 1677565952
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-11-25T22:07:10.170197+00:00",
+          "test_in_progress": "test_trade_workspace_browser.TradeWorkspaceBrowserTests.test_mobile_and_desktop_authenticated_build_review_evaluate_edit",
+          "admission": {
+            "admitted": false,
+            "reason": "capacity",
+            "current_bytes": 1778749440,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 368734208,
+            "clean_inactive_file_bytes": 62402560,
+            "conditional_file_credit_bytes": 31201280,
+            "admission_headroom_bytes": 399935488,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": {
+            "expired_entries": 0,
+            "idle_worker_retired": false,
+            "allocator_trimmed": true
+          },
+          "nearby_memory": [
+            {
+              "time": 1795644422.4475822,
+              "anon": 1303928832,
+              "file": 189231104,
+              "shmem": 3985408,
+              "inactive_file": 69791744,
+              "active_file": 115453952,
+              "kernel": 22347776,
+              "current": 1516191744
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-11-25T22:07:10.475464+00:00",
+          "test_in_progress": "test_trade_workspace_browser.TradeWorkspaceBrowserTests.test_mobile_and_desktop_authenticated_build_review_evaluate_edit",
+          "admission": {
+            "admitted": false,
+            "reason": "capacity",
+            "current_bytes": 1783611392,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 363872256,
+            "clean_inactive_file_bytes": 62402560,
+            "conditional_file_credit_bytes": 31201280,
+            "admission_headroom_bytes": 395073536,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": {
+            "expired_entries": 0,
+            "idle_worker_retired": false,
+            "allocator_trimmed": true
+          },
+          "nearby_memory": [
+            {
+              "time": 1795644422.4475822,
+              "anon": 1303928832,
+              "file": 189231104,
+              "shmem": 3985408,
+              "inactive_file": 69791744,
+              "active_file": 115453952,
+              "kernel": 22347776,
+              "current": 1516191744
+            }
+          ]
+        },
+        {
+          "timestamp": "2026-11-25T22:07:14.884258+00:00",
+          "test_in_progress": "test_trade_workspace_browser.TradeWorkspaceBrowserTests.test_mobile_and_desktop_authenticated_build_review_evaluate_edit",
+          "admission": {
+            "admitted": false,
+            "reason": "capacity",
+            "current_bytes": 1776300032,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 371183616,
+            "clean_inactive_file_bytes": 62402560,
+            "conditional_file_credit_bytes": 31201280,
+            "admission_headroom_bytes": 402384896,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": {
+            "expired_entries": 0,
+            "idle_worker_retired": false,
+            "allocator_trimmed": true
+          },
+          "nearby_memory": [
+            {
+              "time": 1795644422.4475822,
+              "anon": 1303928832,
+              "file": 189231104,
+              "shmem": 3985408,
+              "inactive_file": 69791744,
+              "active_file": 115453952,
+              "kernel": 22347776,
+              "current": 1516191744
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "run": "hosted attempt 2",
+      "test_events": {
+        "start": 4683,
+        "stop": 4683
+      },
+      "run_passed": true,
+      "kernel_peak_bytes": 2017083392,
+      "report_at_test_start_bytes": 1317466112,
+      "first_affected_test": "test_rebuild_roster_space_browser.RebuildRosterSpaceBrowserTests.test_full_rosters_unseeded_strategies_and_qualified_zero_states_at_four_sizes",
+      "test_order_zero_based": 3422,
+      "first_affected_test_shmem_peak_bytes": 27049984,
+      "first_affected_test_cgroup_peak_sample": {
+        "time": 1795641622.2369893,
+        "anon": 1611206656,
+        "file": 186662912,
+        "shmem": 25706496,
+        "inactive_file": 160952320,
+        "active_file": 4096,
+        "kernel": 34549760,
+        "current": 1832976384
+      },
+      "run_max_sampled_active_file_bytes": 4096,
+      "capacity_deferrals": []
+    }
+  ],
+  "claim_scope": "Nearest sampled counters are observational. Isolated temporary file accounting and the full recovered run address different questions."
+}

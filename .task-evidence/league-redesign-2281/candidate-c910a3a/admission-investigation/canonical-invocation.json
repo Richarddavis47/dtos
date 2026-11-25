@@ -1,0 +1,40 @@
+{
+  "container": "38cf5cba04ccc97487a2e0567c8c47e20c93fa92acdde7faef392dd35d7385eb",
+  "source": {
+    "candidate": "c910a3a4c7c97a63c400ec80cc8f604cc421d6fb",
+    "tree": "353feba0c022a750229e748a04ebdab43eac71da",
+    "baseline": "36c1628f80fbc55977f9ffc2f6efc07d250155c3",
+    "baseline_tree": "1e2cbab1823bd647021d1c3c72f05329af0f7178",
+    "branch": "feat/league-redesign-2281",
+    "version": "1.22.66",
+    "build": 2281,
+    "expected_test_count": 4683,
+    "pr": 370
+  },
+  "files": [
+    {
+      "name": "runner.py",
+      "sha256": "574308d9f64252575970aa19ce113f603ccb9927f2c6a523e8c228869fd37cac"
+    },
+    {
+      "name": "observer/sitecustomize.py",
+      "sha256": "3f43288a099e49a3ed2dea36f977b596707589eaefd2656b40a3b9c6533be2d4"
+    }
+  ],
+  "created_at": "2026-11-25T22:18:26.713592+00:00",
+  "command": [
+    "bash",
+    "/workspace/2281-league/docker-validation.sh",
+    "create",
+    "dtos-canonical-2281",
+    "/workspace/dtos-league-2281",
+    "/workspace/2281-league/local-canonical",
+    "/dev/shm/dtos-2281-canonical-c910a3a4",
+    "python",
+    "/output/runner.py"
+  ],
+  "wrapper_sha256": "2e67e5d20ab08ba10078411d2f52f3f0ea5a02b1977ce91e2632bbc7fad22c1b",
+  "fixture_free_after_container_creation": 8952397824,
+  "toolchain": "Read-only /usr and browser settings mounts from the pinned existing matching image. Thin bookworm container root avoids needless VFS copies. Browser /tmp uses the disk-backed writable layer and the Node heap setting matches hosted canonical. Diagnostic scratch retains its original 8 GiB guard. Real 2 GiB, 2 CPUs and no network.",
+  "status": "RUNNING_NOT_PASSED"
+}
