@@ -1,0 +1,40 @@
+{
+  "ready": {
+    "status": "ready",
+    "version": "1.22.66",
+    "build": 2281,
+    "deployment": {
+      "branch": "main",
+      "commit": "4a58ab3e83fb49de6e81518298691c99fdb8ff7d",
+      "deployed_at": "2026-11-26T00:42:29.471072+00:00"
+    },
+    "reason": "Application ready."
+  },
+  "reads": [
+    {
+      "path": "/health/live",
+      "status": 200
+    },
+    {
+      "path": "/welcome",
+      "status": 200,
+      "public_demo_sections": [
+        "demo-team",
+        "demo-trade",
+        "demo-values"
+      ]
+    },
+    {
+      "path": "/account/sign-in",
+      "status": 200
+    },
+    {
+      "path": "/api/my-dtos",
+      "status": 401
+    },
+    {
+      "path": "/api/inspect/live/teams",
+      "status": 401
+    }
+  ]
+}
