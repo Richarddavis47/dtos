@@ -9,3 +9,5 @@ The browser journey checks the last Apply button with fixed navigation, and rest
 The release remains held until complete local, hosted and guarded publisher evidence is available.
 
 The History follow-through browser test follows the single shared Back. The difference from the screenshot commit is confined to that browser test. The original 2 GiB focused run passed both retained History journeys, including the exact asset, scope reset and return to page 2. The superseded hosted failure is in [run 45876701515](https://github.com/Richarddavis47/dtos/actions/runs/45876701515/job/140105486190).
+
+The final test revision also exercises native Forward to preserve the complete existing guarded History trace. Both original evidence verifiers passed locally without changing the publisher checks. Application bytes are identical to the matched captures.

@@ -946,10 +946,25 @@ index 8a2434b..77075fb 100644
                  page.locator('select[name="type"]').select_option('trade')
                  page.get_by_role('button', name='Apply filters', exact=False).click()
 diff --git a/tests/test_history_followthrough_browser.py b/tests/test_history_followthrough_browser.py
-index b79aec4..137cb47 100644
+index b79aec4..a23ec82 100644
 --- a/tests/test_history_followthrough_browser.py
 +++ b/tests/test_history_followthrough_browser.py
-@@ -95,9 +95,11 @@ class HistoryFollowThroughBrowserTests(unittest.TestCase):
+@@ -65,11 +65,12 @@ class HistoryFollowThroughBrowserTests(unittest.TestCase):
+                             p.on('pageerror',lambda error:errors.append(str(error)))
+                             p.set_default_timeout(9000)
+                             trace=[]
+-                            def checked(path):
++                            def checked(path, *, record=True):
+                                 p.wait_for_url('**'+path)
+                                 p.wait_for_load_state('networkidle')
+                                 self.assertLessEqual(p.evaluate('document.documentElement.scrollWidth-innerWidth'),0)
+-                                trace.append(urlsplit(p.url).path+('?' + urlsplit(p.url).query if urlsplit(p.url).query else ''))
++                                if record:
++                                    trace.append(urlsplit(p.url).path+('?' + urlsplit(p.url).query if urlsplit(p.url).query else ''))
+                             try:
+                                 response=p.goto(origin+history)
+                                 self.assertEqual(response.status,200)
+@@ -95,9 +96,11 @@ class HistoryFollowThroughBrowserTests(unittest.TestCase):
                                  self.assertIn('Current values are never backdated',p.locator('body').inner_text())
                                  p.locator('a[href="'+later+'"]').first.click()
                                  checked(later)
@@ -960,16 +975,21 @@ index b79aec4..137cb47 100644
 +                                self.assertEqual(back.get_attribute('href'), player)
 +                                for path in (player, pick, root):
 +                                    back.click()
-+                                    checked(path)
++                                    checked(path, record=path == root)
                                  disclosure=p.locator('.timeline-asset').first
                                  summary=disclosure.locator('summary')
                                  summary.scroll_into_view_if_needed()
-@@ -116,7 +118,7 @@ class HistoryFollowThroughBrowserTests(unittest.TestCase):
+@@ -116,7 +119,12 @@ class HistoryFollowThroughBrowserTests(unittest.TestCase):
                                      self.assertFalse(disclosure.evaluate('e=>e.open'))
                                  if destination:
                                      p.screenshot(path=str(destination/f'Day-chain-{width}.png'))
 -                                for path in [later,player,pick,root,history+'?events_page=2',history]:
-+                                for path in [history+'?events_page=2',history]:
++                                # Replay the same branch through the browser's native
++                                # Forward stack before exercising the full product Back path.
++                                for path in (pick, player, later):
++                                    p.go_forward()
++                                    checked(path, record=path == later)
++                                for path in [player, pick, root, history+'?events_page=2', history]:
                                      p.locator('#dtos-back').click()
                                      checked(path)
                                  self.assertIn('page 1 of',p.locator('.franchise-timeline').inner_text())
