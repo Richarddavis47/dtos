@@ -121,7 +121,7 @@ def create_draft_router(
             )
 
         grouped_picks = "".join(
-            f'<section class="pick-round-group"><h4>{escape(season)} · Round {escape(round_number)}</h4>'
+            f'<section class="pick-round-group"><h3>{escape(season)} · Round {escape(round_number)}</h3>'
             f'<div class="pick-asset-grid">{"".join(picks)}</div></section>'
             for (season, round_number), picks in cards.items()
         )

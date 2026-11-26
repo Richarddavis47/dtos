@@ -950,7 +950,7 @@ def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLRespon
         )
         franchise = account.membership.franchise_name if account.membership else "Choose a league"
         switch_label = f'{escape(franchise or "Team name not recorded")} · Switch league'
-        account_html = f'<aside aria-label="Account and league context"><details class="account-context"><summary><b>{escape(league_name)}</b><span>{switch_label}</span></summary><div class="ds-actions">{switches}<a class="ds-action" href="/account">Account · {escape(account.display_name)}</a></div></details></aside>'
+        account_html = f'<aside aria-label="Account and league context"><details class="account-context"><summary><b>{escape(league_name)}</b><span>{switch_label}</span></summary><div class="ds-actions">{switches}<a class="ds-action" href="/account">Account · {escape(account.display_name)}</a></div><!--compact-tools--></details></aside>'
     from services.contextual_navigation import navigation_markup, with_back
     back, navigation_head = navigation_markup()
     team_heading = 'data-my-team-context=' in body
@@ -964,6 +964,8 @@ def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLRespon
     tools = secondary_navigation()
     brand_mark = f'<a class="brand-mark" href="/" aria-label="DTOS Home">{APPLICATION_NAME}</a>'
     compact_variant = " market-top" if market_screen else ""
+    account_html = account_html.replace("<!--compact-tools-->",
+        "" if home_switch or league_screen else f'<div class="compact-tools">{sync_control}{tools}</div>')
     compact_top = f'<header class="top compact-top{compact_variant}"><div class="brand">{brand_mark}</div>{account_html}</header>'
     if home_switch:
         body = body.replace("<!--home-league-switch-->", "", 1)
@@ -977,7 +979,7 @@ def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLRespon
         account_html = ""
         header = ""
     elif account is not None or market_screen:
-        top = compact_top + f'<div class="compact-tools">{tools}{sync_control}</div>'
+        top = compact_top if account is not None else compact_top + f'<div class="compact-tools">{tools}{sync_control}</div>'
         account_html = ""
     else:
         top = f'<header class="top"><div class="brand">{brand_mark}<p>{escape(league_name)} Front Office</p></div>{sync_control}{tools}</header>'

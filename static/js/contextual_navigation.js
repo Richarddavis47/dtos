@@ -56,7 +56,7 @@
     const p = location.pathname;
     const linked = document.querySelector('a.back[href]');
     const supplied = linked && safeUrl(linked.href);
-    if (supplied && identity(supplied) !== identity(safeUrl(location.href) || '/')) return supplied;
+    if (supplied && /^\/(market\?|teams\/|matchups\/|trades\/history\/|players\/)/.test(supplied) && identity(supplied) !== identity(safeUrl(location.href) || '/')) return supplied;
     if (p.startsWith('/players/') || p.startsWith('/picks/')) return p.startsWith('/players/') ? '/market' : '/picks';
     if (p.startsWith('/teams') && teamHash(location.hash)) return team;
     if (p.startsWith('/trades/')) return '/trades';

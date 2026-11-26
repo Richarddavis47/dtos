@@ -6,13 +6,13 @@ import unittest
 
 from playwright.sync_api import expect, sync_playwright
 
-from tests.test_contextual_back import ContextualBackTests
+from tests import test_contextual_back
 from tools.validation.browser_runtime import launch_chromium
 
 
 class VisualConsistencyTests(unittest.TestCase):
     def test_market_return_and_transactions_controls_at_three_widths(self):
-        helper = ContextualBackTests()
+        helper = test_contextual_back.ContextualBackTests()
         fixture = helper.fixture()
         self.addCleanup(helper.doCleanups)
         output = os.environ.get("DTOS_VISUAL_CONSISTENCY_EVIDENCE")

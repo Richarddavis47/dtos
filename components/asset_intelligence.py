@@ -91,6 +91,7 @@ def player_dossier(report: PlayerReport, selected_team: dict, teams: list[dict],
     if report.recommendation.summary == "No supported aggregate justifies a Buy/Sell posture.":
         takeaway = "No supported buy or sell recommendation yet. Review the current projection, results and Market value."
     concern = weaknesses_text(report)[0]
+    nfl_team_label = "NFL team not listed" if profile.nfl_team in {"Free Agent", "Unknown"} else profile.nfl_team
     market_availability = 'unavailable' if report.core_values.market.score is None else 'available'
     risk_evidence = "".join(f"<li><b>{escape(item.factor)}:</b> {escape(item.observed_value)} — {escape(evidence_text(item.explanation))}</li>" for item in report.risk.evidence)
     supported_opportunity = [(label, value) for label, value in report.opportunity.items() if value.score is not None]
@@ -127,7 +128,7 @@ def player_dossier(report: PlayerReport, selected_team: dict, teams: list[dict],
 {ASSET_CSS}
 <div class="ai-header-grid">
 <section class="card ai-context" aria-label="Player details">
-<div class="ai-player-identity">{player_summary(player_id=player_id, name=profile.name, position=profile.position, nfl_team=profile.nfl_team)}</div>
+<div class="ai-player-identity">{player_summary(player_id=player_id, name=profile.name, position=profile.position, nfl_team=nfl_team_label)}</div>
 {actions_html}
 <div class="ai-summary-market" data-availability="{market_availability}"><b>Market:</b> <strong>{_number(report.core_values.market.score)}</strong><small>Neutral Market value</small></div>
 </section>

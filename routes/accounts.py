@@ -348,6 +348,12 @@ def create_accounts_router(*, service: AccountService, runtime_manager: Any) -> 
                     return _source_unavailable()
                 saved_notice = '<p role="status">Saved connected leagues · Sleeper discovery is unavailable. You can retry discovery or select an existing connection; preparation is still checked.</p><p><a href="/account/leagues">Retry league discovery</a></p>'
         active_id = str(context.membership.league_id) if context.membership else ""
+        discovered_ids = {str(league.get("league_id")) for league in discovered}
+        discovered.extend({"league_id": item.league_id, "name": item.league_name,
+                           "season": item.season, "saved_connection": True}
+                          for item in memberships.values()
+                          if item.status == "active" and str(item.league_id) not in discovered_ids)
+
         def picker_order(league):
             league_id = str(league.get("league_id"))
             member = memberships.get(league_id)
