@@ -90,9 +90,18 @@ index eaf072e..11e93d8 100644
  <details class="ai-evidence cx-evidence"><summary>Player strengths, risks and context</summary><section class="ai-sections"><article class="ai-card"><h3>Supported strengths</h3><ul>{strengths}</ul></article><article class="ai-card"><h3>Risks and uncertainty</h3><ul>{weaknesses}</ul></article>{f'<article class="ai-card"><h3>Supported outlook</h3><ul>{opportunity}</ul></article>' if opportunity else ""}<article class="ai-card"><details class="ai-evidence"><summary>Player Snapshot</summary><p>{escape(report.executive_summary)}</p><ul>{snapshot_html}</ul><p><b>Archetypes:</b> {escape(", ".join(report.archetypes))}</p></details></article><article class="ai-card"><h3>Risk assessment · {escape(report.risk.level)} ({report.risk.score}/100)</h3><details class="ai-evidence"><summary>Supporting Evidence</summary><ul>{risk_evidence}</ul></details></article></section>{forecast_html}</details>
  """
 diff --git a/components/trade_intelligence.py b/components/trade_intelligence.py
-index f0d9587..b7bc413 100644
+index f0d9587..336d840 100644
 --- a/components/trade_intelligence.py
 +++ b/components/trade_intelligence.py
+@@ -23,7 +23,7 @@ TRADE_CSS = """
+ .ti-hero h2{font-size:26px;margin:4px 0}.ti-hero p{font-size:14px;color:var(--text-secondary);max-width:620px;margin:8px 0}
+ .ti-selector label{display:grid;gap:6px;font-size:12px;color:var(--muted)}
+ #trade-builder>label{display:grid;gap:6px;font-size:13px;color:var(--text-secondary);margin-bottom:14px}#trade-builder>label select{width:100%}
+-.ti-workflows{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:4px;margin:12px 0 20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md)}
++.ti-workflows{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px;margin:12px 0 20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md)}
+ .ti-workflow{display:block;padding:12px;text-align:center;border-radius:var(--radius-sm)}
+ .ti-workflow:hover{background:var(--surface-interactive)}
+ .ti-workflow b{display:block;color:var(--accent);font-size:14px}
 @@ -208,7 +208,7 @@ def trade_center(view: dict) -> str:
      active = view["active_team"]
      unified = view.get("unified_recommendation")
@@ -311,7 +320,7 @@ index a71cd17..571601d 100644
                  </section><section class="ux-section" id="market-movers"><div class="ux-section-head">
                  <h2>Market Movement</h2><p>Changes supported by saved dated prices</p></div>
 diff --git a/routes/teams.py b/routes/teams.py
-index a42a877..605da15 100644
+index a42a877..8920cca 100644
 --- a/routes/teams.py
 +++ b/routes/teams.py
 @@ -16,7 +16,7 @@ from services.asset_intelligence import contextual_player_url
@@ -323,20 +332,20 @@ index a42a877..605da15 100644
  from src.core.historical_memory.read_model import historical_graph
  from src.core.history_context import canonical_history_store
  from src.core.request_execution import run_manager_read
-@@ -211,8 +211,10 @@ def _roster_rooms(view: dict[str, Any]) -> str:
-                 weeks.add(projection['week'])
+@@ -212,7 +212,11 @@ def _roster_rooms(view: dict[str, Any]) -> str:
              # A numeric observation and its precision remain unchanged. The
              # repeated long precision explanation belongs in the source list.
--            compact_projection = {**projection, 'display_reason': None} if has_projection else None
+             compact_projection = {**projection, 'display_reason': None} if has_projection else None
 -            status = str(player['availability_status']) if has_status else 'Participation unconfirmed' if has_projection else None
-+            compact_projection = ({**projection, 'display_reason': None,
-+                                   'display': projection['display'] if has_projection else 'projection unavailable'}
-+                                  if projection and projection.get('week') is not None else None)
-+            status = human_status(player['availability_status']) if has_status else 'Participation unconfirmed' if has_projection else 'Status unreported'
++            status = 'Participation unconfirmed' if has_projection else None
++            if has_status:
++                raw_status = str(player['availability_status']).strip()
++                special_status = raw_status.upper()
++                status = special_status if special_status in {'IR', 'PUP', 'NFI'} else human_status(raw_status)
              action = ('<a class="thq-action" href="' + escape('/trades/shop?' + urlencode({'front_office': view['team']['roster_id'], 'asset_id': pid, 'owner_roster_id': view['team']['roster_id']})) + '" aria-label="Shop ' + escape(player['name']) + '">Shop</a>') if view['can_shop'] else ''
              metadata = ([f'Market value: {price:g}'] if price is not None else []) + ([str(player['roster_slot'])] if _present_label(player.get('roster_slot')) else [])
              participation = ('<p class="player-participation-note">' + escape(plain_reason(projection['participation_note'])) + '</p>') if projection and projection.get('participation_note') else ''
-@@ -555,7 +557,7 @@ def create_teams_router(
+@@ -555,7 +559,7 @@ def create_teams_router(
          body = f"""
  {TEAM_HQ_CSS}
  <style>
@@ -735,6 +744,25 @@ index 1aac84b..b85b1ef 100644
      const benefit = decision.decisive_reason || e.why_you_would_do_it;
      const cost = decision.main_cost || e.major_drawback;
      const concern = decision.partner_cost;
+diff --git a/tests/test_00_trade_simple_browser.py b/tests/test_00_trade_simple_browser.py
+index 441e4a1..f5f2bd4 100644
+--- a/tests/test_00_trade_simple_browser.py
++++ b/tests/test_00_trade_simple_browser.py
+@@ -143,7 +143,13 @@ class SimpleTradeJourneyBrowserTests(unittest.TestCase):
+ 
+             start = perf_counter()
+             page.goto("https://dtos.test/trades")
+-            self.assertEqual(page.locator(".ti-workflows > a").count(), 4)
++            primary = page.get_by_role("navigation", name="Primary Trade purpose")
++            self.assertEqual(primary.locator("a").count(), 2)
++            self.assertEqual(page.locator('.ti-workflows > a').count(), 3)
++            recommended = page.locator('a[href^="/trades/recommended"]')
++            self.assertEqual(recommended.count(), 1)
++            self.assertTrue(recommended.is_visible())
++            self.assertEqual(requests, [])
+             build_link = page.get_by_role(
+                 "link", name="Build a Trade", exact=False
+             ).first
 diff --git a/tests/test_00_trade_workflow_experience.py b/tests/test_00_trade_workflow_experience.py
 index 1da2894..0d6c60d 100644
 --- a/tests/test_00_trade_workflow_experience.py
@@ -866,6 +894,23 @@ index 7731255..389b52d 100644
                      self.assertIn("offset=10", page.url)
                      # A syntactically valid old pick without a current native
                      # right is historical/unknown, never an acquisition target.
+diff --git a/tests/test_completed_trade_observations_browser.py b/tests/test_completed_trade_observations_browser.py
+index 3b23914..6a9a4e8 100644
+--- a/tests/test_completed_trade_observations_browser.py
++++ b/tests/test_completed_trade_observations_browser.py
+@@ -132,9 +132,9 @@ class CompletedTradeObservationBrowserTests(unittest.TestCase):
+                                     self.assertEqual(len(requests), before_career_requests)
+                                     page.locator('a[href="'+later+'"]').first.click()
+                                     page.wait_for_url('**'+later)
+-                                    page.locator('.trade-timeline a.back[href="'+root+'"]').click()
+-                                    page.wait_for_url('**'+root)
+-                                    for path in [later, player, pick, root, filtered]:
++                                    self.assertEqual(page.locator('#dtos-back').get_attribute('href'), player)
++                                    self.assertEqual(page.locator('.trade-timeline a.back:visible').count(), 0)
++                                    for path in [player, pick, root, filtered]:
+                                         page.locator('#dtos-back').click()
+                                         page.wait_for_url('**'+path)
+                                         self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth-innerWidth'), 0)
 diff --git a/tests/test_contextual_back.py b/tests/test_contextual_back.py
 index 3316cc1..710a993 100644
 --- a/tests/test_contextual_back.py
@@ -954,6 +999,140 @@ index cf6174a..d3a50cc 100644
          self.assertLessEqual(brand["x"] + brand["width"], switcher["x"])
          self.assertLessEqual(switcher["x"] + switcher["width"], width)
          other = page.locator(".market-result:not([data-asset-id='" + fixture.asset_id + "']) .market-row-change").first
+diff --git a/tests/test_my_team_intelligence_browser.py b/tests/test_my_team_intelligence_browser.py
+index 2db2ad8..1a64442 100644
+--- a/tests/test_my_team_intelligence_browser.py
++++ b/tests/test_my_team_intelligence_browser.py
+@@ -66,7 +66,8 @@ class MyTeamIntelligenceBrowserTests(journeys.ProductBrowserJourneyTests):
+             self.assertEqual(overlaps, [])
+             player.press('Enter')
+             page.wait_for_load_state('domcontentloaded')
+-            back = page.get_by_role('link', name='← Back to My Team roster', exact=True)
++            back = page.locator('#dtos-back')
++            self.assertTrue(back.is_visible())
+             self.assertEqual(back.get_attribute('href'), '/teams/1#full-roster')
+             # Explicit return intent must override a closed saved disclosure,
+             # including an old/missed asynchronous toggle publication.
+@@ -82,8 +83,11 @@ class MyTeamIntelligenceBrowserTests(journeys.ProductBrowserJourneyTests):
+             pick = page.locator('#draft-capital a[href^="/picks/"]').first
+             pick.click()
+             page.wait_for_load_state('domcontentloaded')
+-            page.get_by_role('link', name='← Back to My Team draft capital', exact=True).click()
+-            page.wait_for_load_state('domcontentloaded')
++            back = page.locator('#dtos-back')
++            self.assertTrue(back.is_visible())
++            back.click()
++            page.wait_for_url('**/teams/1#team-picks')
++            page.locator('#draft-capital').wait_for(state='visible')
+             shop = page.locator('#draft-capital a[href*="asset_id=2027-R4-2"]')
+             href = shop.get_attribute('href')
+             self.assertIn('asset_id=2027-R4-2', href)
+diff --git a/tests/test_my_team_outlook_browser.py b/tests/test_my_team_outlook_browser.py
+index 95e3877..533dce6 100644
+--- a/tests/test_my_team_outlook_browser.py
++++ b/tests/test_my_team_outlook_browser.py
+@@ -73,12 +73,14 @@ class MyTeamOutlookBrowserTests(unittest.TestCase):
+                             page.screenshot(path=str(Path(out) / f'my-team-{width}.png'), full_page=True)
+                             (Path(out) / 'phone-measurements.json').write_text(json.dumps(measurements, indent=2))
+                         self.assertLess(link.bounding_box()['y'], height if height > 432 else 432)
+-                        for label, target in (('Depth','#positional-depth'), ('Draft capital','#draft-capital'), ('View full roster','#full-roster')):
+-                            link = page.get_by_role('navigation', name='Roster sections').get_by_role('link', name=label, exact=True)
++                        for label, target in (('Depth', '#positional-depth'), ('View full roster', '#full-roster'), ('Picks', '#team-picks')):
++                            link = page.locator('.thq-tabs').get_by_role('link', name=label, exact=True) if label == 'Picks' else (
++                                page.get_by_role('navigation', name='Roster sections').get_by_role('link', name=label, exact=True))
+                             self.assertEqual(link.get_attribute('href'), target)
+                             link.click()
+                             page.locator(target).wait_for(state='visible')
+-                            if target == '#draft-capital':
++                            if target == '#team-picks':
++                                page.locator('#draft-capital').wait_for(state='visible')
+                                 page.locator('.thq-tabs a[href="#team-roster"]').click()
+                         page.locator('#my-team-strategy').select_option('WIN NOW')
+                         explicit_save(page)
+diff --git a/tests/test_operator_context_integrity.py b/tests/test_operator_context_integrity.py
+index 7f035ea..95ae70d 100644
+--- a/tests/test_operator_context_integrity.py
++++ b/tests/test_operator_context_integrity.py
+@@ -60,7 +60,7 @@ class OperatorContextIntegrityTests(unittest.TestCase):
+             for _ in range(2):
+                 r = f.client.get("/account/my-dtos")
+                 self.assertEqual(r.status_code, 200)
+-                self.assertIn("Fixture Front Office", r.text)
++                self.assertIn("<b>Fixture</b>", r.text)
+                 self.assertIn("Your franchise", r.text)
+                 self.assertNotIn("WRONG DEFAULT", r.text)
+                 self.assertIn('data-league-id="100"', r.text)
+@@ -76,7 +76,7 @@ class OperatorContextIntegrityTests(unittest.TestCase):
+             )
+             f.store.activate(f.account_id, "200")
+             r = f.client.get("/account/my-dtos")
+-            self.assertIn("Second League Front Office", r.text)
++            self.assertIn("<b>Second League</b>", r.text)
+             self.assertIn("Second Franchise", r.text)
+             self.assertIn('data-league-id="200"', r.text)
+             # Old prepared data is not allowed to impersonate selected league 200.
+@@ -98,19 +98,19 @@ class OperatorContextIntegrityTests(unittest.TestCase):
+                         "document.querySelector('#personal-status').textContent.includes('Market rankings loaded')"
+                     )
+                     self.assertIn(
+-                        "Fixture", page.locator(".account-context summary").inner_text()
++                        "Fixture", page.locator(".account-context > summary").inner_text()
+                     )
+                     self.assertFalse(
+                         page.evaluate("document.documentElement.scrollWidth>innerWidth")
+                     )
+                     for _ in range(30):
+                         page.keyboard.press("Tab")
+-                        if page.locator(".account-context summary").evaluate(
++                        if page.locator(".account-context > summary").evaluate(
+                             "e=>e===document.activeElement"
+                         ):
+                             break
+                     self.assertTrue(
+-                        page.locator(".account-context summary").evaluate(
++                        page.locator(".account-context > summary").evaluate(
+                             "e=>e===document.activeElement"
+                         )
+                     )
+diff --git a/tests/test_plain_english_final_browser.py b/tests/test_plain_english_final_browser.py
+index dc33121..a1b3038 100644
+--- a/tests/test_plain_english_final_browser.py
++++ b/tests/test_plain_english_final_browser.py
+@@ -10,6 +10,7 @@ import unittest
+ from unittest.mock import AsyncMock, patch
+ 
+ from playwright.sync_api import sync_playwright
++from routes.navigation import create_navigation_router
+ from routes.transactions import create_transactions_router
+ from src.core.data_platform import data_platform
+ from src.core.data_platform.storage import SnapshotWarehouse
+@@ -31,6 +32,7 @@ def capture_pages(folder=None):
+     f.setUp()
+     measurements = []
+     try:
++        f.f.f.client.app.include_router(create_navigation_router())
+         f.publish(datetime.now(timezone.utc).isoformat())
+         data = f.f.f.data
+         data['league']['name'] = 'Harbor Dynasty'
+@@ -44,7 +46,7 @@ def capture_pages(folder=None):
+             try:
+                 for width, height in VIEWPORTS:
+                     for name, path, selector in (
+-                        ('dossier', '/players/a?front_office=1&from_team=1', '.ai-context'),
++                        ('dossier', '/players/a?front_office=1&from_team=1', '.ai-header-grid'),
+                         ('home', '/', '#home-opportunities'),
+                         ('home-unselected', '/', '#home-opportunities'),
+                         ('depth', '/teams/1#positional-depth', '#positional-depth'),
+@@ -107,7 +109,8 @@ def capture_pages(folder=None):
+                                 page.screenshot(path=str(root / f'{name}-{width}.png'), full_page=True)
+                                 (root / f'{name}-{width}.json').write_text(json.dumps(row, indent=2))
+                             if name == 'dossier':
+-                                page.get_by_role('link', name='← Back to My Team roster', exact=True).click()
++                                page.locator('#dtos-back').click()
++                                page.wait_for_url('**/teams/1#full-roster')
+                                 row['return_path'] = page.url
+                             measurements.append(row)
+                         finally:
 diff --git a/tests/test_player_api.py b/tests/test_player_api.py
 index 3600161..d1b5ce2 100644
 --- a/tests/test_player_api.py
@@ -967,6 +1146,113 @@ index 3600161..d1b5ce2 100644
          self.assertIn("Player One", valid.text)
          self.assertIn('class="ai-player-identity"', valid.text)
          self.assertIn("Live Data &amp; Market", valid.text)
+diff --git a/tests/test_premium_hierarchy_browser.py b/tests/test_premium_hierarchy_browser.py
+index f87a65c..1a786c5 100644
+--- a/tests/test_premium_hierarchy_browser.py
++++ b/tests/test_premium_hierarchy_browser.py
+@@ -12,6 +12,7 @@ from urllib.parse import urlsplit
+ 
+ from playwright.sync_api import sync_playwright
+ 
++from routes.navigation import create_navigation_router
+ from routes.transactions import create_transactions_router
+ from src.core.data_platform import data_platform
+ from src.core.data_platform.storage import SnapshotWarehouse
+@@ -130,9 +131,13 @@ class PremiumSharedJourneyTests(journey.ProductBrowserJourneyTests):
+             home_tools.press("Enter")
+             self.assertFalse(home_tools.evaluate("e=>e.parentElement.open"))
+         if path in ("/market", "/teams/1", "/fois"):
++            switcher = page.locator(".compact-top .account-context > summary")
++            keyboard_disclosure(self, page, switcher)
++            switcher.press("Enter")
+             keyboard_disclosure(
+-                self, page, page.locator(".ds-shell .secondary-nav>summary")
++                self, page, page.locator(".compact-tools .secondary-nav>summary")
+             )
++            switcher.press("Enter")
+         if path == "/teams/1":
+             choice = page.locator("#my-team-strategy")
+             fit = choice.evaluate(
+@@ -145,10 +150,9 @@ class PremiumSharedJourneyTests(journey.ProductBrowserJourneyTests):
+             )
+             nav = page.locator('nav[aria-label="Roster sections"]')
+             self.assertEqual(nav.evaluate("e=>e.scrollWidth>e.clientWidth"), False)
+-            for fragment in ("#full-roster", "#positional-depth", "#draft-capital"):
+-                link = nav.locator(
+-                    'a[href="' + fragment + '"]:not(#my-team-outlook-action)'
+-                )
++            for fragment in ("#full-roster", "#positional-depth", "#team-picks"):
++                group = page.locator(".thq-tabs") if fragment == "#team-picks" else nav
++                link = group.locator(f'a[href="{fragment}"]')
+                 self.assertEqual(link.count(), 1)
+                 link.focus()
+                 self.assertTrue(
+@@ -167,6 +171,7 @@ class PremiumPreparedBrowserTests(unittest.TestCase):
+         self.addCleanup(f.doCleanups)
+         f.publish(datetime.now(timezone.utc).isoformat())
+         data = f.f.f.data
++        f.f.f.client.app.include_router(create_navigation_router())
+         f.f.f.client.app.include_router(
+             create_transactions_router(
+                 ensure_fresh=AsyncMock(),
+@@ -229,11 +234,10 @@ class PremiumPreparedBrowserTests(unittest.TestCase):
+                     for fragment in (
+                         "#full-roster",
+                         "#positional-depth",
+-                        "#draft-capital",
++                        "#team-picks",
+                     ):
+-                        link = nav.locator(
+-                            f'a[href="{fragment}"]:not(#my-team-outlook-action)'
+-                        )
++                        group = page.locator(".thq-tabs") if fragment == "#team-picks" else nav
++                        link = group.locator(f'a[href="{fragment}"]')
+                         link.focus()
+                         self.assertGreaterEqual(link.bounding_box()["height"], 44)
+                         target = link.evaluate("""element => {
+@@ -244,6 +248,8 @@ class PremiumPreparedBrowserTests(unittest.TestCase):
+                         self.assertTrue(target['hit'], (width, fragment, target))
+                         link.press("Enter")
+                         self.assertTrue(page.url.endswith(fragment))
++                        if fragment == "#team-picks":
++                            page.locator("#draft-capital").wait_for(state="visible")
+                     page.locator('.thq-tabs a[href="#team-roster"]').click()
+                     page.evaluate("scrollTo(0,0)")
+                     row = capture(page, "prepared-my-team", width, height)
+@@ -285,7 +291,8 @@ class PremiumPreparedBrowserTests(unittest.TestCase):
+                             has_text="Valuation, fit and source evidence",
+                         ),
+                     )
+-                    page.get_by_text("← Back to My Team roster", exact=True).click()
++                    page.locator("#dtos-back").click()
++                    page.wait_for_url("**/teams/1#full-roster")
+                     self.assertIn("/teams/1#full-roster", page.url)
+                     page.close()
+             finally:
+diff --git a/tests/test_projection_coverage_browser.py b/tests/test_projection_coverage_browser.py
+index 482c2ba..dda2969 100644
+--- a/tests/test_projection_coverage_browser.py
++++ b/tests/test_projection_coverage_browser.py
+@@ -64,14 +64,14 @@ class ProjectionCoverageBrowserTests(unittest.TestCase):
+                             cdp.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []})
+                             self.assertTrue(detail.evaluate('e=>e.open'))
+                             cdp.send('Emulation.setTouchEmulationEnabled', {'enabled': False})
+-                            for label, target in (('Depth', '#positional-depth'),
+-                                                  ('Draft capital', '#draft-capital'),
+-                                                  ('View full roster', '#full-roster')):
+-                                link = page.get_by_role('navigation', name='Roster sections').get_by_role('link', name=label, exact=True)
++                            for label, target in (('Depth', '#positional-depth'), ('View full roster', '#full-roster'), ('Picks', '#team-picks')):
++                                link = page.locator('.thq-tabs').get_by_role('link', name=label, exact=True) if label == 'Picks' else (
++                                    page.get_by_role('navigation', name='Roster sections').get_by_role('link', name=label, exact=True))
+                                 self.assertEqual(link.get_attribute('href'), target)
+                                 link.click()
+                                 page.locator(target).wait_for(state='visible')
+-                                if target == '#draft-capital':
++                                if target == '#team-picks':
++                                    page.locator('#draft-capital').wait_for(state='visible')
+                                     page.locator('.thq-tabs a[href="#team-roster"]').click()
+                             self.assertEqual(page.goto('https://dtos.test/teams/8').status, 200)
+                             page.locator('#my-team-outlook-evidence summary').click()
 diff --git a/tests/test_unmatched_import_recovery.py b/tests/test_unmatched_import_recovery.py
 index 6c88935..fa8de08 100644
 --- a/tests/test_unmatched_import_recovery.py

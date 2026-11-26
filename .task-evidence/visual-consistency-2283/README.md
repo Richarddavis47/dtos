@@ -1,11 +1,9 @@
-# DTOS visual consistency · matched screenshots
+# DTOS visual consistency
 
-Thirty matching before/after captures at 320, 390 and 1280 pixels. Each pair uses the same disposable authenticated prepared fixture or public sign-in route. The viewport matrix includes Home, My Team, Trade, Market, Player Details, League, Matchups, Transactions, Draft Picks and sign-in. The two fixture captures have different exact tested source identities. `fixture-source-relationship.json` confirms the later candidate changed only browser tests to use the current controls.
+The 30 matched screenshots in before and after use the same prepared disposable fixture, at 320, 390 and 1280 pixels. Open the full images for Home, My Team, Trade, Market, Player Details, League, Matchups, Transactions, Draft Picks and sign-in. The top-level comparison images show the initial pass. The team-trade-correction comparisons and the after directory include the subsequent roster and Trade corrections.
 
-The new rendered journey verifies keyboard Back restores Market filters and the expanded row, and checks that the transaction Apply button is reachable with the fixed navigation. Public Welcome and prepared league score controls are validated separately. The matrix includes intentionally incomplete source evidence. It does not represent the production Day Traders roster or physical iPhone Safari.
+The six additional matched captures show grouped exact picks with ownership and original franchises, and the three expanded, read-only Welcome demonstrations. Their application paths match the final source, as recorded in fixture-source-relationship.json.
 
-The draft remains held while exact-source local and hosted release validation complete.
+The browser journey checks the last Apply button with fixed navigation, and restores the filters and expanded Market row after Player Details. The short-phone roster gate retains its original 600-pixel limit. These are Chromium fixture captures. Signed-in Day Traders and physical iPhone Safari remain unverified.
 
-The extra matrix shows three exact pick rows with owner and origin and the expanded Welcome demonstrations at the same three widths.
-
-The current exact-source focused logs include the desktop and short-phone roster gate, native traversal and contextual Back through the original completed trade and exact pick, and the Market search and filter round trip.
+The release remains held until complete local, hosted and guarded publisher evidence is available.

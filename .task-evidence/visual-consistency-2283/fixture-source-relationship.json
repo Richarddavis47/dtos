@@ -1,7 +1,7 @@
 {
   "final": {
-    "candidate": "1fccc79d560bd9c8c898121d4fa81887a087d185",
-    "tree": "f0a27ffe7a05bd14b41510fc7f1731a7870e3bcf",
+    "candidate": "26856433d4e0b88ab542868f5ec779579dece8c8",
+    "tree": "c26aa5c5fdf012f336f177b4b6b814ff7def2552",
     "baseline": "b85342dcc719b7dbac58753662cea06cb2f4260c",
     "baseline_tree": "036fb9dc0083466d0d972d94440a08a51c7d59d6",
     "branch": "feat/visual-consistency-2283",
@@ -10,15 +10,19 @@
     "expected_test_count": 4690,
     "pr": 372
   },
-  "capture_candidate": "88316b540592bd5ecd55d4d3a4c90acdee17d261",
-  "capture_tree": "94783314c0d62473c7318dc9caf134e5bddf1c71",
-  "changed_paths": [
-    "tests/test_beginner_browser.py",
-    "tests/test_beginner_final_browser.py",
-    "tests/test_contextual_back.py",
-    "tests/test_historical_tracker_phase2_browser.py",
-    "tests/test_home_trade_news_browser.py",
-    "tests/test_market_directory_browser.py"
-  ],
-  "application_bytes_identical": true
+  "main_after": {
+    "candidate": "26856433d4e0b88ab542868f5ec779579dece8c8",
+    "tree": "c26aa5c5fdf012f336f177b4b6b814ff7def2552",
+    "pairs": 30
+  },
+  "secondary_after": {
+    "candidate": "88316b540592bd5ecd55d4d3a4c90acdee17d261",
+    "tree": "94783314c0d62473c7318dc9caf134e5bddf1c71",
+    "pairs": 6,
+    "application_files_changed": [
+      "components/trade_intelligence.py",
+      "routes/teams.py"
+    ],
+    "unchanged_scope": "Expanded public Welcome and grouped Draft Picks do not use the changed Trade landing layout or My Team roster-row renderer."
+  }
 }
