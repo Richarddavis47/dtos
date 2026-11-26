@@ -1,0 +1,64 @@
+{
+  "container": "93be67c8528aedbaf2c1b3f596aedcc6854a351294deeacbd6b4e6b48a8a7f7c",
+  "image": "sha256:da2020c853b4c769eadb51c130e7a85938710b66cb866c43661a9dfb44ac5fe4",
+  "created": "2026-11-25T22:51:20.061793178Z",
+  "state": {
+    "Status": "running",
+    "Running": true,
+    "Paused": false,
+    "Restarting": false,
+    "OOMKilled": false,
+    "Dead": false,
+    "Pid": 300570,
+    "ExitCode": 0,
+    "Error": "",
+    "StartedAt": "2026-11-25T22:51:29.949600166Z",
+    "FinishedAt": "0001-01-01T00:00:00Z"
+  },
+  "mounts": [
+    {
+      "type": "bind",
+      "source": "/workspace/dtos/.git",
+      "destination": "/workspace/dtos/.git",
+      "read_write": false
+    },
+    {
+      "type": "bind",
+      "source": "/workspace/2281-league/local-canonical",
+      "destination": "/output",
+      "read_write": true
+    },
+    {
+      "type": "bind",
+      "source": "/dev/shm/dtos-2281-canonical-c910a3a4",
+      "destination": "/fixture",
+      "read_write": true
+    },
+    {
+      "type": "bind",
+      "source": "/workspace/dtos-league-2281",
+      "destination": "/app",
+      "read_write": true
+    }
+  ],
+  "resource_limits": {
+    "memory": 2147483648,
+    "swap": 2147483648,
+    "cpu": 2000000000,
+    "network": "none",
+    "user": "1000:1000"
+  },
+  "validation_environment": [
+    "DTOS_EXPECTED_TEST_COUNT=4683",
+    "HOME=/tmp",
+    "DTOS_EXPECTED_HEAD=c910a3a4c7c97a63c400ec80cc8f604cc421d6fb",
+    "DTOS_EXPECTED_TREE=353feba0c022a750229e748a04ebdab43eac71da",
+    "NODE_OPTIONS=--max-old-space-size=256",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "DTOS_CHROMIUM_EXECUTABLE=/usr/bin/chromium"
+  ],
+  "process": [
+    "python",
+    "/output/runner.py"
+  ]
+}
