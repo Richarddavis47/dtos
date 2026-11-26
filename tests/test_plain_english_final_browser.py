@@ -10,6 +10,7 @@ import unittest
 from unittest.mock import AsyncMock, patch
 
 from playwright.sync_api import sync_playwright
+from routes.navigation import create_navigation_router
 from routes.transactions import create_transactions_router
 from src.core.data_platform import data_platform
 from src.core.data_platform.storage import SnapshotWarehouse
@@ -31,6 +32,7 @@ def capture_pages(folder=None):
     f.setUp()
     measurements = []
     try:
+        f.f.f.client.app.include_router(create_navigation_router())
         f.publish(datetime.now(timezone.utc).isoformat())
         data = f.f.f.data
         data['league']['name'] = 'Harbor Dynasty'
@@ -44,7 +46,7 @@ def capture_pages(folder=None):
             try:
                 for width, height in VIEWPORTS:
                     for name, path, selector in (
-                        ('dossier', '/players/a?front_office=1&from_team=1', '.ai-context'),
+                        ('dossier', '/players/a?front_office=1&from_team=1', '.ai-header-grid'),
                         ('home', '/', '#home-opportunities'),
                         ('home-unselected', '/', '#home-opportunities'),
                         ('depth', '/teams/1#positional-depth', '#positional-depth'),
@@ -107,7 +109,8 @@ def capture_pages(folder=None):
                                 page.screenshot(path=str(root / f'{name}-{width}.png'), full_page=True)
                                 (root / f'{name}-{width}.json').write_text(json.dumps(row, indent=2))
                             if name == 'dossier':
-                                page.get_by_role('link', name='← Back to My Team roster', exact=True).click()
+                                page.locator('#dtos-back').click()
+                                page.wait_for_url('**/teams/1#full-roster')
                                 row['return_path'] = page.url
                             measurements.append(row)
                         finally:

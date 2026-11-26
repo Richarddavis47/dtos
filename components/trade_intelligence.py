@@ -23,7 +23,7 @@ TRADE_CSS = """
 .ti-hero h2{font-size:26px;margin:4px 0}.ti-hero p{font-size:14px;color:var(--text-secondary);max-width:620px;margin:8px 0}
 .ti-selector label{display:grid;gap:6px;font-size:12px;color:var(--muted)}
 #trade-builder>label{display:grid;gap:6px;font-size:13px;color:var(--text-secondary);margin-bottom:14px}#trade-builder>label select{width:100%}
-.ti-workflows{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:4px;margin:12px 0 20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md)}
+.ti-workflows{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px;margin:12px 0 20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md)}
 .ti-workflow{display:block;padding:12px;text-align:center;border-radius:var(--radius-sm)}
 .ti-workflow:hover{background:var(--surface-interactive)}
 .ti-workflow b{display:block;color:var(--accent);font-size:14px}

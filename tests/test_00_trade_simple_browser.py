@@ -143,7 +143,13 @@ class SimpleTradeJourneyBrowserTests(unittest.TestCase):
 
             start = perf_counter()
             page.goto("https://dtos.test/trades")
-            self.assertEqual(page.locator(".ti-workflows > a").count(), 4)
+            primary = page.get_by_role("navigation", name="Primary Trade purpose")
+            self.assertEqual(primary.locator("a").count(), 2)
+            self.assertEqual(page.locator('.ti-workflows > a').count(), 3)
+            recommended = page.locator('a[href^="/trades/recommended"]')
+            self.assertEqual(recommended.count(), 1)
+            self.assertTrue(recommended.is_visible())
+            self.assertEqual(requests, [])
             build_link = page.get_by_role(
                 "link", name="Build a Trade", exact=False
             ).first

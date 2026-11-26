@@ -12,6 +12,7 @@ from urllib.parse import urlsplit
 
 from playwright.sync_api import sync_playwright
 
+from routes.navigation import create_navigation_router
 from routes.transactions import create_transactions_router
 from src.core.data_platform import data_platform
 from src.core.data_platform.storage import SnapshotWarehouse
@@ -170,6 +171,7 @@ class PremiumPreparedBrowserTests(unittest.TestCase):
         self.addCleanup(f.doCleanups)
         f.publish(datetime.now(timezone.utc).isoformat())
         data = f.f.f.data
+        f.f.f.client.app.include_router(create_navigation_router())
         f.f.f.client.app.include_router(
             create_transactions_router(
                 ensure_fresh=AsyncMock(),
@@ -289,7 +291,8 @@ class PremiumPreparedBrowserTests(unittest.TestCase):
                             has_text="Valuation, fit and source evidence",
                         ),
                     )
-                    page.get_by_text("← Back to My Team roster", exact=True).click()
+                    page.locator("#dtos-back").click()
+                    page.wait_for_url("**/teams/1#full-roster")
                     self.assertIn("/teams/1#full-roster", page.url)
                     page.close()
             finally:

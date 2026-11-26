@@ -211,10 +211,12 @@ def _roster_rooms(view: dict[str, Any]) -> str:
                 weeks.add(projection['week'])
             # A numeric observation and its precision remain unchanged. The
             # repeated long precision explanation belongs in the source list.
-            compact_projection = ({**projection, 'display_reason': None,
-                                   'display': projection['display'] if has_projection else 'projection unavailable'}
-                                  if projection and projection.get('week') is not None else None)
-            status = human_status(player['availability_status']) if has_status else 'Participation unconfirmed' if has_projection else 'Status unreported'
+            compact_projection = {**projection, 'display_reason': None} if has_projection else None
+            status = 'Participation unconfirmed' if has_projection else None
+            if has_status:
+                raw_status = str(player['availability_status']).strip()
+                special_status = raw_status.upper()
+                status = special_status if special_status in {'IR', 'PUP', 'NFI'} else human_status(raw_status)
             action = ('<a class="thq-action" href="' + escape('/trades/shop?' + urlencode({'front_office': view['team']['roster_id'], 'asset_id': pid, 'owner_roster_id': view['team']['roster_id']})) + '" aria-label="Shop ' + escape(player['name']) + '">Shop</a>') if view['can_shop'] else ''
             metadata = ([f'Market value: {price:g}'] if price is not None else []) + ([str(player['roster_slot'])] if _present_label(player.get('roster_slot')) else [])
             participation = ('<p class="player-participation-note">' + escape(plain_reason(projection['participation_note'])) + '</p>') if projection and projection.get('participation_note') else ''
