@@ -28,10 +28,8 @@ def classify(evaluation):
     if evaluation.get('legal') is False or legality.get('execution_status') in (
             'NOT EXECUTABLE', 'REQUIRES ROSTER RESOLUTION'):
         return 'HARD INVALID'
-    if package_blocks_recommendation(evaluation):
-        partner = (evaluation['package_adjustment'].get('partner') or {})
-        return 'COUNTERPARTY LIMITED' if partner.get('blocks_recommendation') else 'STRATEGICALLY POOR'
-    if evaluation.get('generated_trade_eligible'):
+    package_blocked = package_blocks_recommendation(evaluation)
+    if evaluation.get('generated_trade_eligible') and not package_blocked:
         return 'CREDIBLE RECOMMENDATION'
     label = evaluation.get('recommendation')
     if label is None:
@@ -45,6 +43,9 @@ def classify(evaluation):
                 'ANALYSIS GOAL REQUIRED' if goal else 'STRATEGICALLY POOR')
     if label in ('REJECT', 'NOT WORTH IT'):
         return 'STRATEGICALLY POOR'
+    if package_blocked:
+        partner = evaluation['package_adjustment'].get('partner') or {}
+        return 'COUNTERPARTY LIMITED' if partner.get('blocks_recommendation') else 'STRATEGICALLY POOR'
     counterparty = (dimensions.get('counterparty_plausibility') or {}).get('assessment')
     if counterparty not in ('STRONG', 'PLAUSIBLE'):
         return 'COUNTERPARTY LIMITED'
