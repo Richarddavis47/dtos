@@ -73,12 +73,14 @@ class MyTeamOutlookBrowserTests(unittest.TestCase):
                             page.screenshot(path=str(Path(out) / f'my-team-{width}.png'), full_page=True)
                             (Path(out) / 'phone-measurements.json').write_text(json.dumps(measurements, indent=2))
                         self.assertLess(link.bounding_box()['y'], height if height > 432 else 432)
-                        for label, target in (('Depth','#positional-depth'), ('Draft capital','#draft-capital'), ('View full roster','#full-roster')):
-                            link = page.get_by_role('navigation', name='Roster sections').get_by_role('link', name=label, exact=True)
+                        for label, target in (('Depth', '#positional-depth'), ('View full roster', '#full-roster'), ('Picks', '#team-picks')):
+                            link = page.locator('.thq-tabs').get_by_role('link', name=label, exact=True) if label == 'Picks' else (
+                                page.get_by_role('navigation', name='Roster sections').get_by_role('link', name=label, exact=True))
                             self.assertEqual(link.get_attribute('href'), target)
                             link.click()
                             page.locator(target).wait_for(state='visible')
-                            if target == '#draft-capital':
+                            if target == '#team-picks':
+                                page.locator('#draft-capital').wait_for(state='visible')
                                 page.locator('.thq-tabs a[href="#team-roster"]').click()
                         page.locator('#my-team-strategy').select_option('WIN NOW')
                         explicit_save(page)

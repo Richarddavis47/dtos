@@ -66,7 +66,8 @@ class MyTeamIntelligenceBrowserTests(journeys.ProductBrowserJourneyTests):
             self.assertEqual(overlaps, [])
             player.press('Enter')
             page.wait_for_load_state('domcontentloaded')
-            back = page.get_by_role('link', name='← Back to My Team roster', exact=True)
+            back = page.locator('#dtos-back')
+            self.assertTrue(back.is_visible())
             self.assertEqual(back.get_attribute('href'), '/teams/1#full-roster')
             # Explicit return intent must override a closed saved disclosure,
             # including an old/missed asynchronous toggle publication.
@@ -82,8 +83,11 @@ class MyTeamIntelligenceBrowserTests(journeys.ProductBrowserJourneyTests):
             pick = page.locator('#draft-capital a[href^="/picks/"]').first
             pick.click()
             page.wait_for_load_state('domcontentloaded')
-            page.get_by_role('link', name='← Back to My Team draft capital', exact=True).click()
-            page.wait_for_load_state('domcontentloaded')
+            back = page.locator('#dtos-back')
+            self.assertTrue(back.is_visible())
+            back.click()
+            page.wait_for_url('**/teams/1#team-picks')
+            page.locator('#draft-capital').wait_for(state='visible')
             shop = page.locator('#draft-capital a[href*="asset_id=2027-R4-2"]')
             href = shop.get_attribute('href')
             self.assertIn('asset_id=2027-R4-2', href)
