@@ -64,14 +64,14 @@ class ProjectionCoverageBrowserTests(unittest.TestCase):
                             cdp.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []})
                             self.assertTrue(detail.evaluate('e=>e.open'))
                             cdp.send('Emulation.setTouchEmulationEnabled', {'enabled': False})
-                            for label, target in (('Depth', '#positional-depth'),
-                                                  ('Draft capital', '#draft-capital'),
-                                                  ('View full roster', '#full-roster')):
-                                link = page.get_by_role('navigation', name='Roster sections').get_by_role('link', name=label, exact=True)
+                            for label, target in (('Depth', '#positional-depth'), ('View full roster', '#full-roster'), ('Picks', '#team-picks')):
+                                link = page.locator('.thq-tabs').get_by_role('link', name=label, exact=True) if label == 'Picks' else (
+                                    page.get_by_role('navigation', name='Roster sections').get_by_role('link', name=label, exact=True))
                                 self.assertEqual(link.get_attribute('href'), target)
                                 link.click()
                                 page.locator(target).wait_for(state='visible')
-                                if target == '#draft-capital':
+                                if target == '#team-picks':
+                                    page.locator('#draft-capital').wait_for(state='visible')
                                     page.locator('.thq-tabs a[href="#team-roster"]').click()
                             self.assertEqual(page.goto('https://dtos.test/teams/8').status, 200)
                             page.locator('#my-team-outlook-evidence summary').click()

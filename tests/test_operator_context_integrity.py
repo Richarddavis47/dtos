@@ -60,7 +60,7 @@ class OperatorContextIntegrityTests(unittest.TestCase):
             for _ in range(2):
                 r = f.client.get("/account/my-dtos")
                 self.assertEqual(r.status_code, 200)
-                self.assertIn("Fixture Front Office", r.text)
+                self.assertIn("<b>Fixture</b>", r.text)
                 self.assertIn("Your franchise", r.text)
                 self.assertNotIn("WRONG DEFAULT", r.text)
                 self.assertIn('data-league-id="100"', r.text)
@@ -76,7 +76,7 @@ class OperatorContextIntegrityTests(unittest.TestCase):
             )
             f.store.activate(f.account_id, "200")
             r = f.client.get("/account/my-dtos")
-            self.assertIn("Second League Front Office", r.text)
+            self.assertIn("<b>Second League</b>", r.text)
             self.assertIn("Second Franchise", r.text)
             self.assertIn('data-league-id="200"', r.text)
             # Old prepared data is not allowed to impersonate selected league 200.
@@ -98,19 +98,19 @@ class OperatorContextIntegrityTests(unittest.TestCase):
                         "document.querySelector('#personal-status').textContent.includes('Market rankings loaded')"
                     )
                     self.assertIn(
-                        "Fixture", page.locator(".account-context summary").inner_text()
+                        "Fixture", page.locator(".account-context > summary").inner_text()
                     )
                     self.assertFalse(
                         page.evaluate("document.documentElement.scrollWidth>innerWidth")
                     )
                     for _ in range(30):
                         page.keyboard.press("Tab")
-                        if page.locator(".account-context summary").evaluate(
+                        if page.locator(".account-context > summary").evaluate(
                             "e=>e===document.activeElement"
                         ):
                             break
                     self.assertTrue(
-                        page.locator(".account-context summary").evaluate(
+                        page.locator(".account-context > summary").evaluate(
                             "e=>e===document.activeElement"
                         )
                     )

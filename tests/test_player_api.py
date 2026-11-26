@@ -129,7 +129,7 @@ class PlayerApiContractTests(unittest.TestCase):
         dossier_url = self.client.get("/api/players").json()["players"][0]["dossier_url"]
         valid = self.client.get(f"{dossier_url}?front_office=1")
         self.assertEqual(valid.status_code, 200)
-        self.assertIn("Player Dossier", valid.text)
+        self.assertIn('aria-label="Player details"', valid.text)
         self.assertIn("Player One", valid.text)
         self.assertIn('class="ai-player-identity"', valid.text)
         self.assertIn("Live Data &amp; Market", valid.text)

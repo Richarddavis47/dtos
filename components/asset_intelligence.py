@@ -14,6 +14,8 @@ from src.core.asset_intelligence import AssetEvaluation, PlayerReport
 
 ASSET_CSS = """
 <style>
+.ai-header-grid{display:grid;gap:12px;align-items:start}.ai-header-grid>*{min-width:0}
+@media(min-width:761px){.ai-header-grid:has(#player-weekly-projections){grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
 .ai-context{display:block;border:0;border-left:3px solid var(--accent);border-radius:0 12px 12px 0;padding:16px}
 .ai-context .ds-actions{justify-content:flex-start}.ai-context form{display:grid;gap:8px}
 .ai-player-identity{margin:8px 0}.ai-player-identity .player-portrait,.ai-player-identity .player-headshot,.ai-player-identity .player-headshot-fallback{width:64px;height:64px;flex-basis:64px;border-radius:12px}
@@ -89,6 +91,7 @@ def player_dossier(report: PlayerReport, selected_team: dict, teams: list[dict],
     if report.recommendation.summary == "No supported aggregate justifies a Buy/Sell posture.":
         takeaway = "No supported buy or sell recommendation yet. Review the current projection, results and Market value."
     concern = weaknesses_text(report)[0]
+    nfl_team_label = "NFL team not listed" if profile.nfl_team in {"Free Agent", "Unknown"} else profile.nfl_team
     market_availability = 'unavailable' if report.core_values.market.score is None else 'available'
     risk_evidence = "".join(f"<li><b>{escape(item.factor)}:</b> {escape(item.observed_value)} — {escape(evidence_text(item.explanation))}</li>" for item in report.risk.evidence)
     supported_opportunity = [(label, value) for label, value in report.opportunity.items() if value.score is not None]
@@ -123,8 +126,18 @@ def player_dossier(report: PlayerReport, selected_team: dict, teams: list[dict],
         integrated = integrated.replace("Trend:</b> Unavailable", f"Trend:</b> {escape(production_reason)}")
     return f"""
 {ASSET_CSS}
-<section class="card ai-context" aria-label="Player decision summary"><div class="identity-kicker">Player Dossier</div><div class="ai-player-identity">{player_summary(player_id=player_id, name=profile.name, position=profile.position, nfl_team=profile.nfl_team)}</div><div class="ai-summary-market" data-availability="{market_availability}"><b>Market:</b> <strong>{_number(report.core_values.market.score)}</strong><small>Neutral Market value</small></div><p class="ai-takeaway">{escape(takeaway)}</p><p class="ai-summary-limit"><b>Concern or uncertainty:</b> {escape(concern)}</p>{actions_html}<form method="get"><label for="front_office">Viewing for</label><select id="front_office" name="front_office" onchange="this.form.submit()">{options}</select></form></section>
+<div class="ai-header-grid">
+<section class="card ai-context" aria-label="Player details">
+<div class="ai-player-identity">{player_summary(player_id=player_id, name=profile.name, position=profile.position, nfl_team=nfl_team_label)}</div>
+{actions_html}
+<div class="ai-summary-market" data-availability="{market_availability}"><b>Market:</b> <strong>{_number(report.core_values.market.score)}</strong><small>Neutral Market value</small></div>
+</section>
 {weekly_projection_html or ""}
-<details class="ai-evidence"><summary>Valuation, fit and source evidence</summary>{primary_recommendation}<section class="ai-values">{values}</section>{integrated}</details>
+</div>
+<section class="card ai-context" aria-label="Player decision summary">
+<p class="ai-takeaway">{escape(takeaway)}</p><p class="ai-summary-limit"><b>Concern or uncertainty:</b> {escape(concern)}</p>
+<form method="get"><label for="front_office">Viewing for</label><select id="front_office" name="front_office" onchange="this.form.submit()">{options}</select></form>
+</section>
+<details class="ai-evidence" id="player-value-evidence"><summary>Valuation, fit and source evidence</summary>{primary_recommendation}<section class="ai-values">{values}</section>{integrated}</details>
 <details class="ai-evidence cx-evidence"><summary>Player strengths, risks and context</summary><section class="ai-sections"><article class="ai-card"><h3>Supported strengths</h3><ul>{strengths}</ul></article><article class="ai-card"><h3>Risks and uncertainty</h3><ul>{weaknesses}</ul></article>{f'<article class="ai-card"><h3>Supported outlook</h3><ul>{opportunity}</ul></article>' if opportunity else ""}<article class="ai-card"><details class="ai-evidence"><summary>Player Snapshot</summary><p>{escape(report.executive_summary)}</p><ul>{snapshot_html}</ul><p><b>Archetypes:</b> {escape(", ".join(report.archetypes))}</p></details></article><article class="ai-card"><h3>Risk assessment · {escape(report.risk.level)} ({report.risk.score}/100)</h3><details class="ai-evidence"><summary>Supporting Evidence</summary><ul>{risk_evidence}</ul></details></article></section>{forecast_html}</details>
 """

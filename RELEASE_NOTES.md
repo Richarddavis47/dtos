@@ -1,3 +1,10 @@
+## v1.22.68 / build 2283 — Clearer league navigation
+
+- Use a consistent league switcher and contextual Back across the signed-in experience.
+- Open completed trade results before current-week activity. Keep transaction filters, player evidence, and exact pick ownership easy to find.
+- Bring matchup scores and lineup actions forward. Keep both teams’ lineup effects alongside the Trade Review decision and package explanation.
+- Simplify Market rows, league selection and sign-in, and give the read-only Welcome demos more room on desktop.
+
 ## v1.22.67 / build 2282 — Bilateral Trade Packages
 
 - Trade recommendations account for what both teams give up when a package replaces a top player. Review explains the lineup, depth, draft-capital and roster-space evidence that supports or limits the trade.

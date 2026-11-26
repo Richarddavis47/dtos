@@ -27,7 +27,7 @@ from src.ui.render_cache import GenerationRenderCache
 from src.ui.front_office_brief import CSS as BRIEF_CSS
 from src.ui.customer_experience import readable_time
 from src.ui.standings import render_standings
-from src.ui.league_hub import league_week_heading, matchup_preview
+from src.ui.league_hub import league_heading, matchup_preview, matchup_week_control
 from src.platform.league_context import current_league_context
 from src.core.request_execution import run_manager_read
 from src.platform.request_diagnostics import diagnosed, span
@@ -333,7 +333,7 @@ def create_home_router(
             for label, href in (("Transactions", "/transactions"), ("Draft Capital", "/picks"), ("History", "/history"))
         ) + '</nav>'
         body = ('<link rel="stylesheet" href="/static/css/league_hub.css"><div class="league-hub">'
-                + league_week_heading(data, selected) + visual_standings + matchup_preview(selected, view, viewer)
+                + league_heading() + visual_standings + matchup_preview(selected, view, viewer, matchup_week_control(data, selected))
                 + recap + links + preseason_analysis + observations_html
                 + '<details class="cx-evidence"><summary>Manager grades and specialist tools</summary>'
                 + '<a class="ds-action" href="/fois">Manager grades (FOIS)</a><!--league-secondary-chrome--></details></div>')

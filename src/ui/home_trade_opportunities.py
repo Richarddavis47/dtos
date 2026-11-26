@@ -70,12 +70,6 @@ CSS = """.home-opportunity{background:var(--surface,#202628);border:1px solid #3
 """
 
 CSS += """
-.ds-shell .top.home-top{grid-template-columns:minmax(0,1fr) fit-content(68%);align-items:start;gap:10px}
-.home-top aside{min-width:0;justify-self:end}
-.home-top .account-context{padding:0;border:0;margin:0}
-.home-top .account-context summary{padding:3px 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface-elevated);gap:6px;min-height:44px}
-.home-top .account-context summary b{font-size:14px;overflow-wrap:anywhere}
-.home-top .account-context summary span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
 .home-team,.home-first,.home-week{margin:0 0 14px;min-width:0}
 .home-team h1{font-size:clamp(26px,5vw,36px);margin:0;line-height:1.15;overflow-wrap:anywhere}
 .home-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:10px 0 0;padding:6px 0;text-align:center;background:var(--surface-elevated);border:1px solid var(--line);border-radius:10px}
@@ -98,6 +92,11 @@ CSS += """
 .home-week-links a+a{border-top:1px solid var(--line)}
 .home-shortcuts a:hover{border-color:var(--accent)}.home-shortcuts a span,.home-week-links a span{color:var(--accent);font-size:20px;line-height:1}
 .home-week .ds-home-detail{margin:4px 0 0}
+@media(min-width:761px){
+.home-week{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);align-items:start;gap:0 16px}
+.home-week h2{grid-column:1/-1}.home-week-links{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.home-week-links a+a{border-top:0;border-left:1px solid var(--line);padding-left:12px}
+}
 @media(min-width:700px){.home-stats{max-width:590px}.home-shortcuts{max-width:590px}.home-first .ux-primary-action{width:min(100%,330px)}}
 @media(max-width:359px) and (max-height:500px){
  .home-team,.home-first{margin-bottom:10px}

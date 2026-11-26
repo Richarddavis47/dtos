@@ -12,6 +12,7 @@ from urllib.parse import urlsplit
 
 from playwright.sync_api import sync_playwright
 
+from routes.navigation import create_navigation_router
 from routes.transactions import create_transactions_router
 from src.core.data_platform import data_platform
 from src.core.data_platform.storage import SnapshotWarehouse
@@ -130,9 +131,13 @@ class PremiumSharedJourneyTests(journey.ProductBrowserJourneyTests):
             home_tools.press("Enter")
             self.assertFalse(home_tools.evaluate("e=>e.parentElement.open"))
         if path in ("/market", "/teams/1", "/fois"):
+            switcher = page.locator(".compact-top .account-context > summary")
+            keyboard_disclosure(self, page, switcher)
+            switcher.press("Enter")
             keyboard_disclosure(
-                self, page, page.locator(".ds-shell .secondary-nav>summary")
+                self, page, page.locator(".compact-tools .secondary-nav>summary")
             )
+            switcher.press("Enter")
         if path == "/teams/1":
             choice = page.locator("#my-team-strategy")
             fit = choice.evaluate(
@@ -145,10 +150,9 @@ class PremiumSharedJourneyTests(journey.ProductBrowserJourneyTests):
             )
             nav = page.locator('nav[aria-label="Roster sections"]')
             self.assertEqual(nav.evaluate("e=>e.scrollWidth>e.clientWidth"), False)
-            for fragment in ("#full-roster", "#positional-depth", "#draft-capital"):
-                link = nav.locator(
-                    'a[href="' + fragment + '"]:not(#my-team-outlook-action)'
-                )
+            for fragment in ("#full-roster", "#positional-depth", "#team-picks"):
+                group = page.locator(".thq-tabs") if fragment == "#team-picks" else nav
+                link = group.locator(f'a[href="{fragment}"]')
                 self.assertEqual(link.count(), 1)
                 link.focus()
                 self.assertTrue(
@@ -167,6 +171,7 @@ class PremiumPreparedBrowserTests(unittest.TestCase):
         self.addCleanup(f.doCleanups)
         f.publish(datetime.now(timezone.utc).isoformat())
         data = f.f.f.data
+        f.f.f.client.app.include_router(create_navigation_router())
         f.f.f.client.app.include_router(
             create_transactions_router(
                 ensure_fresh=AsyncMock(),
@@ -229,11 +234,10 @@ class PremiumPreparedBrowserTests(unittest.TestCase):
                     for fragment in (
                         "#full-roster",
                         "#positional-depth",
-                        "#draft-capital",
+                        "#team-picks",
                     ):
-                        link = nav.locator(
-                            f'a[href="{fragment}"]:not(#my-team-outlook-action)'
-                        )
+                        group = page.locator(".thq-tabs") if fragment == "#team-picks" else nav
+                        link = group.locator(f'a[href="{fragment}"]')
                         link.focus()
                         self.assertGreaterEqual(link.bounding_box()["height"], 44)
                         target = link.evaluate("""element => {
@@ -244,6 +248,8 @@ class PremiumPreparedBrowserTests(unittest.TestCase):
                         self.assertTrue(target['hit'], (width, fragment, target))
                         link.press("Enter")
                         self.assertTrue(page.url.endswith(fragment))
+                        if fragment == "#team-picks":
+                            page.locator("#draft-capital").wait_for(state="visible")
                     page.locator('.thq-tabs a[href="#team-roster"]').click()
                     page.evaluate("scrollTo(0,0)")
                     row = capture(page, "prepared-my-team", width, height)
@@ -285,7 +291,8 @@ class PremiumPreparedBrowserTests(unittest.TestCase):
                             has_text="Valuation, fit and source evidence",
                         ),
                     )
-                    page.get_by_text("← Back to My Team roster", exact=True).click()
+                    page.locator("#dtos-back").click()
+                    page.wait_for_url("**/teams/1#full-roster")
                     self.assertIn("/teams/1#full-roster", page.url)
                     page.close()
             finally:

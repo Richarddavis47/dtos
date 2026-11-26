@@ -599,6 +599,7 @@
       header.append(panel);
     }
     const decision = decisionPresentation(e);
+    appendCurrentLineupSummary(header, decision);
     const benefit = decision.decisive_reason || e.why_you_would_do_it;
     const cost = decision.main_cost || e.major_drawback;
     const concern = decision.partner_cost;

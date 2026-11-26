@@ -100,7 +100,8 @@ class TradeWorkflowExperienceTests(unittest.TestCase):
                 response = f.f.client.get(path)
                 self.assertEqual(response.status_code, 200)
                 if path.startswith('/trades?'):
-                    self.assertIn('Generate Trades', response.text)
+                    self.assertIn('Find Recommended Trades', response.text)
+                    self.assertEqual(response.text.count('/trades/recommended?front_office=1'), 1)
                     self.assertIn('Evaluate Trade', response.text)
                 else:
                     self.assertIn('Find a trade</a>', response.text)

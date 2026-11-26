@@ -786,7 +786,7 @@ def create_market_router(
                 <section id="market-results" class="market-results" aria-labelledby="market-results-heading">
                 <div class="market-results-intro"><h2 id="market-results-heading">{"Search results" if q else "Market assets"}</h2>
                 <span>{total} matching assets</span></div>{ownership_notice}
-                <div class="market-list">{display_rows}</div><nav aria-label="Market pagination">{pagination_html}</nav>
+                <div class="market-list">{display_rows}</div><p class="muted market-movement-key">A dash means no comparable change data. Zero means the compared price stayed the same.</p><nav aria-label="Market pagination">{pagination_html}</nav>
                 <details class="technical-details"><summary>Full market evidence table</summary><div class="ds-table-wrap" tabindex="0" role="region" aria-label="Full Market evidence"><table><caption>Filtered asset results · order is not a dynasty rank</caption><thead><tr><th>Result</th><th>Asset</th><th>Owner</th><th>Market</th><th>Intrinsic</th><th>Contender</th><th>Rebuilder</th><th>Confidence</th><th>Agreement</th><th>Evidence</th></tr></thead><tbody>{''.join(table_rows) or '<tr><td colspan="10">No assets match these filters.</td></tr>'}</tbody></table></div></details>
                 </section><section class="ux-section" id="market-movers"><div class="ux-section-head">
                 <h2>Market Movement</h2><p>Changes supported by saved dated prices</p></div>

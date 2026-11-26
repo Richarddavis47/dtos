@@ -27,7 +27,7 @@ body.public-welcome{margin:0;font-size:16px;color:var(--text-primary);line-heigh
 .public-welcome .pw-primary{background:var(--accent);border-color:var(--accent);color:#0c1908}.public-welcome .pw-primary:hover{background:var(--accent)}
 .public-welcome a:focus-visible,.public-welcome summary:focus-visible,.public-welcome [tabindex]:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
 .public-welcome .pw-skip{position:absolute;left:16px;top:-100px;z-index:1;background:var(--surface);padding:10px 16px;min-height:44px;border:1px solid var(--focus);border-radius:8px}.public-welcome .pw-skip:focus{top:8px}
-.public-welcome .pw-intro{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:48px;padding:32px 0}
+.public-welcome .pw-intro{display:grid;grid-template-columns:minmax(230px,2fr) minmax(0,5fr);gap:clamp(24px,4vw,48px);padding:32px 0}
 .public-welcome .pw-hero{min-width:0}.public-welcome .pw-eyebrow{font-size:12px;color:var(--accent);font-weight:750;letter-spacing:.08em;text-transform:uppercase;margin:0 0 12px}
 .public-welcome h1{font-size:clamp(28px,3.7vw,42px);line-height:1.13;letter-spacing:-.035em;margin:0 0 18px;max-width:15ch}
 .public-welcome .pw-value{color:var(--text-secondary);margin:0 0 20px;max-width:42ch;font-size:17px}

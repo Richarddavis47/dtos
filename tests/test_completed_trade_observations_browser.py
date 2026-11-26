@@ -132,9 +132,9 @@ class CompletedTradeObservationBrowserTests(unittest.TestCase):
                                     self.assertEqual(len(requests), before_career_requests)
                                     page.locator('a[href="'+later+'"]').first.click()
                                     page.wait_for_url('**'+later)
-                                    page.locator('.trade-timeline a.back[href="'+root+'"]').click()
-                                    page.wait_for_url('**'+root)
-                                    for path in [later, player, pick, root, filtered]:
+                                    self.assertEqual(page.locator('#dtos-back').get_attribute('href'), player)
+                                    self.assertEqual(page.locator('.trade-timeline a.back:visible').count(), 0)
+                                    for path in [player, pick, root, filtered]:
                                         page.locator('#dtos-back').click()
                                         page.wait_for_url('**'+path)
                                         self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth-innerWidth'), 0)
