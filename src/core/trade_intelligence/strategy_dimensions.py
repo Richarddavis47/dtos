@@ -152,9 +152,10 @@ def disclosed_costs(strategy, market_return):
     return costs
 
 
-def reconcile_result(result, proposal, impact, historical=None, *, team_windows=None, manager_strategies=None):
+def reconcile_result(result, proposal, impact, historical=None, *, league=None,
+                     team_windows=None, manager_strategies=None):
     """Migrate the existing canonical result, including partial-Market results."""
-    from .package_quality import package_profile
+    from .package_quality import package_adjustment, package_blocks_recommendation, package_profile
     sides = impact.get('sides') or {}
     packages, strategies = {}, {}
     for side, incoming, outgoing in (('active', proposal.assets_received, proposal.assets_sent),
@@ -174,7 +175,9 @@ def reconcile_result(result, proposal, impact, historical=None, *, team_windows=
             pick['hypothetical_owner'] = str(other)
     market = result['market_evidence']
     difference = market['difference']
-    for side in ('active', 'partner'):
+    result['package_adjustment'] = {}
+    for side, received, sent in (('active', proposal.assets_received, proposal.assets_sent),
+                                 ('partner', proposal.assets_sent, proposal.assets_received)):
         strategy = strategies[side]
         outgoing = market['sent' if side == 'active' else 'received']['total']
         incoming = market['received' if side == 'active' else 'sent']['total']
@@ -182,8 +185,17 @@ def reconcile_result(result, proposal, impact, historical=None, *, team_windows=
         if strategy['future_capital']['received'] or strategy['future_capital']['sent']:
             strategy['capital_strategy_fit'] = assess_capital(strategy, packages[side], market,
                                                             outgoing_total=outgoing, incoming_total=incoming)
+        result['package_adjustment'][side] = package_adjustment(
+            received, sent, sides.get(side), packages[side], strategy, league or {},
+            incoming_total=incoming, outgoing_total=outgoing)
     plausible = plausibility(strategies['partner'], packages['partner'],
                               -difference if difference is not None else None, historical)
+    partner_adjustment = result['package_adjustment']['partner']
+    if (partner_adjustment['blocks_recommendation'] and not partner_adjustment['spots_to_resolve']
+            and 'COUNTERPARTY_SEVERE_MARKET_LOSS' not in plausible['reason_codes']):
+        # Keep observed capital as evidence and remove its automatic promotion.
+        plausible.update(assessment='LOW', explanation=partner_adjustment['explanation'],
+                         reason_codes=['COUNTERPARTY_PACKAGE_COMPENSATION_UNESTABLISHED'])
     active = strategies['active']
     values = [row['delta'] for row in active['horizons'].values() if row.get('delta') is not None]
     gains, losses = any(d > 0 for d in values), any(d < 0 for d in values)
@@ -251,6 +263,8 @@ def reconcile_result(result, proposal, impact, historical=None, *, team_windows=
     else:
         trace.append('MATERIAL_TRADEOFF_UNRESOLVED')
     codes = list(active['reason_codes']) + list(packages['active']['reason_codes'])
+    if result['package_adjustment']['active']['blocks_recommendation']:
+        codes.append('ACTIVE_PACKAGE_COMPENSATION_UNESTABLISHED')
     if difference is not None and difference != 0:
         codes.append('MARKET_VALUE_EDGE' if difference > 0 else 'MARKET_OVERPAY')
     if market['availability'] != 'full':
@@ -293,7 +307,8 @@ def reconcile_result(result, proposal, impact, historical=None, *, team_windows=
                   recommendation_availability='bounded' if recommendation else 'unavailable',
                   dominant_reason='User-side conclusion from separate Market, optimal-lineup, package, capital and strategy evidence; counterparty plausibility is separate.',
                   reason_codes=sorted(set(codes)), major_limitations=limitations,
-                  generated_trade_eligible=bool(result['legal'] and plausible['assessment'] in ('STRONG', 'PLAUSIBLE')
+                  generated_trade_eligible=bool(result['legal'] and not package_blocks_recommendation(result)
+                                                and plausible['assessment'] in ('STRONG', 'PLAUSIBLE')
                                                 and recommendation in ('SMASH ACCEPT', 'WORTH PURSUING') and confidence != 'LIMITED'))
     unresolved_capacity = any((s.get('roster_capacity') or {}).get('additional_spots_to_resolve') for s in strategies.values())
     result['legality'] = {'ownership_and_identity_valid': result['legal'],

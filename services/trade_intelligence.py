@@ -9,7 +9,7 @@ import json
 from time import perf_counter
 from src.platform.trade_execution import trade_checkpoint
 
-from src.core.intelligence import AssetContext, TradeAsset, TradeEvidenceContext, TradeProposal, apply_positional_ranks, build_asset_pool, build_league_model, build_trade_evidence_context, evaluate_bilateral, generate_proposals
+from src.core.intelligence import AssetContext, TradeAsset, TradeEvidenceContext, TradeProposal, apply_positional_ranks, build_asset_pool, build_league_model, build_trade_evidence_context, evaluate_bilateral, generate_proposals, package_blocks_recommendation
 from src.core.valuation.calibration import cached_market_facts
 from src.core.player_ownership import PlayerOwnershipIndex, targeted_player_action
 from services.trade_cheaper_repair import (
@@ -174,6 +174,8 @@ def _personal_evaluation(evaluation, proposal, context, *, active_team, partner_
     neutral = {key: evaluation.get(key) for key in ('recommendation', 'generated_trade_eligible',
         'dominant_reason', 'major_drawback', 'why_you_would_do_it', 'market_evidence', 'values', 'reason_codes')}
     neutral_dimensions = evaluation.get('dimensions') or {}
+    # Package tier and opponent compensation use canonical evidence in either mode.
+    custom['package_adjustment'] = evaluation.get('package_adjustment')
     custom['dimensions']['counterparty_plausibility'] = neutral_dimensions.get('counterparty_plausibility')
     custom['dimensions']['strategic_fit']['partner'] = neutral_dimensions['strategic_fit']['partner']
     custom['dimensions']['package_quality']['partner'] = neutral_dimensions['package_quality']['partner']
@@ -214,6 +216,7 @@ def _personal_evaluation(evaluation, proposal, context, *, active_team, partner_
     capacity_unresolved = any((strategy_sides[side].get('roster_capacity') or {}).get('additional_spots_to_resolve')
                               for side in ('active', 'partner'))
     custom['generated_trade_eligible'] = bool(custom.get('legal') and canonical_complete
+        and not package_blocks_recommendation(custom)
         and personal_market['availability'] == 'full' and plausible in ('STRONG', 'PLAUSIBLE')
         and confidence in ('MEDIUM', 'HIGH') and not severe and not capacity_unresolved
         and custom.get('recommendation') in ('SMASH ACCEPT', 'WORTH PURSUING'))
@@ -1244,6 +1247,8 @@ def _distinct_trade_for_offers(rows, by_id):
 
 def _trade_for_eligible(evaluation: dict[str, Any]) -> bool:
     """Target acquisition may be optional; never reinterpret the shared judgment."""
+    if package_blocks_recommendation(evaluation):
+        return False
     if evaluation.get('generated_trade_eligible'):
         return True
     if evaluation.get('recommendation') != 'FAIR / OPTIONAL':

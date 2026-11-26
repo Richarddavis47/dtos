@@ -588,6 +588,16 @@
       box.append(list); packages.append(box);
     }
     header.append(packages, assessedGauge(e, retained));
+    const adjustment = e.package_adjustment;
+    if (adjustment?.active?.explanation || adjustment?.partner?.explanation) {
+      const panel = node('section', null, 'tw-trade-essentials');
+      panel.append(node('h4', 'Package adjustment'));
+      for (const [side, label] of [['active', 'Your team'], ['partner', 'Their team']]) {
+        if (adjustment[side]?.explanation) panel.append(node('p', label + ': ' + customerText(adjustment[side].explanation)));
+      }
+      panel.append(node('small', 'This affects recommendations. The totals above are the sum of the individual values.'));
+      header.append(panel);
+    }
     const decision = decisionPresentation(e);
     const benefit = decision.decisive_reason || e.why_you_would_do_it;
     const cost = decision.main_cost || e.major_drawback;
