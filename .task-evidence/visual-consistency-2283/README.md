@@ -5,3 +5,5 @@ Thirty matching before/after captures at 320, 390 and 1280 pixels. Each pair use
 The new rendered journey verifies keyboard Back restores Market filters and the expanded row, and checks that the transaction Apply button is reachable with the fixed navigation. Public Welcome and prepared league score controls are validated separately. The matrix includes intentionally incomplete source evidence. It does not represent the production Day Traders roster or physical iPhone Safari.
 
 The draft remains held while exact-source local and hosted release validation complete.
+
+The extra matrix shows three exact pick rows with owner and origin and the expanded Welcome demonstrations at the same three widths.
