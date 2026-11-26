@@ -1,0 +1,895 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 76e43b6..0fd7206 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,10 @@
++## v1.22.68 / build 2283 — Clearer league navigation
++
++- Use a consistent league switcher and contextual Back across the signed-in experience.
++- Open completed trade results before current-week activity. Keep transaction filters, player evidence, and exact pick ownership easy to find.
++- Bring matchup scores and lineup actions forward. Keep both teams’ lineup effects alongside the Trade Review decision and package explanation.
++- Simplify Market rows, league selection and sign-in, and give the read-only Welcome demos more room on desktop.
++
+ ## v1.22.67 / build 2282 — Bilateral Trade Packages
+ 
+ - Trade recommendations account for what both teams give up when a package replaces a top player. Review explains the lineup, depth, draft-capital and roster-space evidence that supports or limits the trade.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index ec8c1d8..d011fda 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,10 @@
++## v1.22.68 / build 2283 — Clearer league navigation
++
++- Use a consistent league switcher and contextual Back across the signed-in experience.
++- Open completed trade results before current-week activity. Keep transaction filters, player evidence, and exact pick ownership easy to find.
++- Bring matchup scores and lineup actions forward. Keep both teams’ lineup effects alongside the Trade Review decision and package explanation.
++- Simplify Market rows, league selection and sign-in, and give the read-only Welcome demos more room on desktop.
++
+ ## v1.22.67 / build 2282 — Bilateral Trade Packages
+ 
+ - Trade recommendations account for what both teams give up when a package replaces a top player. Review explains the lineup, depth, draft-capital and roster-space evidence that supports or limits the trade.
+diff --git a/app_metadata.py b/app_metadata.py
+index afe0cca..5f27af8 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.67"
+-PRODUCT_VERSION = "1.22.67"
+-BUILD_NUMBER = 2282
+-RELEASE_CODENAME = "Bilateral Trade Packages"
++VERSION = "1.22.68"
++PRODUCT_VERSION = "1.22.68"
++BUILD_NUMBER = 2283
++RELEASE_CODENAME = "Clearer League Navigation"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/components/asset_intelligence.py b/components/asset_intelligence.py
+index eaf072e..11e93d8 100644
+--- a/components/asset_intelligence.py
++++ b/components/asset_intelligence.py
+@@ -14,6 +14,8 @@ from src.core.asset_intelligence import AssetEvaluation, PlayerReport
+ 
+ ASSET_CSS = """
+ <style>
++.ai-header-grid{display:grid;gap:12px;align-items:start}.ai-header-grid>*{min-width:0}
++@media(min-width:761px){.ai-header-grid:has(#player-weekly-projections){grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+ .ai-context{display:block;border:0;border-left:3px solid var(--accent);border-radius:0 12px 12px 0;padding:16px}
+ .ai-context .ds-actions{justify-content:flex-start}.ai-context form{display:grid;gap:8px}
+ .ai-player-identity{margin:8px 0}.ai-player-identity .player-portrait,.ai-player-identity .player-headshot,.ai-player-identity .player-headshot-fallback{width:64px;height:64px;flex-basis:64px;border-radius:12px}
+@@ -89,6 +91,7 @@ def player_dossier(report: PlayerReport, selected_team: dict, teams: list[dict],
+     if report.recommendation.summary == "No supported aggregate justifies a Buy/Sell posture.":
+         takeaway = "No supported buy or sell recommendation yet. Review the current projection, results and Market value."
+     concern = weaknesses_text(report)[0]
++    nfl_team_label = "NFL team not listed" if profile.nfl_team in {"Free Agent", "Unknown"} else profile.nfl_team
+     market_availability = 'unavailable' if report.core_values.market.score is None else 'available'
+     risk_evidence = "".join(f"<li><b>{escape(item.factor)}:</b> {escape(item.observed_value)} — {escape(evidence_text(item.explanation))}</li>" for item in report.risk.evidence)
+     supported_opportunity = [(label, value) for label, value in report.opportunity.items() if value.score is not None]
+@@ -123,8 +126,18 @@ def player_dossier(report: PlayerReport, selected_team: dict, teams: list[dict],
+         integrated = integrated.replace("Trend:</b> Unavailable", f"Trend:</b> {escape(production_reason)}")
+     return f"""
+ {ASSET_CSS}
+-<section class="card ai-context" aria-label="Player decision summary"><div class="identity-kicker">Player Dossier</div><div class="ai-player-identity">{player_summary(player_id=player_id, name=profile.name, position=profile.position, nfl_team=profile.nfl_team)}</div><div class="ai-summary-market" data-availability="{market_availability}"><b>Market:</b> <strong>{_number(report.core_values.market.score)}</strong><small>Neutral Market value</small></div><p class="ai-takeaway">{escape(takeaway)}</p><p class="ai-summary-limit"><b>Concern or uncertainty:</b> {escape(concern)}</p>{actions_html}<form method="get"><label for="front_office">Viewing for</label><select id="front_office" name="front_office" onchange="this.form.submit()">{options}</select></form></section>
++<div class="ai-header-grid">
++<section class="card ai-context" aria-label="Player details">
++<div class="ai-player-identity">{player_summary(player_id=player_id, name=profile.name, position=profile.position, nfl_team=nfl_team_label)}</div>
++{actions_html}
++<div class="ai-summary-market" data-availability="{market_availability}"><b>Market:</b> <strong>{_number(report.core_values.market.score)}</strong><small>Neutral Market value</small></div>
++</section>
+ {weekly_projection_html or ""}
+-<details class="ai-evidence"><summary>Valuation, fit and source evidence</summary>{primary_recommendation}<section class="ai-values">{values}</section>{integrated}</details>
++</div>
++<section class="card ai-context" aria-label="Player decision summary">
++<p class="ai-takeaway">{escape(takeaway)}</p><p class="ai-summary-limit"><b>Concern or uncertainty:</b> {escape(concern)}</p>
++<form method="get"><label for="front_office">Viewing for</label><select id="front_office" name="front_office" onchange="this.form.submit()">{options}</select></form>
++</section>
++<details class="ai-evidence" id="player-value-evidence"><summary>Valuation, fit and source evidence</summary>{primary_recommendation}<section class="ai-values">{values}</section>{integrated}</details>
+ <details class="ai-evidence cx-evidence"><summary>Player strengths, risks and context</summary><section class="ai-sections"><article class="ai-card"><h3>Supported strengths</h3><ul>{strengths}</ul></article><article class="ai-card"><h3>Risks and uncertainty</h3><ul>{weaknesses}</ul></article>{f'<article class="ai-card"><h3>Supported outlook</h3><ul>{opportunity}</ul></article>' if opportunity else ""}<article class="ai-card"><details class="ai-evidence"><summary>Player Snapshot</summary><p>{escape(report.executive_summary)}</p><ul>{snapshot_html}</ul><p><b>Archetypes:</b> {escape(", ".join(report.archetypes))}</p></details></article><article class="ai-card"><h3>Risk assessment · {escape(report.risk.level)} ({report.risk.score}/100)</h3><details class="ai-evidence"><summary>Supporting Evidence</summary><ul>{risk_evidence}</ul></details></article></section>{forecast_html}</details>
+ """
+diff --git a/components/trade_intelligence.py b/components/trade_intelligence.py
+index f0d9587..b7bc413 100644
+--- a/components/trade_intelligence.py
++++ b/components/trade_intelligence.py
+@@ -208,7 +208,7 @@ def trade_center(view: dict) -> str:
+     active = view["active_team"]
+     unified = view.get("unified_recommendation")
+     active_id = int(active.get("roster_id") or 0)
+-    entry_actions = f'''<link rel="stylesheet" href="/static/css/trade_workspace.css"><nav class="tw-entry-actions" aria-label="Primary Trade purpose"><a href="/trades/recommended?front_office={active_id}"><b>Generate Trades</b><span>DTOS discovers possible offers. Choose your goal and optional search constraints.</span></a><a href="/trades/calculator?front_office={active_id}"><b>Evaluate Trade</b><span>You supply the offer. Compare values, then evaluate both teams.</span></a></nav>'''
++    entry_actions = f'''<link rel="stylesheet" href="/static/css/trade_workspace.css"><nav class="tw-entry-actions" aria-label="Primary Trade purpose"><a href="/trades/recommended?front_office={active_id}"><b>Find Recommended Trades</b><span>Choose a goal and search for offers that work for both teams.</span></a><a href="/trades/calculator?front_office={active_id}"><b>Evaluate Trade</b><span>You supply the offer. Compare values, then evaluate both teams.</span></a></nav>'''
+     options = "".join(
+         f'<option value="{int(team.get("roster_id") or 0)}" {"selected" if int(team.get("roster_id") or 0) == active_id else ""}>{escape(str(team.get("owner") or team.get("team_name")))}</option>'
+         for team in view["teams"]
+@@ -218,8 +218,7 @@ def trade_center(view: dict) -> str:
+         for identifier, label, description in (
+             ("create", "Build a Trade", "See live Market totals, evaluate, and preview balancing options."),
+             ("trade-for", "Trade For", "Pursue an asset another franchise owns."),
+-            ("shop", "Shop / Trade Away", "Search the league for legitimate markets."),
+-            ("recommended", "Recommended Trades", "Offers that meet both teams’ requirements."),
++            ("shop", "Shop / Trade Away", "Search offers for an asset you own."),
+         )
+     )
+     if view.get('search_state') == 'not_started' and not view.get('canonical_results'):
+diff --git a/dtos_app.py b/dtos_app.py
+index bf7e5e5..f7cef21 100644
+--- a/dtos_app.py
++++ b/dtos_app.py
+@@ -939,14 +939,18 @@ def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLRespon
+         if account.membership and str(account.membership.league_id) == selected_league_id:
+             navigation_roster_id = account.membership.roster_id
+         csrf_html = f'<input type="hidden" name="csrf_token" value="{escape(account.csrf_token)}">'
++        memberships = sorted(account_store.memberships(account.account_id),
++                             key=lambda item: str(item.league_id) != selected_league_id)
+         switches = "".join(
+-            f'<form method="post" action="/account/leagues/{escape(item.league_id)}/activate"><input type="hidden" name="csrf_token" value="{escape(account.csrf_token)}"><button class="ds-action" type="submit">{escape(item.league_name or item.league_id)}</button></form>'
+-            for item in account_store.memberships(account.account_id)
+-            if item.status == "active" and item.roster_id is not None
++            f'<form method="post" action="/account/leagues/{escape(item.league_id)}/activate">{csrf_html}'
++            f'<button class="ds-action" type="submit"'
++            f'{" aria-current=true" if str(item.league_id) == selected_league_id else ""}>'
++            f'{escape(item.league_name or item.league_id)}</button></form>'
++            for item in memberships if item.status == "active" and item.roster_id is not None
+         )
+         franchise = account.membership.franchise_name if account.membership else "Choose a league"
+         switch_label = f'{escape(franchise or "Team name not recorded")} · Switch league'
+-        account_html = f'<aside aria-label="Account and league context"><details class="account-context"><summary><b>{escape(league_name)}</b><span>{switch_label}</span></summary><div class="ds-actions">{switches}<a class="ds-action" href="/account">Account · {escape(account.display_name)}</a></div></details></aside>'
++        account_html = f'<aside aria-label="Account and league context"><details class="account-context"><summary><b>{escape(league_name)}</b><span>{switch_label}</span></summary><div class="ds-actions">{switches}<a class="ds-action" href="/account">Account · {escape(account.display_name)}</a></div><!--compact-tools--></details></aside>'
+     from services.contextual_navigation import navigation_markup, with_back
+     back, navigation_head = navigation_markup()
+     team_heading = 'data-my-team-context=' in body
+@@ -959,20 +963,23 @@ def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLRespon
+     sync_control = f'<form method="post" action="/sync">{csrf_html}<button class="btn" type="submit">Sync League</button></form>'
+     tools = secondary_navigation()
+     brand_mark = f'<a class="brand-mark" href="/" aria-label="DTOS Home">{APPLICATION_NAME}</a>'
++    compact_variant = " market-top" if market_screen else ""
++    account_html = account_html.replace("<!--compact-tools-->",
++        "" if home_switch or league_screen else f'<div class="compact-tools">{sync_control}{tools}</div>')
++    compact_top = f'<header class="top compact-top{compact_variant}"><div class="brand">{brand_mark}</div>{account_html}</header>'
+     if home_switch:
+         body = body.replace("<!--home-league-switch-->", "", 1)
+         body = body.replace("<!--home-secondary-chrome-->", sync_control + tools, 1)
+-        top = f'<header class="top home-top"><div class="brand">{brand_mark}</div>{account_html}</header>'
++        top = compact_top
+         account_html = ""
+         header = back
+     elif league_screen:
+-        top = f'<header class="top home-top league-top"><div class="brand">{brand_mark}</div>{account_html}</header>'
++        top = compact_top
+         body = with_back(body.replace("<!--league-secondary-chrome-->", sync_control + tools, 1), back)
+         account_html = ""
+         header = ""
+-    elif market_screen:
+-        top = (f'<header class="top home-top market-top"><div class="brand">{brand_mark}</div>{account_html}</header>'
+-               f'<div class="market-chrome-tools">{sync_control}{tools}</div>')
++    elif account is not None or market_screen:
++        top = compact_top if account is not None else compact_top + f'<div class="compact-tools">{tools}{sync_control}</div>'
+         account_html = ""
+     else:
+         top = f'<header class="top"><div class="brand">{brand_mark}<p>{escape(league_name)} Front Office</p></div>{sync_control}{tools}</header>'
+diff --git a/routes/accounts.py b/routes/accounts.py
+index 8a0bfa3..24f0566 100644
+--- a/routes/accounts.py
++++ b/routes/accounts.py
+@@ -209,7 +209,7 @@ def create_accounts_router(*, service: AccountService, runtime_manager: Any) ->
+     @router.get("/account/sign-in")
+     async def sign_in_page(error: str = "") -> HTMLResponse:
+         message = '<p class="error">Sign-in failed. Check your details and try again.</p>' if error else ""
+-        return _shell("Sign in", f'<section class="card"><h2>Sign in to DTOS</h2>{message}<form class="grid" method="post" action="/account/sign-in"><label>Username<input name="username" autocomplete="username" required></label><label>Password<input type="password" name="password" autocomplete="current-password" required></label><button class="btn ds-action primary" data-dtos-action="primary" data-action-id="sign-in" type="submit">Sign in</button></form><p><a href="/account/recover">Recover your account</a></p><p class="muted">New to DTOS? <a href="/account/create">Create an account</a>.</p></section>', purpose="Use your DTOS credentials to return to your saved leagues.")
++        return _shell("Sign in", f'<section class="card" aria-label="DTOS sign-in">{message}<form class="grid" method="post" action="/account/sign-in"><label>Username<input name="username" autocomplete="username" required></label><label>Password<input type="password" name="password" autocomplete="current-password" required></label><button class="btn ds-action primary" data-dtos-action="primary" data-action-id="sign-in" type="submit">Sign in</button></form><p><a href="/account/recover">Recover your account</a></p><p class="muted">New to DTOS? <a href="/account/create">Create an account</a>.</p></section>', purpose="Use your DTOS credentials to return to your saved leagues.")
+ 
+     @router.post("/account/sign-in")
+     async def sign_in(request: Request) -> Response:
+@@ -347,18 +347,32 @@ def create_accounts_router(*, service: AccountService, runtime_manager: Any) ->
+                 if not discovered:
+                     return _source_unavailable()
+                 saved_notice = '<p role="status">Saved connected leagues · Sleeper discovery is unavailable. You can retry discovery or select an existing connection; preparation is still checked.</p><p><a href="/account/leagues">Retry league discovery</a></p>'
++        active_id = str(context.membership.league_id) if context.membership else ""
++        discovered_ids = {str(league.get("league_id")) for league in discovered}
++        discovered.extend({"league_id": item.league_id, "name": item.league_name,
++                           "season": item.season, "saved_connection": True}
++                          for item in memberships.values()
++                          if item.status == "active" and str(item.league_id) not in discovered_ids)
++
++        def picker_order(league):
++            league_id = str(league.get("league_id"))
++            member = memberships.get(league_id)
++            return 0 if league_id == active_id else 1 if member and member.status == "active" else 2
++
+         cards = []
+-        for league in discovered:
++        for league in sorted(discovered, key=picker_order):
+             league_id = str(league.get("league_id"))
+             membership = memberships.get(league_id)
+             connected = bool(membership and membership.status == "active")
+-            state = "Switch front office" if connected else "Add to DTOS"
++            is_active = league_id == active_id
++            state = "Open active league" if is_active else "Switch front office" if connected else "Add to DTOS"
++            active_label = '<p><b>Active league</b></p>' if is_active else ""
+             action = f"/account/leagues/{league_id}/activate" if connected else f"/account/leagues/{league_id}"
+             history = league.get("historical_seasons") or []
+             years = ", ".join(str(row.get("season")) for row in history if row.get("season"))
+             coverage = "Saved connection · discovery not refreshed" if league.get("saved_connection") else f"Current season: {escape(str(league.get('season') or 'Unknown'))} · {int(league.get('total_rosters') or 0)} teams"
+-            cards.append(f'<article class="card"><h2>{escape(str(league.get("name") or "Sleeper league"))}</h2><p>{coverage}</p>{f"<p>History: {escape(years)}</p>" if years else ""}<p>{"Your team: <b>" + escape(membership.franchise_name or "Team found on Sleeper") + "</b>" if membership else "DTOS will look for the team linked to your Sleeper account."}</p><form method="post" action="{escape(action)}"><input type="hidden" name="csrf_token" value="{escape(context.csrf_token)}"><button class="btn" type="submit">{state}</button></form></article>')
+-        return _shell("Your leagues", f'{saved_notice}<p class="muted">Current NFL dynasty leagues are shown first.</p>{"".join(cards) or "<section class=\"card\"><h2>No eligible leagues found</h2><p>Check the linked Sleeper username or try again later.</p></section>"}<section class="card"><h2>Add another league</h2><p>Enter a Sleeper league ID. DTOS can add the league only when your Sleeper account matches exactly one team.</p><form class="grid" method="post" action="/account/leagues/import"><input type="hidden" name="csrf_token" value="{escape(context.csrf_token)}"><label>Sleeper league ID<input name="league_id" inputmode="numeric" required></label><button class="btn ds-action primary" data-dtos-action="primary" data-action-id="import-league" type="submit">Add to DTOS</button></form></section>', purpose="Choose a connected league or add another league you belong to.")
++            cards.append(f'<article class="card"><h2>{escape(str(league.get("name") or "Sleeper league"))}</h2>{active_label}<p>{coverage}</p>{f"<p>History: {escape(years)}</p>" if years else ""}<p>{"Your team: <b>" + escape(membership.franchise_name or "Team found on Sleeper") + "</b>" if membership else "DTOS will look for the team linked to your Sleeper account."}</p><form method="post" action="{escape(action)}"><input type="hidden" name="csrf_token" value="{escape(context.csrf_token)}"><button class="btn" type="submit">{state}</button></form></article>')
++        return _shell("Your leagues", f'{saved_notice}<p class="muted">Your active league is first, followed by other connected leagues.</p>{"".join(cards) or "<section class=\"card\"><h2>No eligible leagues found</h2><p>Check the linked Sleeper username or try again later.</p></section>"}<section class="card"><h2>Add another league</h2><p>Enter a Sleeper league ID. DTOS can add the league only when your Sleeper account matches exactly one team.</p><form class="grid" method="post" action="/account/leagues/import"><input type="hidden" name="csrf_token" value="{escape(context.csrf_token)}"><label>Sleeper league ID<input name="league_id" inputmode="numeric" required></label><button class="btn ds-action primary" data-dtos-action="primary" data-action-id="import-league" type="submit">Add to DTOS</button></form></section>', purpose="Choose a connected league or add another league you belong to.")
+ 
+     @router.post("/account/leagues/import")
+     async def import_league(request: Request) -> Response:
+diff --git a/routes/draft.py b/routes/draft.py
+index 146df5b..241fc39 100644
+--- a/routes/draft.py
++++ b/routes/draft.py
+@@ -33,7 +33,7 @@ def create_draft_router(
+             str(team["roster_id"]): team["team_name"] for team in data["teams"]
+         }
+         rows = []
+-        cards = []
++        cards: dict[tuple[str, str], list[str]] = {}
+         historical_cards = []
+         sorted_picks = sorted(
+             data["traded_picks"],
+@@ -81,7 +81,7 @@ def create_draft_router(
+             confidence = escape(str(scoped["projected_range_confidence"]))
+             exact = escape(str(scoped.get("exact_slot"))) if scoped.get("exact_slot_established") is True else "Unavailable"
+             details = (
+-                '<details><summary>Supporting Evidence</summary>'
++                '<details><summary>Sources</summary>'
+                 f'<p>{market_text} · {provider} · {concept}</p><p>Market unit: normalized 0–1000. Format: {escape(str(quote.get("market_format") or "Unavailable"))}.</p>'
+                 f'<p>Market availability: {escape(str(market.get("availability")))}. '
+                 f'{escape(str(market.get("reason") or "Prepared external quote"))}</p>'
+@@ -104,10 +104,13 @@ def create_draft_router(
+                 f'<p class="pick-owner"><span>{"Current owner" if current_right else "Owner in recorded transfer"}</span>{franchise(owner_id)}</p>'
+                 f'<p class="pick-owner"><span>Original franchise</span>{franchise(roster_id)}</p>'
+                 f'<div class="pick-outlook"><b>Market price: {price_text}</b>{market_summary}</div>{market_gap}'
+-                '<details><summary>Draft position and valuation details</summary>'
++                '<details><summary>Range and value</summary>'
+                 f'<p class="muted">Projected range: {range_text} · Confidence: {confidence} · Exact slot: {exact}</p>{details}{shared_explanation}</details></article>'
+             )
+-            (cards if current_right else historical_cards).append(card)
++            if current_right:
++                cards.setdefault((year, str(pick.get("round"))), []).append(card)
++            else:
++                historical_cards.append(card)
+             rows.append(
+                 f'<tr><td><a href="/picks/{escape(pick_id)}">{escape(str(pick.get("season", "")))}</a></td>'
+                 f'<td>{escape(str(pick.get("round", "")))}</td>'
+@@ -117,10 +120,15 @@ def create_draft_router(
+                 f'<td>{range_text} · {confidence}</td><td>{exact}</td></tr>'
+             )
+ 
++        grouped_picks = "".join(
++            f'<section class="pick-round-group"><h3>{escape(season)} · Round {escape(round_number)}</h3>'
++            f'<div class="pick-asset-grid">{"".join(picks)}</div></section>'
++            for (season, round_number), picks in cards.items()
++        )
+         body = (
+-            '<h2>Draft Picks</h2><p>Current traded picks are separate from past transfers. Your full owned inventory is in My Team draft capital.</p><h3>Current traded picks</h3><div class="pick-asset-grid">'
+-            + ("".join(cards) or '<div class="ds-empty"><b>No current traded picks are established here.</b>View My Team for supported owned picks.</div>')
+-            + '</div>' + ('<details class="cx-evidence"><summary>Past or unconfirmed pick transfers · ' + str(len(historical_cards)) + '</summary><p>These recorded transfers do not establish a currently tradable pick. Open its history to check conversion and ownership.</p><div class="pick-asset-grid">' + ''.join(historical_cards) + '</div></details>' if historical_cards else '')
++            '<p>Current traded picks are separate from past transfers. Your full owned inventory is in My Team draft capital.</p><h2>Current traded picks</h2>'
++            + (grouped_picks or '<div class="ds-empty"><b>No current traded picks are established here.</b>View My Team for supported owned picks.</div>')
++            + ('<details class="cx-evidence"><summary>Past or unconfirmed pick transfers · ' + str(len(historical_cards)) + '</summary><p>These recorded transfers do not establish a currently tradable pick. Open its history to check conversion and ownership.</p><div class="pick-asset-grid">' + ''.join(historical_cards) + '</div></details>' if historical_cards else '')
+             + '<details class="technical-details"><summary>Compare all pick evidence</summary><div class="card ds-table-wrap"><table><thead>'
+             '<tr><th>Season</th><th>Round</th><th>Original Team</th>'
+             '<th>Current Owner</th><th>Market price</th><th>Projected range / confidence</th><th>Exact slot</th></tr></thead><tbody>'
+diff --git a/routes/home.py b/routes/home.py
+index 2a9ba1b..625eacf 100644
+--- a/routes/home.py
++++ b/routes/home.py
+@@ -27,7 +27,7 @@ from src.ui.render_cache import GenerationRenderCache
+ from src.ui.front_office_brief import CSS as BRIEF_CSS
+ from src.ui.customer_experience import readable_time
+ from src.ui.standings import render_standings
+-from src.ui.league_hub import league_week_heading, matchup_preview
++from src.ui.league_hub import league_heading, matchup_preview, matchup_week_control
+ from src.platform.league_context import current_league_context
+ from src.core.request_execution import run_manager_read
+ from src.platform.request_diagnostics import diagnosed, span
+@@ -333,7 +333,7 @@ def create_home_router(
+             for label, href in (("Transactions", "/transactions"), ("Draft Capital", "/picks"), ("History", "/history"))
+         ) + '</nav>'
+         body = ('<link rel="stylesheet" href="/static/css/league_hub.css"><div class="league-hub">'
+-                + league_week_heading(data, selected) + visual_standings + matchup_preview(selected, view, viewer)
++                + league_heading() + visual_standings + matchup_preview(selected, view, viewer, matchup_week_control(data, selected))
+                 + recap + links + preseason_analysis + observations_html
+                 + '<details class="cx-evidence"><summary>Manager grades and specialist tools</summary>'
+                 + '<a class="ds-action" href="/fois">Manager grades (FOIS)</a><!--league-secondary-chrome--></details></div>')
+diff --git a/routes/market.py b/routes/market.py
+index a71cd17..571601d 100644
+--- a/routes/market.py
++++ b/routes/market.py
+@@ -786,7 +786,7 @@ def create_market_router(
+                 <section id="market-results" class="market-results" aria-labelledby="market-results-heading">
+                 <div class="market-results-intro"><h2 id="market-results-heading">{"Search results" if q else "Market assets"}</h2>
+                 <span>{total} matching assets</span></div>{ownership_notice}
+-                <div class="market-list">{display_rows}</div><nav aria-label="Market pagination">{pagination_html}</nav>
++                <div class="market-list">{display_rows}</div><p class="muted market-movement-key">A dash means no comparable change data. Zero means the compared price stayed the same.</p><nav aria-label="Market pagination">{pagination_html}</nav>
+                 <details class="technical-details"><summary>Full market evidence table</summary><div class="ds-table-wrap" tabindex="0" role="region" aria-label="Full Market evidence"><table><caption>Filtered asset results · order is not a dynasty rank</caption><thead><tr><th>Result</th><th>Asset</th><th>Owner</th><th>Market</th><th>Intrinsic</th><th>Contender</th><th>Rebuilder</th><th>Confidence</th><th>Agreement</th><th>Evidence</th></tr></thead><tbody>{''.join(table_rows) or '<tr><td colspan="10">No assets match these filters.</td></tr>'}</tbody></table></div></details>
+                 </section><section class="ux-section" id="market-movers"><div class="ux-section-head">
+                 <h2>Market Movement</h2><p>Changes supported by saved dated prices</p></div>
+diff --git a/routes/teams.py b/routes/teams.py
+index a42a877..605da15 100644
+--- a/routes/teams.py
++++ b/routes/teams.py
+@@ -16,7 +16,7 @@ from services.asset_intelligence import contextual_player_url
+ from services.team_headquarters import build_team_directory, build_team_headquarters
+ from services.team_assessment_presentation import prepared_comparison
+ from src.ui.customer_experience import plain_reason, readable_time
+-from src.ui.intelligence_presentation import record_evidence
++from src.ui.intelligence_presentation import human_status, record_evidence
+ from src.core.historical_memory.read_model import historical_graph
+ from src.core.history_context import canonical_history_store
+ from src.core.request_execution import run_manager_read
+@@ -211,8 +211,10 @@ def _roster_rooms(view: dict[str, Any]) -> str:
+                 weeks.add(projection['week'])
+             # A numeric observation and its precision remain unchanged. The
+             # repeated long precision explanation belongs in the source list.
+-            compact_projection = {**projection, 'display_reason': None} if has_projection else None
+-            status = str(player['availability_status']) if has_status else 'Participation unconfirmed' if has_projection else None
++            compact_projection = ({**projection, 'display_reason': None,
++                                   'display': projection['display'] if has_projection else 'projection unavailable'}
++                                  if projection and projection.get('week') is not None else None)
++            status = human_status(player['availability_status']) if has_status else 'Participation unconfirmed' if has_projection else 'Status unreported'
+             action = ('<a class="thq-action" href="' + escape('/trades/shop?' + urlencode({'front_office': view['team']['roster_id'], 'asset_id': pid, 'owner_roster_id': view['team']['roster_id']})) + '" aria-label="Shop ' + escape(player['name']) + '">Shop</a>') if view['can_shop'] else ''
+             metadata = ([f'Market value: {price:g}'] if price is not None else []) + ([str(player['roster_slot'])] if _present_label(player.get('roster_slot')) else [])
+             participation = ('<p class="player-participation-note">' + escape(plain_reason(projection['participation_note'])) + '</p>') if projection and projection.get('participation_note') else ''
+@@ -555,7 +557,7 @@ def create_teams_router(
+         body = f"""
+ {TEAM_HQ_CSS}
+ <style>
+-.thq-outlook{{padding:12px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface);overflow-wrap:anywhere}}.thq-outlook h2{{font-size:18px;margin:0 0 8px}}.thq-outlook p{{font-size:14px;line-height:1.5;margin:6px 0}}.thq-outlook li{{font-size:14px;line-height:1.5;margin:6px 0}}.thq-outlook .thq-strength-detail{{margin:0}}.thq-outlook .thq-strength-detail>summary{{display:list-item;list-style:disclosure-closed inside}}.thq-outlook .thq-strength-detail[open]>summary{{list-style-type:disclosure-open}}.thq-outlook summary h2{{display:inline;font-size:18px;margin:0}}.thq-outlook summary p{{line-height:1.4;margin:4px 0}}.thq-outlook .thq-actions{{margin:6px 0 0}}.thq-name-row{{display:flex;flex-wrap:wrap;align-items:center;gap:6px}}.thq-name-row>details[open]{{flex-basis:100%}}.thq-header{{margin-bottom:12px;gap:12px}}.thq-header .thq-avatar,.thq-header .franchise-portrait{{width:48px;height:48px;flex-basis:48px;font-size:23px}}.thq-title h1{{font-size:22px;margin:0}}.thq-title p{{margin:0}}.thq-actions{{margin:8px 0;gap:6px}}.thq-section{{margin-top:16px}}.thq-room-head{{padding:4px 10px;font-size:14px}}.thq-player{{padding:8px 10px}}.thq-player>div{{position:relative;padding-right:52px}}.thq-player>div>.thq-action{{position:absolute;right:0;top:0;padding:8px;min-height:44px}}.thq-player .player-summary{{gap:8px}}.thq-player .player-summary img{{width:40px;height:40px}}.thq-player-meta{{font-size:14px;margin-top:4px}}.thq-roster{{gap:10px}}.thq-strategy small{{display:none}}.thq-strategy{{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:6px}}.thq-strategy label{{margin:0}}.thq-strategy select{{min-width:0;margin:0}}#my-team-strategy-feedback{{grid-column:1/-1}}.thq-header{{padding:8px}}#my-team-strategy-feedback:empty{{display:none}}.thq-actions[aria-label="Roster sections"]{{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));overflow:visible;max-width:100%;padding-bottom:4px}}.thq-outlook-next:empty{{display:none}}.thq-outlook-next{{margin:6px 0}}.thq-actions[aria-label="Roster sections"] .thq-action{{min-width:0;justify-content:center;padding:8px 2px;overflow-wrap:normal;font-size:14px;background:var(--surface);color:var(--text)}}.thq-outlook-next>.thq-action{{background:var(--accent);color:#0c1908;border-color:var(--accent)}}.thq-player .player-portrait{{width:40px;height:40px;flex-basis:40px}}.thq-player .player-headshot,.thq-player .player-headshot-fallback{{width:100%;height:100%}}body:has([data-my-team-context]) .ds-header-side{{display:none}}body:has([data-my-team-context]) .ds-page-header{{display:none}}body:has([data-my-team-context]) .ds-page-header h1{{font-size:20px}}
++.thq-outlook{{padding:12px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface);overflow-wrap:anywhere}}.thq-outlook h2{{font-size:18px;margin:0 0 8px}}.thq-outlook p{{font-size:14px;line-height:1.5;margin:6px 0}}.thq-outlook li{{font-size:14px;line-height:1.5;margin:6px 0}}.thq-outlook .thq-strength-detail{{margin:0}}.thq-outlook .thq-strength-detail>summary{{display:list-item;list-style:disclosure-closed inside}}.thq-outlook .thq-strength-detail[open]>summary{{list-style-type:disclosure-open}}.thq-outlook summary h2{{display:inline;font-size:18px;margin:0}}.thq-outlook summary p{{line-height:1.4;margin:4px 0}}.thq-outlook .thq-actions{{margin:6px 0 0}}.thq-name-row{{display:flex;flex-wrap:wrap;align-items:center;gap:6px}}.thq-name-row>details[open]{{flex-basis:100%}}.thq-header{{margin-bottom:12px;gap:12px}}.thq-header .thq-avatar,.thq-header .franchise-portrait{{width:48px;height:48px;flex-basis:48px;font-size:23px}}.thq-title h1{{font-size:22px;margin:0}}.thq-title p{{margin:0}}.thq-actions{{margin:8px 0;gap:6px}}.thq-section{{margin-top:16px}}.thq-room-head{{padding:4px 10px;font-size:14px}}.thq-player{{padding:8px 10px}}.thq-player>div{{position:relative;padding-right:52px}}.thq-player>div>.thq-action{{position:absolute;right:0;top:0;padding:8px;min-height:44px}}.thq-player .player-summary{{gap:8px}}.thq-player .player-summary img{{width:40px;height:40px}}.thq-player-meta{{font-size:14px;margin-top:4px}}.thq-roster{{gap:10px}}.thq-strategy small{{display:none}}.thq-strategy{{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:6px}}.thq-strategy label{{margin:0}}.thq-strategy select{{min-width:0;margin:0}}#my-team-strategy-feedback{{grid-column:1/-1}}.thq-header{{padding:8px}}#my-team-strategy-feedback:empty{{display:none}}.thq-actions[aria-label="Roster sections"]{{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible;max-width:100%;padding-bottom:4px}}.thq-outlook-next:empty{{display:none}}.thq-outlook-next{{margin:6px 0}}.thq-actions[aria-label="Roster sections"] .thq-action{{min-width:0;justify-content:center;padding:8px 2px;overflow-wrap:normal;font-size:14px;background:var(--surface);color:var(--text)}}.thq-outlook-next>.thq-action{{background:var(--accent);color:#0c1908;border-color:var(--accent)}}.thq-player .player-portrait{{width:40px;height:40px;flex-basis:40px}}.thq-player .player-headshot,.thq-player .player-headshot-fallback{{width:100%;height:100%}}body:has([data-my-team-context]) .ds-header-side{{display:none}}body:has([data-my-team-context]) .ds-page-header{{display:none}}body:has([data-my-team-context]) .ds-page-header h1{{font-size:20px}}
+ @media(max-width:760px){{.thq-header{{padding:8px}}#full-roster{{margin-top:12px}}.thq-outlook a,.thq-outlook summary{{scroll-margin-bottom:100px}}body:has([data-my-team-context]) .wrap{{padding-top:8px}}body:has([data-my-team-context]) .account-context{{padding:4px 0;margin-bottom:4px}}.thq-header .thq-title h1,.thq-header .thq-title p{{margin:0}}.thq-header .identity-kicker{{line-height:1.2}}.thq-outlook{{padding:8px}}body:has([data-my-team-context]) .brand p{{display:none}}body:has([data-my-team-context]) .secondary-nav{{margin-bottom:4px}}.thq-header>div:last-child{{margin-top:8px}}.thq-header .thq-title p{{font-size:14px}}.thq-identity{{gap:8px}}}}
+ .thq-strategy{{display:block}}#my-team-goal-form{{display:grid;grid-template-columns:60px minmax(104px,1fr) auto;gap:6px;align-items:center}}#my-team-strategy-feedback{{grid-column:1/-1}}#my-team-goal-help{{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}}#my-team-save-goal{{min-height:44px;min-width:0;padding:8px;white-space:nowrap}}
+ 
+diff --git a/routes/transactions.py b/routes/transactions.py
+index ed5f555..cb08bc2 100644
+--- a/routes/transactions.py
++++ b/routes/transactions.py
+@@ -38,6 +38,10 @@ PageRenderer = Callable[[str, str], HTMLResponse]
+ 
+ TRANSACTIONS_CSS = """
+ <style>
++.tx-active-filters{display:flex;flex-wrap:wrap;gap:6px;padding:0;list-style:none}
++.tx-active-filters li{padding:4px 9px;border:1px solid var(--line);border-radius:12px;overflow-wrap:anywhere}
++.tx-disclosure{margin-top:12px}.tx-disclosure summary{min-height:44px;align-content:center;cursor:pointer;font-weight:700}
++.tx-disclosure form{margin-top:8px}.tx-stat{min-width:0;overflow-wrap:anywhere}
+ .tx-hero{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap}
+ .tx-hero h2{margin:0 0 5px}.tx-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.tx-actions form{margin:0}
+ .tx-refresh{border:0;border-radius:10px;padding:11px 15px;background:var(--accent);color:#062018;font-weight:850;cursor:pointer}
+@@ -58,6 +62,12 @@ TRANSACTIONS_CSS = """
+ .player-hero{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center}.player-monogram{width:58px;height:58px;border-radius:16px;background:#182a40;border:1px solid var(--line);display:grid;place-items:center;font-size:20px;font-weight:950;color:var(--accent)}
+ @media(max-width:1000px){.tx-stats{grid-template-columns:repeat(3,1fr)}.tx-filters{grid-template-columns:repeat(2,1fr)}}
+ @media(max-width:600px){.tx-stats{grid-template-columns:repeat(2,1fr)}.tx-filters{grid-template-columns:1fr}.tx-refresh-meta{text-align:left}.tx-hero{display:block}.tx-actions{margin-top:10px}.tx-stat b{font-size:19px}
++.tx-archive-table{min-width:0}
++.tx-archive-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
++.tx-archive-table tbody,.tx-archive-table tr,.tx-archive-table td{display:block}
++.tx-archive-table tr{padding:12px;border-bottom:1px solid var(--line)}
++.tx-archive-table td{padding:4px 0;border:0;overflow-wrap:anywhere}
++.tx-archive-table td p{margin:2px 0}
+ .tx-table{min-width:0;display:block}.tx-table thead{display:block}.tx-table thead tr{display:flex;flex-wrap:wrap}.tx-table thead th{border:0;padding:10px;font-size:12px}
+ .tx-table tbody{display:grid;gap:12px;padding:12px}.tx-table tbody tr{display:grid;grid-template-columns:minmax(0,1fr) auto;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:12px}
+ .tx-table tbody td{display:block;border:0;padding:4px 0;min-width:0}.tx-table tbody td:nth-child(n+3){grid-column:1/-1;padding-top:12px}.tx-time{white-space:normal;font-size:12px}.tx-asset{padding:8px;border-left:2px solid var(--line);background:var(--surface-elevated);border-radius:6px}.tx-table-wrap{background:transparent;border:0}}
+@@ -340,20 +350,26 @@ def create_transactions_router(
+         archive_table_body = archive_rows or '<tr><td colspan="6">No archived transactions match these filters.</td></tr>'
+         from src.ui.trade_timeline import render_source_coverage
+         coverage = canonical_history_store.source_coverage(selected_league) if scope != 'current_activity' and hasattr(canonical_history_store, 'source_coverage') else {}
+-        archive_panel = (f'<section class="card"><h2>Historical Archive</h2><p>{archive["total_filtered"]} archived transactions match this scope. Source: retained Sleeper observations.</p><p>{escape(archive["qualification"])}</p><p>Archive page {archive["page"]} of {archive["page_count"]} · {len(archive["rows"])} shown · {archive["per_page"]} per page. Only acquired source periods are included.</p><div class="ds-table-wrap" tabindex="0" role="region" aria-label="Historical transactions"><table><thead><tr><th>Season</th><th>Timestamp</th><th>Type</th><th>Status</th><th>Consideration</th><th>Details</th></tr></thead><tbody>{archive_table_body}</tbody></table></div>{_pagination({**archive, "transactions": archive["rows"]}, filters)}{render_source_coverage(coverage)}</section>') if scope != 'current_activity' else ''
++        archive_panel = (f'<section class="card"><h2>Historical Archive</h2><p>{archive["total_filtered"]} archived transactions match this scope. Source: retained Sleeper observations.</p><p>{escape(archive["qualification"])}</p><p>Archive page {archive["page"]} of {archive["page_count"]} · {len(archive["rows"])} shown · {archive["per_page"]} per page. Only acquired source periods are included.</p><div class="ds-table-wrap" tabindex="0" role="region" aria-label="Historical transactions"><table class="tx-archive-table"><thead><tr><th>Season</th><th>Timestamp</th><th>Type</th><th>Status</th><th>Consideration</th><th>Details</th></tr></thead><tbody>{archive_table_body}</tbody></table></div>{_pagination({**archive, "transactions": archive["rows"]}, filters)}{render_source_coverage(coverage)}</section>') if scope != 'current_activity' else ''
+         activity = _transactions_table(view, filters) + _pagination(view, filters) if scope == 'current_activity' else ''
++        scopes = {"all_history": "All league history", "current_season": "Current season",
++                  "current_activity": "Current-week activity"}
++        selected_team_name = next((row["team_name"] for row in view["teams"]
++                                   if str(row["roster_id"]) == str(team)), team)
++        active_filters = [scopes.get(scope, scope)]
++        for label, value in (("Type", transaction_type.replace("_", " ").title()), ("Status", "Completed" if status == "complete" else status),
++                             ("Team", selected_team_name), ("Manager", owner), ("Player", player),
++                             ("Draft pick", draft_pick), ("From", date_from), ("To", date_to),
++                             ("Search", search), ("Season", season), ("Week", week)):
++            if value not in (None, ""):
++                active_filters.append(f"{label}: {value}")
++        summary_html = "".join(f"<li>{escape(item)}</li>" for item in active_filters)
+         body = f"""
+ {TRANSACTIONS_CSS}
+-<section class="tx-hero">
+-  <div><h2>Transactions Center</h2><p>Activity counters below describe the current cached activity window. Historical Archive results have their own scope and counts.</p><p class="muted">Track every roster move, asset exchange, and front-office decision from the current league week.</p></div>
+-  <div class="tx-actions">
+-    <form method="post" action="/transactions/refresh{f'?{escape(refresh_query)}' if refresh_query else ''}"><button class="tx-refresh" type="submit">Refresh Transactions</button></form>
+-    <div class="tx-refresh-meta">Last successful refresh<br><b>{escape(_format_refresh_time(state.get('transactions_last_sync')))}</b></div>
+-  </div>
+-</section>
+ {refresh_alert}
+-<section class="tx-stats">{stats}</section>
+-<form class="card" method="get" action="/transactions">
++<ul class="tx-active-filters" aria-label="Active transaction filters">{summary_html}</ul>
++<details class="card tx-disclosure"><summary>Search and filters</summary>
++<form method="get" action="/transactions">
+   <div class="tx-filters">
+     <div class="tx-field"><label for="team">Team</label><select id="team" name="team">{team_options}</select></div>
+     <div class="tx-field"><label for="owner">Owner</label><select id="owner" name="owner">{owner_options}</select></div>
+@@ -371,9 +387,16 @@ def create_transactions_router(
+     <input type="hidden" name="sort" value="{escape(sort)}"><input type="hidden" name="direction" value="{escape(direction)}">
+     <div class="tx-filter-actions"><button type="submit">Apply filters</button><a class="tx-reset" href="/transactions">Reset</a></div>
+   </div>
+-</form>
++</form></details>
+ {activity}
+ {archive_panel}
++<details class="card tx-disclosure"><summary>Current-week activity counts</summary>
++<p>Counts from the current cached activity window. Historical results above have their own scope and counts.</p>
++<section class="tx-stats">{stats}</section>
++<div class="tx-actions">
++  <form method="post" action="/transactions/refresh{f'?{escape(refresh_query)}' if refresh_query else ''}"><button class="tx-refresh" type="submit">Refresh Transactions</button></form>
++  <div class="tx-refresh-meta">Last successful refresh<br><b>{escape(_format_refresh_time(state.get('transactions_last_sync')))}</b></div>
++</div></details>
+ """
+         return page("Transactions Center", body)
+ 
+@@ -526,7 +549,7 @@ def create_transactions_router(
+             + escape(str(current_observation.get('current_observed_owner_name') or 'Unavailable')) + ' · as of '
+             + escape(str(current_observation.get('as_of') or 'date unavailable'))
+             + ' · DTOS Sleeper retrieval/sync observation, not acquisition or ownership-change time. Missing intervals do not establish uninterrupted ownership.</p>')
+-        historical_panel = f'''<details class="card cx-evidence"><summary>{history_league_name} Career History</summary><h2>Recorded seasons and ownership</h2><p><b>League origin:</b> {escape(human_status(origin.get("event_type")))}</p><p><a href="/history/player/{escape(player_id)}{origin_query}">Open observed historical performance</a></p>{historical_details}<p>Unknown lineup roles remain separate from bench. Missing weekly scoring remains unavailable.</p>
++        historical_panel = f'''<details class="card cx-evidence" id="player-career-history"><summary>{history_league_name} Career History</summary><h2>Recorded seasons and ownership</h2><p><b>League origin:</b> {escape(human_status(origin.get("event_type")))}</p><p><a href="/history/player/{escape(player_id)}{origin_query}">Open observed historical performance</a></p>{historical_details}<p>Unknown lineup roles remain separate from bench. Missing weekly scoring remains unavailable.</p>
+ <h3>Annual League History</h3><div class="ds-table-wrap" tabindex="0" role="region" aria-label="Observed season production"><table><thead><tr><th>Season</th><th>Status</th><th>Scored observations</th><th>Known starts</th><th>Explicit bench</th><th>Unknown role</th><th>Observed points</th><th>Sample overall rank</th><th>Sample position rank</th><th>Scored-week coverage</th></tr></thead><tbody>{season_history}</tbody></table></div>
+ <h3>Ownership Timeline</h3>{current_observation_html}<ul>{ownership_history}</ul><p class="muted">Failed transactions remain behavioral evidence and never modify ownership. Missing weeks are not converted to zero. Current values are never backdated.</p></details>'''
+         trade_return = f'<a class="back" href="/trades/history/{quote(original["transaction_id"], safe="")}">← Back to original trade timeline</a>' if original else ''
+@@ -539,14 +562,21 @@ def create_transactions_router(
+         from services.market_navigation import market_return
+         market_origin = market_return(from_market, market_league, (data.get("league") or {}).get("league_id"))
+         market_back = f'<a class="back" href="{escape(market_origin)}">← Back to Market results</a>' if market_origin else ''
++        sections = [("Projections", "#player-weekly-projections")]
++        if canonical_panel:
++            sections.append(("Results", "#player-results"))
++        if workload_html:
++            sections.append(("Workload", "#recent-workload-title"))
++        sections.extend((("History", "#player-career-history"), ("Evidence", "#player-value-evidence")))
++        shortcuts = '<nav class="ds-actions player-section-links" aria-label="Player sections">' + ''.join(
++            f'<a class="ds-action" href="{href}">{label}</a>' for label, href in sections) + '</nav>'
+         body = f"""
+ {TRANSACTIONS_CSS}
+-{'' if market_back else trade_return}
+-{matchup_return}
+-{market_back or team_return or '<a class="back" href="/transactions">← Back to Transactions Center</a>'}
++{market_back or team_return or matchup_return or trade_return or '<a class="back" href="/transactions">← Back to Transactions Center</a>'}
+ {player_dossier(report, selected_team, teams, weekly_projection_html=weekly_panel, ownership=ownership)}
+ <p class="player-reported-status">Sleeper reported status: {escape(str(player.get("injury_status") or player.get("status") or "Unavailable"))}</p>
+-{canonical_panel}
++{shortcuts}
++{f'<div id="player-results">{canonical_panel}</div>' if canonical_panel else ''}
+ {workload_html}
+ <details class="cx-evidence"><summary>Player assessment explanation</summary>{profile_explanation}</details>
+ {live_panel}
+diff --git a/src/ui/design_system.py b/src/ui/design_system.py
+index 598d83d..f244546 100644
+--- a/src/ui/design_system.py
++++ b/src/ui/design_system.py
+@@ -52,7 +52,7 @@ def _presentation(title: str) -> PagePresentation:
+     if "draft" in normalized or "pick" in normalized:
+         return PagePresentation("Understand the league's draft-capital ownership and strategic flexibility.", "Draft capital", "Open Trade Center", "/trades")
+     if "transaction" in normalized:
+-        return PagePresentation("See what changed across the league and which assets moved.", "League activity", "Review Transactions", "/transactions")
++        return PagePresentation("See what changed across the league and which assets moved.", "League activity", "League", "/league", variant="search")
+     if "setting" in normalized:
+         return PagePresentation("Review league rules, synchronization state, and application information.", "League configuration", "Review Sync Status", "/settings#sync-status")
+     return PagePresentation("Choose a league page to review your team and its next move.", "League overview", "View teams", "/teams")
+diff --git a/src/ui/home_trade_opportunities.py b/src/ui/home_trade_opportunities.py
+index 07b8ff9..cb289ce 100644
+--- a/src/ui/home_trade_opportunities.py
++++ b/src/ui/home_trade_opportunities.py
+@@ -70,12 +70,6 @@ CSS = """.home-opportunity{background:var(--surface,#202628);border:1px solid #3
+ """
+ 
+ CSS += """
+-.ds-shell .top.home-top{grid-template-columns:minmax(0,1fr) fit-content(68%);align-items:start;gap:10px}
+-.home-top aside{min-width:0;justify-self:end}
+-.home-top .account-context{padding:0;border:0;margin:0}
+-.home-top .account-context summary{padding:3px 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface-elevated);gap:6px;min-height:44px}
+-.home-top .account-context summary b{font-size:14px;overflow-wrap:anywhere}
+-.home-top .account-context summary span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+ .home-team,.home-first,.home-week{margin:0 0 14px;min-width:0}
+ .home-team h1{font-size:clamp(26px,5vw,36px);margin:0;line-height:1.15;overflow-wrap:anywhere}
+ .home-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:10px 0 0;padding:6px 0;text-align:center;background:var(--surface-elevated);border:1px solid var(--line);border-radius:10px}
+@@ -98,6 +92,11 @@ CSS += """
+ .home-week-links a+a{border-top:1px solid var(--line)}
+ .home-shortcuts a:hover{border-color:var(--accent)}.home-shortcuts a span,.home-week-links a span{color:var(--accent);font-size:20px;line-height:1}
+ .home-week .ds-home-detail{margin:4px 0 0}
++@media(min-width:761px){
++.home-week{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);align-items:start;gap:0 16px}
++.home-week h2{grid-column:1/-1}.home-week-links{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
++.home-week-links a+a{border-top:0;border-left:1px solid var(--line);padding-left:12px}
++}
+ @media(min-width:700px){.home-stats{max-width:590px}.home-shortcuts{max-width:590px}.home-first .ux-primary-action{width:min(100%,330px)}}
+ @media(max-width:359px) and (max-height:500px){
+  .home-team,.home-first{margin-bottom:10px}
+diff --git a/src/ui/league_hub.py b/src/ui/league_hub.py
+index bfbd720..4e38ed4 100644
+--- a/src/ui/league_hub.py
++++ b/src/ui/league_hub.py
+@@ -7,7 +7,7 @@ from src.core.player_value_projection.sleeper_actuals import actual_display
+ from src.ui.design_system import DESIGN_SYSTEM_VERSION
+ 
+ 
+-def league_week_heading(data, selected):
++def matchup_week_control(data, selected):
+     calendar = matchup_calendar(data.get("league") or {}, data.get("week") or 1, data.get("nfl_state"))
+     weeks = sorted(set(calendar.get("regular_season_weeks") or []) | {
+         week for group in calendar.get("playoff_rounds") or [] for week in group
+@@ -21,11 +21,15 @@ def league_week_heading(data, selected):
+ 
+     previous = arrow("Previous matchup week", "‹", weeks[index - 1] if index else None)
+     following = arrow("Next matchup week", "›", weeks[index + 1] if index + 1 < len(weeks) else None)
+-    return (f'<header class="league-heading" data-dtos-component="page-header" data-design-system="{DESIGN_SYSTEM_VERSION}"><h1>League</h1>'
+-            f'<nav aria-label="Matchup preview week">{previous}<strong>Week {selected}</strong>{following}</nav></header>')
++    return f'<nav class="league-week-control" aria-label="Matchup preview week">{previous}<strong>Week {selected}</strong>{following}</nav>'
+ 
+ 
+-def matchup_preview(week, view, viewer):
++def league_heading():
++    return (f'<header class="league-heading" data-dtos-component="page-header" '
++            f'data-design-system="{DESIGN_SYSTEM_VERSION}"><h1>League</h1></header>')
++
++
++def matchup_preview(week, view, viewer, week_control):
+     all_href = f'/matchups?week={week}'
+     identity, sides = next(iter(view.get("groups", {}).items()), (None, []))
+     has_matchup = identity is not None and view.get("availability") == "available"
+@@ -64,4 +68,4 @@ def matchup_preview(week, view, viewer):
+         content = (f'<div class="card league-matchup-preview" data-game-state="{state}">'
+                    f'<div class="league-score-pair">{"".join(scores)}</div><p>{label}</p>{future}'
+                    f'<a class="ux-primary-action" data-dtos-action="primary" href="{href}">View matchup</a></div>')
+-    return f'<section class="league-matchup" aria-labelledby="league-matchup-title">{heading}{content}</section>'
++    return f'<section class="league-matchup" aria-labelledby="league-matchup-title">{heading}{week_control}{content}</section>'
+diff --git a/src/ui/market_directory.py b/src/ui/market_directory.py
+index daf9589..d398a82 100644
+--- a/src/ui/market_directory.py
++++ b/src/ui/market_directory.py
+@@ -40,7 +40,7 @@ def result_row(*, asset_id, name, metadata, price, has_price, rank, query, selec
+         change = f"{amount:+,.2f}".rstrip("0").rstrip(".") if amount else "0"
+         movement = f'<b class="market-change-{("up" if amount > 0 else "down" if amount < 0 else "flat")}">{change}</b><small>{escape(_window(trend))}</small>'
+     else:
+-        movement = '<small>No change data</small>'
++        movement = '<small class="market-visually-hidden">No change data</small><b aria-hidden="true">—</b>'
+     href = f'/market?{escape(query)}' + ("#market-open-row" if not active else "#market-results")
+     focus = ' id="market-open-row"' if active else ''
+     active_evidence = (
+diff --git a/src/ui/matchup_season.py b/src/ui/matchup_season.py
+index 5616ded..533f004 100644
+--- a/src/ui/matchup_season.py
++++ b/src/ui/matchup_season.py
+@@ -134,14 +134,14 @@ def render_season_week(view: dict, *, matchup_id: str | None = None) -> str:
+                           and (matchup_id is None or identity == matchup_id))
+     if recheck and not own_reviews and matchup_id is None:
+         own_reviews = lineup_recheck_panel(recheck, None)
+-    body = nav + own_reviews + f'<section class="card matchup-heading"><h2>{escape(heading)}</h2><p>{escape(description)}</p></section>'
++    body = nav + (own_reviews if matchup_id is None else '') + f'<section class="card matchup-heading"><h2>{escape(heading)}</h2><p>{escape(description)}</p></section>'
+     if own_reviews:
+         body += '<script src="/static/lineup-review.js" defer></script>'
+     if not view['opponents_locked']:
+-        return body + '<section class="card"><h3>Playoff opponents not established</h3><p>Projected seeding is not a locked matchup. Playoff-window strength remains opponent-independent.</p><a href="/teams">View team strength</a></section>'
++        return body + (own_reviews if matchup_id is not None else '') + '<section class="card"><h3>Playoff opponents not established</h3><p>Projected seeding is not a locked matchup. Playoff-window strength remains opponent-independent.</p><a href="/teams">View team strength</a></section>'
+     byes = ''.join(f'<section class="card"><h3><a href="/teams/{side["roster_id"]}">{escape(side["team"])}</a></h3><p>First-round bye · qualified for the playoffs. No opponent or game score is assigned.</p></section>' for side in view.get('byes') or [])
+     if view['availability'] != 'available':
+-        return body + byes + '<section class="card"><h3>This week is not ready</h3><p>Choose a week with available results, or retry the normal league refresh when it is available.</p></section>'
++        return body + (own_reviews if matchup_id is not None else '') + byes + '<section class="card"><h3>This week is not ready</h3><p>Choose a week with available results, or retry the normal league refresh when it is available.</p></section>'
+     cards = []
+     ordered = sorted(view['groups'].items(), key=lambda item: (not any(s.get('is_viewer') for s in item[1]), item[0]))
+     for identity, sides in ordered:
+@@ -186,7 +186,7 @@ def render_season_week(view: dict, *, matchup_id: str | None = None) -> str:
+             label = 'Open Week ' + str(week) + ' matchup: ' + ' versus '.join(s['team'] for s in sides)
+             content = f'<a class="matchup-card-link" aria-label="{escape(label)}" href="/matchups/{escape(identity)}?week={week}">{content}</a>'
+         else:
+-            content = f'<a class="back" href="/matchups?week={week}">All Week {week} matchups</a>' + content + _aligned_roster(sides, week, identity, state)
++            content = content + own_reviews + f'<p><a class="ds-action" href="/matchups?week={week}">All Week {week} matchups</a></p>' + _aligned_roster(sides, week, identity, state)
+         technical = '<details class="matchup-evidence"><summary>Lineup and projection evidence</summary><p>' + escape(coverage) + '</p>'
+         if view['period'] != 'historical':
+             for side in sides:
+diff --git a/src/ui/my_team_outlook.py b/src/ui/my_team_outlook.py
+index ace7a1c..4e9bdb6 100644
+--- a/src/ui/my_team_outlook.py
++++ b/src/ui/my_team_outlook.py
+@@ -10,7 +10,6 @@ def roster_shortcuts():
+ <a class="thq-action" href="#full-roster" aria-label="View full roster">Players</a>
+ <a class="thq-action" href="#my-team-outlook" aria-label="Roster outlook and next step">Outlook</a>
+ <a class="thq-action" href="#positional-depth">Depth</a>
+-<a class="thq-action" href="#draft-capital" aria-label="Draft capital">Picks</a>
+ </nav>'''
+ 
+ 
+@@ -25,7 +24,7 @@ def outlook_panel(outlook, *, editable, roster_id):
+         action += (f'<p>{escape(need["reason"])}</p><a id="my-team-trade-need" class="thq-action" '
+                    f'href="{escape(need["href"], quote=True)}">Explore {escape(need["position"])} trades</a>')
+     trade = (f'<a class="thq-action" href="/trades/calculator?front_office={roster_id}">Evaluate a trade</a>'
+-             f'<a class="thq-action" href="/trades?front_office={roster_id}">Recommended Trades</a>') if editable else ''
++             f'<a class="thq-action" href="/trades/recommended?front_office={roster_id}">Recommended Trades</a>') if editable else ''
+     choices = escape(json.dumps(goal_options(roster_id), separators=(',', ':')), quote=True) if editable else '{}'
+     heading = '<h2 id="my-team-outlook-title">Your roster at a glance</h2>'
+     lead = (f'<p id="my-team-outlook-lead">Comparison pending: lineup and depth. {escape(outlook["future_summary"])}</p>'
+diff --git a/src/ui/public_welcome.py b/src/ui/public_welcome.py
+index 268ef7b..b790feb 100644
+--- a/src/ui/public_welcome.py
++++ b/src/ui/public_welcome.py
+@@ -27,7 +27,7 @@ body.public-welcome{margin:0;font-size:16px;color:var(--text-primary);line-heigh
+ .public-welcome .pw-primary{background:var(--accent);border-color:var(--accent);color:#0c1908}.public-welcome .pw-primary:hover{background:var(--accent)}
+ .public-welcome a:focus-visible,.public-welcome summary:focus-visible,.public-welcome [tabindex]:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+ .public-welcome .pw-skip{position:absolute;left:16px;top:-100px;z-index:1;background:var(--surface);padding:10px 16px;min-height:44px;border:1px solid var(--focus);border-radius:8px}.public-welcome .pw-skip:focus{top:8px}
+-.public-welcome .pw-intro{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:48px;padding:32px 0}
++.public-welcome .pw-intro{display:grid;grid-template-columns:minmax(230px,2fr) minmax(0,5fr);gap:clamp(24px,4vw,48px);padding:32px 0}
+ .public-welcome .pw-hero{min-width:0}.public-welcome .pw-eyebrow{font-size:12px;color:var(--accent);font-weight:750;letter-spacing:.08em;text-transform:uppercase;margin:0 0 12px}
+ .public-welcome h1{font-size:clamp(28px,3.7vw,42px);line-height:1.13;letter-spacing:-.035em;margin:0 0 18px;max-width:15ch}
+ .public-welcome .pw-value{color:var(--text-secondary);margin:0 0 20px;max-width:42ch;font-size:17px}
+diff --git a/src/ui/theme.py b/src/ui/theme.py
+index a11b50d..a9a3403 100644
+--- a/src/ui/theme.py
++++ b/src/ui/theme.py
+@@ -58,6 +58,20 @@ a.card:hover,a.team-link:hover,.ux-action:hover{border-color:var(--line-strong);
+ .account-context summary b{font-size:13px}
+ .account-context summary span{font-size:12px;color:var(--text-muted)}
+ .account-context .ds-actions{max-height:280px;overflow-y:auto;justify-content:flex-start;padding:12px 0}
++.ds-shell .top.compact-top{grid-template-columns:minmax(0,1fr) fit-content(68%);align-items:start;gap:10px}
++.compact-top aside{min-width:0;justify-self:end}
++.ds-shell .compact-top .account-context{padding:0;border:0;margin:0}
++.ds-shell .compact-top .account-context summary{flex-wrap:nowrap;padding:3px 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface-elevated);gap:6px;min-height:44px}
++.compact-top .account-context summary b{font-size:14px;overflow-wrap:anywhere;min-width:0}
++.compact-top .account-context summary span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
++.compact-top .ds-actions{overflow-wrap:anywhere}
++.compact-tools{display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap}
++.compact-tools .secondary-nav{margin:0;flex:1}
++.compact-tools .btn{min-height:44px;background:transparent;color:var(--text-secondary);border:1px solid var(--border)}
++@media(max-width:760px){
++ .wrap:has(.compact-top){padding-bottom:calc(108px + env(safe-area-inset-bottom))}
++ .wrap:has(.compact-top) :is(button,input,select,a,summary){scroll-margin-bottom:75px}
++}
+ .account-context button[aria-current=true]{border-color:var(--accent);color:var(--accent)}
+ .manager-nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));margin:0 0 8px;gap:4px;border-bottom:1px solid var(--border)}
+ .manager-nav a{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:8px;border-bottom:2px solid transparent;font-weight:650;color:var(--text-secondary)}
+diff --git a/static/css/contextual_navigation.css b/static/css/contextual_navigation.css
+index 971566d..3e99968 100644
+--- a/static/css/contextual_navigation.css
++++ b/static/css/contextual_navigation.css
+@@ -1,4 +1,4 @@
+-.dtos-page-title{display:flex;align-items:center;gap:10px;min-width:0;flex-wrap:wrap}.dtos-page-title h1{margin:0;min-width:0;overflow-wrap:anywhere}.dtos-back{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;min-width:64px;padding:4px 8px;border:1px solid var(--border,var(--line));border-radius:8px;color:var(--text);font-size:14px;font-weight:650;white-space:nowrap;text-decoration:none}.dtos-back:focus-visible{outline:3px solid var(--focus,var(--accent));outline-offset:3px}.dtos-back[aria-busy=true]{opacity:.7;cursor:wait}.dtos-back[hidden]{display:none!important}.dtos-nav-suspended main{visibility:hidden}.dtos-nav-check{max-width:620px;margin:32px auto;padding:16px;color:var(--text);background:var(--surface);font:inherit}.dtos-nav-check button{min-height:44px}.dtos-nav-check[hidden]{display:none}
++.dtos-page-title{display:flex;align-items:center;gap:10px;min-width:0;flex-wrap:wrap}.dtos-page-title h1{margin:0;min-width:0;overflow-wrap:anywhere}.dtos-back{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;min-width:64px;padding:4px 8px;border:1px solid var(--border,var(--line));border-radius:8px;color:var(--text);font-size:14px;font-weight:650;white-space:nowrap;text-decoration:none}.dtos-back:focus-visible{outline:3px solid var(--focus,var(--accent));outline-offset:3px}.dtos-back[aria-busy=true]{opacity:.7;cursor:wait}.dtos-back[hidden],a.back[hidden]{display:none!important}.dtos-nav-suspended main{visibility:hidden}.dtos-nav-check{max-width:620px;margin:32px auto;padding:16px;color:var(--text);background:var(--surface);font:inherit}.dtos-nav-check button{min-height:44px}.dtos-nav-check[hidden]{display:none}
+ 
+ @media(max-width:360px){.dtos-page-title{gap:6px}.dtos-back{font-size:13px;padding:4px 6px}.ds-page-header .dtos-page-title h1{font-size:22px}.ds-page-header:not([data-dtos-shell="account-onboarding"])>div:first-child{gap:8px}.ds-page-header .ds-page-guide:not([open]){max-width:52px}.ds-page-header .ds-page-guide:not([open])>summary{white-space:normal}}
+ 
+diff --git a/static/css/league_hub.css b/static/css/league_hub.css
+index 9a48f0b..f13507f 100644
+--- a/static/css/league_hub.css
++++ b/static/css/league_hub.css
+@@ -1,13 +1,10 @@
+-.ds-shell .top.league-top {grid-template-columns:max-content minmax(0,1fr)}
+-.league-top .account-context {margin:0;min-width:0}
+-.league-top .account-context summary {overflow-wrap:anywhere}
+ .league-hub {display:grid;gap:16px;min-width:0}
+ .league-hub h1,.league-hub h2,.league-hub p {margin:0}
+ .league-heading,.league-section-heading {display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+-.league-heading nav {display:flex;align-items:center;border:1px solid var(--border);border-radius:10px;background:var(--surface)}
+-.league-heading nav>* {display:grid;min-height:44px;min-width:44px;place-items:center;padding-inline:4px}
+-.league-heading nav strong {padding-inline:10px}
+-.league-heading nav a {font-size:1.3rem}
++.league-week-control {display:flex;align-items:center;border:1px solid var(--border);border-radius:10px;background:var(--surface)}
++.league-week-control>* {display:grid;min-height:44px;min-width:44px;place-items:center;padding-inline:4px}
++.league-week-control strong {padding-inline:10px}
++.league-week-control a {font-size:1.3rem}
+ .league-week-unavailable {color:var(--muted)}
+ .league-section-heading h2 {font-size:clamp(1.2rem,4vw,1.5rem)}
+ .league-section-heading a {display:flex;align-items:center;min-height:44px;color:var(--accent);text-decoration:underline;text-underline-offset:3px}
+@@ -55,3 +52,5 @@
+   .league-hub .league-section-heading a {font-size:.875rem}
+   .league-cutoff small {display:inline;margin-left:4px}
+ }
++
++.league-week-control {width:fit-content;margin:4px 0 8px}
+diff --git a/static/css/market_directory.css b/static/css/market_directory.css
+index caed69b..3628dab 100644
+--- a/static/css/market_directory.css
++++ b/static/css/market_directory.css
+@@ -16,11 +16,6 @@
+   font-weight:800;
+ }
+ .market-directory {min-width:0}
+-.market-chrome-tools {display:flex; justify-content:flex-end; flex-wrap:wrap; gap:8px}
+-.market-chrome-tools form .btn {background:var(--surface); color:var(--text); border-color:var(--border)}
+-.ds-shell .top.market-top {grid-template-columns:max-content minmax(0,1fr)}
+-.ds-shell .market-top .account-context {margin:0; min-width:0}
+-.ds-shell .market-top .account-context summary {overflow-wrap:anywhere}
+ .market-visually-hidden {
+   position:absolute;
+   width:1px;
+diff --git a/static/js/contextual_navigation.js b/static/js/contextual_navigation.js
+index b1bd003..ba3c639 100644
+--- a/static/js/contextual_navigation.js
++++ b/static/js/contextual_navigation.js
+@@ -50,7 +50,7 @@
+     if (first === 'teams' && !['/teams',team].includes(u.pathname)) return 'Team details';
+     if (u.hash === '#positional-depth') return 'Depth';
+     if (u.hash === '#draft-capital') return 'Capital';
+-    return ({'':'Home', teams:'My Team', market:'Market', players:'Player details', trades:'Trade workspace', league:'League', matchups:'Matchups', picks:'Draft Capital', history:'History', fois:'FOIS', 'front-offices':'Franchise details', account:'Account', reports:'Weekly Report', settings:'Settings'})[first] || 'previous page';
++    return ({'':'Home', teams:'My Team', market:'Market', players:'Player details', trades:'Trade workspace', league:'League', matchups:'Matchups', picks:'Draft Capital', transactions:'Transactions', history:'History', fois:'FOIS', 'front-offices':'Franchise details', account:'Account', reports:'Weekly Report', settings:'Settings'})[first] || 'previous page';
+   }
+   function parent() {
+     const p = location.pathname;
+@@ -124,6 +124,9 @@
+     back.hidden = identity(target) === identity(entry?.url || safeUrl(location.href) || '/');
+     back.href = target; back.setAttribute('aria-label','Go back to ' + label(target));
+     back.title = 'Back to ' + label(target);
++    // Legacy server links still serve direct visits without JS. This control
++    // becomes the sole return link once the scoped navigation is ready.
++    for (const link of document.querySelectorAll('a.back')) link.hidden = !back.hidden;
+   }
+   function initialize() {
+     ledger = load(); const url = safeUrl(location.href); if (!url) {back.hidden=true;return;}
+diff --git a/static/js/trade_workspace.js b/static/js/trade_workspace.js
+index 1aac84b..b85b1ef 100644
+--- a/static/js/trade_workspace.js
++++ b/static/js/trade_workspace.js
+@@ -599,6 +599,7 @@
+       header.append(panel);
+     }
+     const decision = decisionPresentation(e);
++    appendCurrentLineupSummary(header, decision);
+     const benefit = decision.decisive_reason || e.why_you_would_do_it;
+     const cost = decision.main_cost || e.major_drawback;
+     const concern = decision.partner_cost;
+diff --git a/tests/test_00_trade_workflow_experience.py b/tests/test_00_trade_workflow_experience.py
+index 1da2894..0d6c60d 100644
+--- a/tests/test_00_trade_workflow_experience.py
++++ b/tests/test_00_trade_workflow_experience.py
+@@ -100,7 +100,8 @@ class TradeWorkflowExperienceTests(unittest.TestCase):
+                 response = f.f.client.get(path)
+                 self.assertEqual(response.status_code, 200)
+                 if path.startswith('/trades?'):
+-                    self.assertIn('Generate Trades', response.text)
++                    self.assertIn('Find Recommended Trades', response.text)
++                    self.assertEqual(response.text.count('/trades/recommended?front_office=1'), 1)
+                     self.assertIn('Evaluate Trade', response.text)
+                 else:
+                     self.assertIn('Find a trade</a>', response.text)
+diff --git a/tests/test_contextual_back.py b/tests/test_contextual_back.py
+index 3316cc1..710a993 100644
+--- a/tests/test_contextual_back.py
++++ b/tests/test_contextual_back.py
+@@ -671,13 +671,14 @@ class ContextualBackTests(unittest.TestCase):
+                     ),
+                     count,
+                 )
+-                p.locator('a[href="#draft-capital"]').first.click()
+-                p.wait_for_url("**#draft-capital")
++                p.get_by_role("navigation", name="My Team sections").get_by_role("link", name="Picks", exact=True).click()
++                p.wait_for_url("**#team-picks")
+                 p.go_back()
+                 p.wait_for_url("**/teams/1")
+                 p.go_forward()
+-                p.wait_for_url("**#draft-capital")
++                p.wait_for_url("**#team-picks")
+                 p.reload()
++                p.locator("#draft-capital").wait_for(state="visible")
+                 self.back(p, "/teams/1")
+                 p.locator('.manager-nav a[href="/market"]').click()
+                 p.wait_for_url("**/market")
+diff --git a/tests/test_player_api.py b/tests/test_player_api.py
+index 3600161..d1b5ce2 100644
+--- a/tests/test_player_api.py
++++ b/tests/test_player_api.py
+@@ -129,7 +129,7 @@ class PlayerApiContractTests(unittest.TestCase):
+         dossier_url = self.client.get("/api/players").json()["players"][0]["dossier_url"]
+         valid = self.client.get(f"{dossier_url}?front_office=1")
+         self.assertEqual(valid.status_code, 200)
+-        self.assertIn("Player Dossier", valid.text)
++        self.assertIn('aria-label="Player details"', valid.text)
+         self.assertIn("Player One", valid.text)
+         self.assertIn('class="ai-player-identity"', valid.text)
+         self.assertIn("Live Data &amp; Market", valid.text)
+diff --git a/tests/test_unmatched_import_recovery.py b/tests/test_unmatched_import_recovery.py
+index 6c88935..fa8de08 100644
+--- a/tests/test_unmatched_import_recovery.py
++++ b/tests/test_unmatched_import_recovery.py
+@@ -40,7 +40,8 @@ class UnmatchedImportRecoveryTests(unittest.TestCase):
+                 leagues = self.client.get('/account/leagues')
+                 self.assertEqual(leagues.status_code, 200)
+                 self.assertIn('First league', leagues.text)
+-                self.assertIn('Switch front office', leagues.text)
++                self.assertIn('Open active league', leagues.text)
++                self.assertIn('Active league', leagues.text)
+                 identity = self.client.get('/account/sleeper')
+                 self.assertEqual(identity.status_code, 200)
+                 self.assertIn('Sleeper username', identity.text)
+diff --git a/tests/test_visual_consistency.py b/tests/test_visual_consistency.py
+new file mode 100644
+index 0000000..f16a2c4
+--- /dev/null
++++ b/tests/test_visual_consistency.py
+@@ -0,0 +1,89 @@
++"""Prepared authenticated route journeys for the shared presentation."""
++import os
++from pathlib import Path
++from urllib.parse import urlsplit
++import unittest
++
++from playwright.sync_api import expect, sync_playwright
++
++from tests import test_contextual_back
++from tools.validation.browser_runtime import launch_chromium
++
++
++class VisualConsistencyTests(unittest.TestCase):
++    def test_market_return_and_transactions_controls_at_three_widths(self):
++        helper = test_contextual_back.ContextualBackTests()
++        fixture = helper.fixture()
++        self.addCleanup(helper.doCleanups)
++        output = os.environ.get("DTOS_VISUAL_CONSISTENCY_EVIDENCE")
++        if output:
++            Path(output).mkdir(parents=True, exist_ok=True)
++
++        with sync_playwright() as playwright:
++            browser = launch_chromium(playwright, headless=True)
++            try:
++                for width, height in ((320, 432), (390, 844), (1280, 900)):
++                    with self.subTest(width=width):
++                        page, requests, _, _, errors = helper.page(browser, fixture, width, height)
++                        try:
++                            self.exercise(page, helper.origin, output, width)
++                            self.assertFalse(errors, errors)
++                            self.assertFalse(any(method == "POST" for method, _, _ in requests), requests)
++                        finally:
++                            page.close()
++            finally:
++                browser.close()
++
++    def exercise(self, page, origin, output, width):
++        def capture(name):
++            self.assertLessEqual(page.evaluate("document.documentElement.scrollWidth"), width)
++            if output:
++                page.screenshot(path=str(Path(output, f"{name}-{width}.png")), full_page=True)
++
++        status = page.goto(origin + "/market?position=QB&sort=value&direction=desc")
++        self.assertEqual(status.status, 200)
++        switcher = page.locator(".compact-top .account-context > summary")
++        expect(switcher).to_be_visible()
++        self.assertGreaterEqual(switcher.bounding_box()["height"], 44)
++        first = page.locator(".market-row").first
++        first.click()
++        page.wait_for_url("**/market?*selected=*")
++        expanded_url = urlsplit(page.url).query
++        capture("market")
++        link = page.locator("#market-row-detail a[href^='/players/']").first
++        link.click()
++        page.wait_for_url("**/players/*")
++        expect(page.get_by_role("region", name="Player details")).to_be_visible()
++        expect(page.locator("#player-weekly-projections")).to_be_visible()
++        self.assertEqual(page.locator("a.back:visible").count(), 0)
++        capture("player")
++        page.locator("#dtos-back").press("Enter")
++        page.wait_for_url("**/market?*selected=*")
++        self.assertEqual(urlsplit(page.url).query, expanded_url)
++        expect(page.locator(".market-row[aria-expanded='true']")).to_be_visible()
++
++        page.goto(origin + "/transactions?scope=all_history&type=trade&status=complete")
++        expect(page.get_by_label("Active transaction filters")).to_contain_text("Status: Completed")
++        expect(page.get_by_role("heading", name="Historical Archive")).to_be_visible()
++        filters = page.get_by_text("Search and filters", exact=True)
++        activity = page.get_by_text("Current-week activity counts", exact=True)
++        self.assertFalse(page.locator("details.tx-disclosure").nth(0).evaluate("e=>e.open"))
++        self.assertFalse(page.locator("details.tx-disclosure").nth(1).evaluate("e=>e.open"))
++        capture("transactions")
++        filters.press("Enter")
++        expect(page.get_by_label("Transaction type")).to_have_value("trade")
++        expect(page.get_by_label("History scope")).to_have_value("all_history")
++        page.get_by_label("Search", exact=True).fill("fixture")
++        apply = page.get_by_role("button", name="Apply filters")
++        apply.scroll_into_view_if_needed()
++        self.assertTrue(apply.evaluate("""e => {
++            const r = e.getBoundingClientRect();
++            const point = document.elementFromPoint(r.x+r.width/2, r.y+r.height/2);
++            return e.contains(point);
++        }"""))
++        apply.click()
++        page.wait_for_url("**/transactions?*q=fixture*")
++        expect(page.get_by_label("Active transaction filters")).to_contain_text("Search: fixture")
++        activity.press("Enter")
++        expect(page.get_by_role("button", name="Refresh Transactions")).to_be_visible()
++        capture("transactions-activity")

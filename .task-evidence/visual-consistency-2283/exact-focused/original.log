@@ -1,0 +1,168 @@
+/usr/local/lib/python3.14/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+test_direct_entry_refresh_browser_traversal_and_disclosures_do_not_loop (tests.test_contextual_back.ContextualBackTests.test_direct_entry_refresh_browser_traversal_and_disclosures_do_not_loop) ... {"timestamp":"2026-11-26T17:54:39.335340+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:39.350100+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.108
+{"timestamp":"2026-11-26T17:54:40.824762+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/players/c \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:40.936260+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:40.951183+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/player-projections.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:41.010793+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:41.032736+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:41.225537+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:41.228231+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"81ae48275c22427fbb0a0006c1d4cdb0","event":"request_complete","duration_ms":185.578,"status_code":200,"method":"GET","path":"/static/css/matchups.css"}
+{"timestamp":"2026-11-26T17:54:41.456185+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/account/navigation-context \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:41.508831+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/market \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:41.575891+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:41.576343+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/market_directory.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:41.577590+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:41.801156+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:41.904288+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:41.906743+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/my-team.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:41.912142+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/my-team-sections.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:41.921356+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:41.921888+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:42.343793+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:42.455211+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:42.472939+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:42.475362+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:42.482889+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/my-team.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:42.486732+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/my-team-sections.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:42.632024+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/account/navigation-context \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:42.724268+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/market \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:42.769112+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:42.780986+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/market_directory.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:42.781410+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:42.836670+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/teams/1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:42.896544+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:42.897475+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/my-team.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:42.904350+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:42.916860+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:42.921313+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/my-team-sections.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:42.978027+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/market \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:43.019879+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:43.025809+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/market_directory.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:43.030452+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_storage_denial_and_no_prior_context_have_truthful_safe_fallbacks (tests.test_contextual_back.ContextualBackTests.test_storage_denial_and_no_prior_context_have_truthful_safe_fallbacks) ... {"timestamp":"2026-11-26T17:54:43.668983+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:43.680271+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.108
+{"timestamp":"2026-11-26T17:54:44.972419+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/trades/create \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:45.114522+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_workspace.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:45.117804+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/trade_comparison.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:45.119071+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/trade_workspace.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:45.119924+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:45.125021+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:45.129970+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/strategy_session.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:45.259509+00:00","level":"INFO","logger":"dtos.trade_resources","message":"trade_readiness","request_id":"system","event":"trade_readiness","diagnostic":{"schema":"trade-resource-v1","observation":{"admitted":true,"reason":"ready","current_bytes":352038912,"limit_bytes":2147483648,"raw_headroom_bytes":1795444736,"clean_inactive_file_bytes":770048,"conditional_file_credit_bytes":385024,"admission_headroom_bytes":1795829760,"working_bytes":268435456,"safety_bytes":134217728,"events":{"oom":0,"oom_kill":0}},"heavy_work_busy":false}}
+{"timestamp":"2026-11-26T17:54:45.263971+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/trades/workspace?front_office=1&mode=calculator \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:45.514786+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/players/c \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:45.674494+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:45.687034+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:45.704968+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/player-projections.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:45.714128+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:45.729040+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:45.730048+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"340333d7064d416b9c9e247b257974e6","event":"request_complete","duration_ms":2.988,"status_code":200,"method":"GET","path":"/static/css/matchups.css"}
+{"timestamp":"2026-11-26T17:54:45.928618+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/account/navigation-context \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:45.972008+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/market \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:46.055452+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:46.090954+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:46.106127+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/market_directory.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+test_market_return_and_transactions_controls_at_three_widths (tests.test_visual_consistency.VisualConsistencyTests.test_market_return_and_transactions_controls_at_three_widths) ... {"timestamp":"2026-11-26T17:54:47.064772+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:47.072975+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: POST http://testserver/api/my-dtos \"HTTP/1.1 200 OK\"","request_id":"system"}
+Validation Chromium: /usr/bin/chromium
+Validation Chromium version: 156.0.8078.108
+{"timestamp":"2026-11-26T17:54:48.054791+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/market?position=QB&sort=value&direction=desc \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:48.178838+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:48.194409+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:48.222660+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/market_directory.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:48.745839+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/market?q=&position=QB&availability=&sort=value&direction=desc&front_office=1&selected=player%3Ac&offset=0&limit=10 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:48.829927+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:48.831663+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/market_directory.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:48.833264+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:49.220795+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/players/c?from_market=%2Fmarket%3Fq%3D%26position%3DQB%26availability%3D%26sort%3Dvalue%26direction%3Ddesc%26front_office%3D1%26selected%3Dplayer%253Ac%26offset%3D0%26limit%3D10&market_league=league-1&front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:49.318345+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:49.326536+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:49.325995+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:49.336208+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/player-projections.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:49.355550+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:49.358569+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"89b8a0df4b5047c4ae5e066b520fc4e2","event":"request_complete","duration_ms":14.461,"status_code":200,"method":"GET","path":"/static/css/matchups.css"}
+{"timestamp":"2026-11-26T17:54:49.668811+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/account/navigation-context \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:49.716355+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/market?q=&position=QB&availability=&sort=value&direction=desc&front_office=1&selected=player%3Ac&offset=0&limit=10 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:49.790198+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:49.794479+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:49.798252+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/market_directory.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:49.943649+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/transactions?scope=all_history&type=trade&status=complete \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:50.024949+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:50.026794+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:50.441315+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/transactions?team=&owner=&type=trade&player=&draft_pick=&date_from=&date_to=&q=fixture&per_page=25&scope=all_history&season=&week=&status=complete&sort=date&direction=desc \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:50.484393+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:50.486242+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:51.052744+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/market?position=QB&sort=value&direction=desc \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:51.190023+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:51.192633+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/market_directory.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:51.193292+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:51.570544+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/market?q=&position=QB&availability=&sort=value&direction=desc&front_office=1&selected=player%3Ac&offset=0&limit=10 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:51.646695+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:51.650854+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:51.654044+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/market_directory.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:51.915617+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/players/c?from_market=%2Fmarket%3Fq%3D%26position%3DQB%26availability%3D%26sort%3Dvalue%26direction%3Ddesc%26front_office%3D1%26selected%3Dplayer%253Ac%26offset%3D0%26limit%3D10&market_league=league-1&front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:51.969805+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:51.972634+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:51.974350+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:51.978156+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/player-projections.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:51.989486+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:51.990482+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"dc62f2cd39264e098ddaf2db4a6a6f31","event":"request_complete","duration_ms":2.631,"status_code":200,"method":"GET","path":"/static/css/matchups.css"}
+{"timestamp":"2026-11-26T17:54:52.170655+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/account/navigation-context \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:52.195040+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/market?q=&position=QB&availability=&sort=value&direction=desc&front_office=1&selected=player%3Ac&offset=0&limit=10 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:52.245651+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/market_directory.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:52.246621+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:52.248342+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:52.346173+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/transactions?scope=all_history&type=trade&status=complete \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:52.388758+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:52.392419+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:52.890212+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/transactions?team=&owner=&type=trade&player=&draft_pick=&date_from=&date_to=&q=fixture&per_page=25&scope=all_history&season=&week=&status=complete&sort=date&direction=desc \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:52.986677+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:52.989955+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:53.473618+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/market?position=QB&sort=value&direction=desc \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:53.545038+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:53.560145+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/market_directory.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:53.567153+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:53.878329+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/market?q=&position=QB&availability=&sort=value&direction=desc&front_office=1&selected=player%3Ac&offset=0&limit=10 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:53.987376+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/market_directory.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:54.007225+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:54.007540+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:54.576042+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/players/c?from_market=%2Fmarket%3Fq%3D%26position%3DQB%26availability%3D%26sort%3Dvalue%26direction%3Ddesc%26front_office%3D1%26selected%3Dplayer%253Ac%26offset%3D0%26limit%3D10&market_league=league-1&front_office=1 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:54.666790+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:54.670709+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:54.673506+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/player-projections.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:54.683629+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 404 Not Found\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:54.692165+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/matchups.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:54.693096+00:00","level":"INFO","logger":"dtos.request","message":"request_complete","request_id":"f6c08015561d4d2d91e173d77715ab16","event":"request_complete","duration_ms":2.549,"status_code":200,"method":"GET","path":"/static/css/matchups.css"}
+{"timestamp":"2026-11-26T17:54:54.941813+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/api/account/navigation-context \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:54.968666+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/market?q=&position=QB&availability=&sort=value&direction=desc&front_office=1&selected=player%3Ac&offset=0&limit=10 \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:55.037246+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:55.045335+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:55.051299+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/market_directory.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:55.182965+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/transactions?scope=all_history&type=trade&status=complete \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:55.253580+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:55.254398+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:55.718691+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/transactions?team=&owner=&type=trade&player=&draft_pick=&date_from=&date_to=&q=fixture&per_page=25&scope=all_history&season=&week=&status=complete&sort=date&direction=desc \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:55.785602+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/js/contextual_navigation.js \"HTTP/1.1 200 OK\"","request_id":"system"}
+{"timestamp":"2026-11-26T17:54:55.797128+00:00","level":"INFO","logger":"httpx","message":"HTTP Request: GET http://testserver/static/css/contextual_navigation.css \"HTTP/1.1 200 OK\"","request_id":"system"}
+ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 17.617s
+
+OK
+2147483648
+518602752
+low 0
+high 0
+max 0
+oom 0
+oom_kill 0
+oom_group_kill 0
