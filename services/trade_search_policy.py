@@ -4,6 +4,8 @@ These policies never price assets, change a recommendation or infer acceptance.
 """
 from collections import Counter
 
+from src.core.trade_intelligence.package_quality import package_blocks_recommendation
+
 
 def analysis_goal_required(evaluation):
     """Read the evaluator's recorded input requirement; never infer a goal."""
@@ -26,6 +28,9 @@ def classify(evaluation):
     if evaluation.get('legal') is False or legality.get('execution_status') in (
             'NOT EXECUTABLE', 'REQUIRES ROSTER RESOLUTION'):
         return 'HARD INVALID'
+    if package_blocks_recommendation(evaluation):
+        partner = (evaluation['package_adjustment'].get('partner') or {})
+        return 'COUNTERPARTY LIMITED' if partner.get('blocks_recommendation') else 'STRATEGICALLY POOR'
     if evaluation.get('generated_trade_eligible'):
         return 'CREDIBLE RECOMMENDATION'
     label = evaluation.get('recommendation')
@@ -232,6 +237,10 @@ def rank_key(row):
     if intent != 'REBUILD':
         benefit = benefit[::-1]
     package = (dimensions.get('package_quality') or {}).get('active') or {}
+    adjustments = e.get('package_adjustment') or {}
+    package_order = {'COMPARABLE': 0, 'COMPENSATED': 1, 'UNVERIFIED': 2, 'LIMITED': 3}
+    bilateral_package = tuple(package_order.get((adjustments.get(side) or {}).get('assessment'), 2)
+                              for side in ('partner', 'active'))
     ratio = (e.get('values') or {}).get('ratio')
     diagnostic = (dimensions.get('roster_diagnostics') or {}).get('sides') or {}
     def contextual_fit(side):
@@ -243,7 +252,7 @@ def rank_key(row):
             *benefit,
             {'STRONG': 0, 'PLAUSIBLE': 1}.get((dimensions.get('counterparty_plausibility') or {}).get('assessment'), 2),
             {'HIGH': 0, 'MEDIUM': 0}.get((dimensions.get('confidence') or {}).get('assessment'), 2),
-            package.get('assessment') == 'POOR', ratio is None, abs(1 - ratio) if ratio is not None else 0,
+            *bilateral_package, package.get('assessment') == 'POOR', ratio is None, abs(1 - ratio) if ratio is not None else 0,
             not contextual_fit('active'), not contextual_fit('partner'),
             -int((dimensions.get('league_partner_context') or {}).get('soft_tie_break') or 0),
             {'HIGH': 0, 'MEDIUM': 1}.get((dimensions.get('confidence') or {}).get('assessment'), 2),

@@ -174,6 +174,8 @@ def _personal_evaluation(evaluation, proposal, context, *, active_team, partner_
     neutral = {key: evaluation.get(key) for key in ('recommendation', 'generated_trade_eligible',
         'dominant_reason', 'major_drawback', 'why_you_would_do_it', 'market_evidence', 'values', 'reason_codes')}
     neutral_dimensions = evaluation.get('dimensions') or {}
+    # Package tier and opponent compensation use canonical evidence in either mode.
+    custom['package_adjustment'] = evaluation.get('package_adjustment')
     custom['dimensions']['counterparty_plausibility'] = neutral_dimensions.get('counterparty_plausibility')
     custom['dimensions']['strategic_fit']['partner'] = neutral_dimensions['strategic_fit']['partner']
     custom['dimensions']['package_quality']['partner'] = neutral_dimensions['package_quality']['partner']
@@ -213,7 +215,9 @@ def _personal_evaluation(evaluation, proposal, context, *, active_team, partner_
     strategy_sides = custom['dimensions']['strategic_fit']
     capacity_unresolved = any((strategy_sides[side].get('roster_capacity') or {}).get('additional_spots_to_resolve')
                               for side in ('active', 'partner'))
+    from src.core.trade_intelligence.package_quality import package_blocks_recommendation
     custom['generated_trade_eligible'] = bool(custom.get('legal') and canonical_complete
+        and not package_blocks_recommendation(custom)
         and personal_market['availability'] == 'full' and plausible in ('STRONG', 'PLAUSIBLE')
         and confidence in ('MEDIUM', 'HIGH') and not severe and not capacity_unresolved
         and custom.get('recommendation') in ('SMASH ACCEPT', 'WORTH PURSUING'))
@@ -1244,6 +1248,9 @@ def _distinct_trade_for_offers(rows, by_id):
 
 def _trade_for_eligible(evaluation: dict[str, Any]) -> bool:
     """Target acquisition may be optional; never reinterpret the shared judgment."""
+    from src.core.trade_intelligence.package_quality import package_blocks_recommendation
+    if package_blocks_recommendation(evaluation):
+        return False
     if evaluation.get('generated_trade_eligible'):
         return True
     if evaluation.get('recommendation') != 'FAIR / OPTIONAL':

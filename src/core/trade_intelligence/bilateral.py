@@ -195,7 +195,7 @@ def evaluate_bilateral(
                 'profile_rebuilds': 0, 'trend_rebuilds': 0,
             },
         }
-        result = reconcile_result(result, proposal, horizon_impact, historical, team_windows=team_windows,
+        result = reconcile_result(result, proposal, horizon_impact, historical, league=league, team_windows=team_windows,
                                   manager_strategies=manager_strategies or {
                                       str(proposal.active_roster_id): active_team.get('strategy'),
                                       str(proposal.partner_roster_id): partner_team.get('strategy')})
@@ -227,7 +227,7 @@ def evaluate_bilateral(
         }
         if horizon_impact is not None:
             from src.core.trade_intelligence.strategy_dimensions import reconcile_result
-            return reconcile_result(result, proposal, horizon_impact, team_windows=team_windows)
+            return reconcile_result(result, proposal, horizon_impact, league=league, team_windows=team_windows)
         return result
     sent_value, received_value = market['sent']['total'], market['received']['total']
     ratio = received_value / sent_value if sent_value else 1.0 if not received_value else float('inf')
@@ -404,5 +404,5 @@ def evaluate_bilateral(
     }
     if horizon_impact is not None:
         from src.core.trade_intelligence.strategy_dimensions import reconcile_result
-        return reconcile_result(result, proposal, horizon_impact, historical, team_windows=team_windows)
+        return reconcile_result(result, proposal, horizon_impact, historical, league=league, team_windows=team_windows)
     return result

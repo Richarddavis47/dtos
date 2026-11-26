@@ -1,3 +1,8 @@
+## v1.22.67 / build 2282 — Bilateral Trade Packages
+
+- Trade recommendations account for what both teams give up when a package replaces a top player. Review explains the lineup, depth, draft-capital and roster-space evidence that supports or limits the trade.
+- Neutral Market and Custom sums stay separate from package considerations. Managers can evaluate any legal offer manually, including one that did not qualify in Trade For.
+
 ## v1.22.66 / build 2281 — Phone-first League
 
 - Adds complete League standings with rank, record, Points For, supported head-to-head streak and change versus the previous completed week.

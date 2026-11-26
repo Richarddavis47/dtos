@@ -3,7 +3,7 @@ from decimal import Decimal
 
 # Existing capital and counterparty safety policy, shared by player-only offers.
 SEVERE_MARKET_LOSS_RATIO = .50
-TRADE_EVALUATION_POLICY_VERSION = 'scoped-trade-effects-v6-reserve-quality'
+TRADE_EVALUATION_POLICY_VERSION = 'scoped-trade-effects-v7-package-adjustment'
 
 
 def pick_identity_errors(asset):

@@ -166,3 +166,89 @@ def package_profile(incoming, outgoing, impact):
             'roster_capacity': capacity, 'cut_cost': None,
             'capacity_availability': 'configured_slots_only' if capacity else 'unavailable',
             'liquidity_availability': 'unavailable', 'universal_package_discount': False}
+
+
+def package_adjustment(incoming, outgoing, impact, package, strategy, league, *,
+                       incoming_total, outgoing_total):
+    """Qualify top-player tradeoffs without pricing NFL points or useful depth."""
+    from src.core.valuation.config import DEFAULT_CONFIG
+
+    slots = tuple(str(slot).upper() for slot in (league.get('roster_positions') or ()))
+    extra_qb_slot = slots.count('QB') > 1 or 'SUPER_FLEX' in slots
+    best_ball = (league.get('settings') or {}).get('best_ball') == 1
+    required_spots = (package.get('roster_capacity') or {}).get('additional_spots_to_resolve', 0)
+    extra_players = max(0, package['net_player_roster_spots'])
+    result = {
+        'assessment': 'UNVERIFIED', 'blocks_recommendation': False,
+        'explanation': 'Complete prices are needed to compare the top assets in these packages.',
+        'best_ball': best_ball, 'extra_qb_slot': extra_qb_slot,
+        'extra_active_players': extra_players, 'spots_to_resolve': required_spots,
+    }
+    if required_spots:
+        result.update(assessment='LIMITED', blocks_recommendation=True,
+                      explanation=f'The incoming package exceeds the active roster limit by {required_spots}. No drop or exception is assumed.')
+        return result
+
+    if incoming_total is None or outgoing_total is None:
+        return result
+    top = max((asset for asset in outgoing if asset.kind == 'player'),
+              key=lambda asset: (asset.trade_value, asset.asset_id), default=None)
+    scarce_qb = bool(top and top.position == 'QB' and extra_qb_slot)
+    tier_floor = DEFAULT_CONFIG.premium_asset_threshold if scarce_qb else DEFAULT_CONFIG.elite_asset_threshold
+    best_incoming = max((a.trade_value for a in incoming if a.kind == 'player'
+                         and (not scarce_qb or a.position == 'QB')), default=0)
+    gap = bool(top and top.trade_value >= tier_floor and best_incoming < top.trade_value * .85)
+    production = strategy['production_evidence']
+    quality = package['reserve_quality']
+    incoming_ids = {a.asset_id.removeprefix('player:') for a in incoming if a.kind == 'player'}
+    distinct_roles = 0
+    for week, row in ((impact or {}).get('weekly') or {}).items():
+        if row.get('delta') is None:
+            continue
+        post = row['post']
+        assigned = list(post['optimal']['entries'])
+        reserve = package['reserve_quality_by_week'].get(week) or {}
+        if best_ball and reserve.get('conclusion_state') == 'current' and reserve.get('material_gain'):
+            # These are disjoint assignments, not separate one-player removal scenarios.
+            assigned += post['reserve_capacity'].get('entries') or []
+        distinct_roles = max(distinct_roles, len(incoming_ids.intersection(entry['asset_id'] for entry in assigned)))
+    complete = strategy['projection_coverage_complete']
+    loss = production['material_loss'] or any(
+        row.get('delta') is not None
+        and row['delta'] <= -max(1.0, (row.get('pre_total') or 0) * .03)
+        for row in strategy['horizons'].values())
+    depth = (distinct_roles >= 2 and quality['material_gain'] and not loss
+             and quality['conclusion_state'] == 'current')
+    production_compensation = complete and not loss and (production['material_gain'] or depth)
+    capital = strategy['future_capital'].get('assessment') or {}
+    premium = incoming_total - outgoing_total >= outgoing_total * .05
+    premium_compensation = complete and premium and capital.get('meaningful_gain')
+    capacity_note = (
+        f' Adds {extra_players} to the active roster. No drop value is assumed.'
+        if extra_players else '')
+    result.update(distinct_incoming_roles=distinct_roles, major_top_player_gap=gap)
+    if not gap:
+        result.update(assessment='COMPARABLE', explanation=(
+            'No major drop from the top player was identified.' + capacity_note))
+    else:
+        role = 'quarterback for this league’s QB-eligible slots' if scarce_qb else 'top player'
+        lead = f'Gives up {top.label} without receiving a comparable {role}. '
+        if production_compensation:
+            support = ('The incoming players fill distinct useful roles and improve supported backup coverage.'
+                       if depth else 'The return improves supported optimal-lineup production.')
+        elif premium_compensation:
+            support = 'Receives a separate Market premium and meaningful priced draft capital. Any projected lineup loss still matters.'
+        else:
+            fit = ('They lose projected lineup points. ' if loss else
+                   'A complete lineup benefit is unconfirmed. ' if not complete else '')
+            support = fit + ('The pick adds flexibility, but the return does not establish enough compensation.'
+                             if capital.get('meaningful_gain') else 'The return does not establish enough lineup, depth or priced-capital compensation.')
+        accepted = bool(production_compensation or premium_compensation)
+        result.update(assessment='COMPENSATED' if accepted else 'LIMITED',
+                      blocks_recommendation=not accepted, explanation=lead + support + capacity_note)
+    return result
+
+
+def package_blocks_recommendation(evaluation):
+    return any(row.get('blocks_recommendation') is True
+               for row in (evaluation.get('package_adjustment') or {}).values())
