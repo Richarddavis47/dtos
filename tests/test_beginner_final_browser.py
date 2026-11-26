@@ -190,6 +190,7 @@ class FinalResetBrowserTests(unittest.TestCase):
                     player = page.locator('#full-roster a[href^="/players/"]').first
                     player.click()
                     page.locator("#dtos-back").click()
+                    page.wait_for_url("**/teams/1")
                     self.assertTrue(
                         page.locator("#my-team-roster").evaluate("e=>e.open")
                     )
@@ -490,7 +491,6 @@ class FinalNavigationBrowserTests(unittest.TestCase):
         from types import SimpleNamespace
 
         f.client.app.router.routes.clear()
-        f.client.app.include_router(create_navigation_router())
         f.client.app.include_router(
             create_market_router(
                 require_data=lambda: data,
@@ -534,6 +534,7 @@ class FinalNavigationBrowserTests(unittest.TestCase):
             require_data=lambda: owner.data,
             page=dtos_app.page,
         )
+        owner.client.app.include_router(create_navigation_router())
         owner.client.app.include_router(create_home_router(**common))
         owner.client.app.include_router(
             create_teams_router(**common, state={"data": owner.data})

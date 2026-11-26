@@ -66,6 +66,7 @@ class TrackerPhase2BrowserTests(unittest.TestCase):
                 page.goto('http://fixture/league')
                 page.get_by_role('navigation', name='Explore your league').get_by_role(
                     'link', name='Transactions', exact=True).click()
+                page.get_by_text('Search and filters', exact=True).press('Enter')
                 page.locator('select[name="scope"]').select_option('all_history')
                 page.locator('select[name="type"]').select_option('trade')
                 page.get_by_role('button', name='Apply filters', exact=False).click()

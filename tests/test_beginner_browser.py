@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, patch
 from playwright.sync_api import sync_playwright
 from fastapi.testclient import TestClient
 
+from routes.navigation import create_navigation_router
 from routes.home import create_home_router
 from routes.teams import create_teams_router
 from routes.transactions import create_transactions_router
@@ -26,6 +27,7 @@ class BeginnerBrowserTests(unittest.TestCase):
         f.setUp()
         self.addCleanup(f.doCleanups)
         app = f.client.app
+        app.include_router(create_navigation_router())
         common = dict(ensure_fresh=AsyncMock(), require_data=lambda: f.data, page=dtos_app.page)
         app.include_router(create_home_router(**common))
         app.include_router(create_teams_router(**common, state={'data': f.data}))
@@ -69,7 +71,8 @@ class BeginnerBrowserTests(unittest.TestCase):
                     self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
                     player = page.locator('#full-roster a[href^="/players/"]').first
                     player.click()
-                    page.get_by_role('link', name='← Back to My Team roster').click()
+                    page.locator('#dtos-back').click()
+                    page.wait_for_url('**/teams/1')
                     self.assertTrue(page.locator('#my-team-roster').evaluate('e=>e.open'))
                     page.goto('https://dtos.test/trades/create')
                     own = page.locator('#trade-sent-board')

@@ -11,6 +11,7 @@ from urllib.parse import urlsplit
 from fastapi.testclient import TestClient
 from playwright.sync_api import sync_playwright
 from routes.home import create_home_router
+from routes.navigation import create_navigation_router
 from routes.historical_assets import create_historical_assets_router
 from tests import test_trade_workspace_batch1 as auth
 from tests import test_home_trade_news as fixtures
@@ -69,6 +70,7 @@ class TradeNewsBrowserTests(unittest.TestCase):
         active = [data]
         app = f.client.app
         app.router.routes.clear()
+        app.include_router(create_navigation_router())
         app.include_router(
             create_home_router(
                 ensure_fresh=AsyncMock(),
@@ -210,13 +212,15 @@ class TradeNewsBrowserTests(unittest.TestCase):
                     link.scroll_into_view_if_needed()
                     link.click()
                     self.assertIn("Historical Trade Timeline", page.title())
-                    page.get_by_role("link", name="← Back to Home", exact=True).click()
+                    page.locator("#dtos-back").click()
                     page.locator(".league-trade-news").wait_for()
                     self.assertTrue(page.locator("[data-news-trade]").count() == 1)
                     page.reload(wait_until="networkidle")
                     self.assertTrue(page.locator("[data-news-trade]").count() == 1)
-                    page.go_back(wait_until="networkidle")
                     page.go_forward(wait_until="networkidle")
+                    self.assertIn("Historical Trade Timeline", page.title())
+                    page.go_back(wait_until="networkidle")
+                    self.assertTrue(page.locator(".league-trade-news").is_visible())
                     self.assertLessEqual(
                         page.evaluate("document.documentElement.scrollWidth"), width
                     )
