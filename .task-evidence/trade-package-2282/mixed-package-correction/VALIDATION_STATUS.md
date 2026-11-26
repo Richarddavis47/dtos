@@ -1,0 +1,1 @@
+The full GitHub originals from the prior tree remain under canonical workflow run 45743537825. This was a real 4,689-test failure. The separately preserved local run was interrupted after it recorded a 2 GiB Trade admission deferral. These outcomes do not verify the new tree. The recorded 92 focused tests under the 2 GiB limit passed with the current application bytes.

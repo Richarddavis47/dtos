@@ -1,0 +1,688 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 2a11657..76e43b6 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,8 @@
++## v1.22.67 / build 2282 — Bilateral Trade Packages
++
++- Trade recommendations account for what both teams give up when a package replaces a top player. Review explains the lineup, depth, draft-capital and roster-space evidence that supports or limits the trade.
++- Neutral Market and Custom sums stay separate from package considerations. Managers can evaluate any legal offer manually, including one that did not qualify in Trade For.
++
+ ## v1.22.66 / build 2281 — Phone-first League
+ 
+ - Adds complete League standings with rank, record, Points For, supported head-to-head streak and change versus the previous completed week.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 85646c6..ec8c1d8 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,8 @@
++## v1.22.67 / build 2282 — Bilateral Trade Packages
++
++- Trade recommendations account for what both teams give up when a package replaces a top player. Review explains the lineup, depth, draft-capital and roster-space evidence that supports or limits the trade.
++- Neutral Market and Custom sums stay separate from package considerations. Managers can evaluate any legal offer manually, including one that did not qualify in Trade For.
++
+ ## v1.22.66 / build 2281 — Phone-first League
+ 
+ - Adds complete League standings with rank, record, Points For, supported head-to-head streak and change versus the previous completed week.
+diff --git a/app_metadata.py b/app_metadata.py
+index eaf13a1..afe0cca 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.66"
+-PRODUCT_VERSION = "1.22.66"
+-BUILD_NUMBER = 2281
+-RELEASE_CODENAME = "Phone-First League"
++VERSION = "1.22.67"
++PRODUCT_VERSION = "1.22.67"
++BUILD_NUMBER = 2282
++RELEASE_CODENAME = "Bilateral Trade Packages"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/services/trade_explanation.py b/services/trade_explanation.py
+index 742b550..14e8a31 100644
+--- a/services/trade_explanation.py
++++ b/services/trade_explanation.py
+@@ -40,6 +40,7 @@ REASONS = {
+     'COUNTERPARTY_CAPACITY_UNRESOLVED': 'Their roster capacity still needs resolution.',
+     'SUPPORTED_COUNTERPARTY_BENEFIT': 'The evaluation identifies a supported benefit for their team.',
+     'COUNTERPARTY_LINEUP_AND_MARKET_GAIN': 'Their supported lineup and acquisition-price evidence both improve.',
++    'COUNTERPARTY_PACKAGE_COMPENSATION_UNESTABLISHED': 'The return does not establish enough compensation for what the other team gives up.',
+     'POOR_COUNTERPARTY_PACKAGE': 'The accepted evaluation identifies poor package quality for their team.',
+     'COUNTERPARTY_LINEUP_LOSS_WITHOUT_SUPPORTED_COMPENSATION': 'Their lineup declines without supported compensation.',
+     'CURRENT_LINEUP_DOWNGRADE': 'The supported current-week optimal lineup loses projected points.',
+@@ -79,6 +80,7 @@ def decision_lead(result, final, admissions):
+         partner = (result.get('dimensions') or {}).get('counterparty_plausibility') or {}
+         blockers = {'COUNTERPARTY_PROJECTION_UNAVAILABLE', 'COUNTERPARTY_TRADEOFF_UNRESOLVED',
+                     'COUNTERPARTY_CAPACITY_UNRESOLVED', 'POOR_COUNTERPARTY_PACKAGE',
++                    'COUNTERPARTY_PACKAGE_COMPENSATION_UNESTABLISHED',
+                     'COUNTERPARTY_LINEUP_LOSS_WITHOUT_SUPPORTED_COMPENSATION', 'LOW_COUNTERPARTY_PLAUSIBILITY'}
+         reason = next((REASONS[c] for c in partner.get('reason_codes') or [] if c in blockers),
+                       partner.get('explanation') or 'A supported benefit or adequate compensation for the other team is not established.')
+diff --git a/services/trade_intelligence.py b/services/trade_intelligence.py
+index 2df7294..a5a7c8e 100644
+--- a/services/trade_intelligence.py
++++ b/services/trade_intelligence.py
+@@ -9,7 +9,7 @@ import json
+ from time import perf_counter
+ from src.platform.trade_execution import trade_checkpoint
+ 
+-from src.core.intelligence import AssetContext, TradeAsset, TradeEvidenceContext, TradeProposal, apply_positional_ranks, build_asset_pool, build_league_model, build_trade_evidence_context, evaluate_bilateral, generate_proposals
++from src.core.intelligence import AssetContext, TradeAsset, TradeEvidenceContext, TradeProposal, apply_positional_ranks, build_asset_pool, build_league_model, build_trade_evidence_context, evaluate_bilateral, generate_proposals, package_blocks_recommendation
+ from src.core.valuation.calibration import cached_market_facts
+ from src.core.player_ownership import PlayerOwnershipIndex, targeted_player_action
+ from services.trade_cheaper_repair import (
+@@ -174,6 +174,8 @@ def _personal_evaluation(evaluation, proposal, context, *, active_team, partner_
+     neutral = {key: evaluation.get(key) for key in ('recommendation', 'generated_trade_eligible',
+         'dominant_reason', 'major_drawback', 'why_you_would_do_it', 'market_evidence', 'values', 'reason_codes')}
+     neutral_dimensions = evaluation.get('dimensions') or {}
++    # Package tier and opponent compensation use canonical evidence in either mode.
++    custom['package_adjustment'] = evaluation.get('package_adjustment')
+     custom['dimensions']['counterparty_plausibility'] = neutral_dimensions.get('counterparty_plausibility')
+     custom['dimensions']['strategic_fit']['partner'] = neutral_dimensions['strategic_fit']['partner']
+     custom['dimensions']['package_quality']['partner'] = neutral_dimensions['package_quality']['partner']
+@@ -214,6 +216,7 @@ def _personal_evaluation(evaluation, proposal, context, *, active_team, partner_
+     capacity_unresolved = any((strategy_sides[side].get('roster_capacity') or {}).get('additional_spots_to_resolve')
+                               for side in ('active', 'partner'))
+     custom['generated_trade_eligible'] = bool(custom.get('legal') and canonical_complete
++        and not package_blocks_recommendation(custom)
+         and personal_market['availability'] == 'full' and plausible in ('STRONG', 'PLAUSIBLE')
+         and confidence in ('MEDIUM', 'HIGH') and not severe and not capacity_unresolved
+         and custom.get('recommendation') in ('SMASH ACCEPT', 'WORTH PURSUING'))
+@@ -1244,6 +1247,8 @@ def _distinct_trade_for_offers(rows, by_id):
+ 
+ def _trade_for_eligible(evaluation: dict[str, Any]) -> bool:
+     """Target acquisition may be optional; never reinterpret the shared judgment."""
++    if package_blocks_recommendation(evaluation):
++        return False
+     if evaluation.get('generated_trade_eligible'):
+         return True
+     if evaluation.get('recommendation') != 'FAIR / OPTIONAL':
+diff --git a/services/trade_search_policy.py b/services/trade_search_policy.py
+index 0c9f115..3c140e8 100644
+--- a/services/trade_search_policy.py
++++ b/services/trade_search_policy.py
+@@ -4,6 +4,8 @@ These policies never price assets, change a recommendation or infer acceptance.
+ """
+ from collections import Counter
+ 
++from src.core.intelligence import package_blocks_recommendation
++
+ 
+ def analysis_goal_required(evaluation):
+     """Read the evaluator's recorded input requirement; never infer a goal."""
+@@ -26,7 +28,8 @@ def classify(evaluation):
+     if evaluation.get('legal') is False or legality.get('execution_status') in (
+             'NOT EXECUTABLE', 'REQUIRES ROSTER RESOLUTION'):
+         return 'HARD INVALID'
+-    if evaluation.get('generated_trade_eligible'):
++    package_blocked = package_blocks_recommendation(evaluation)
++    if evaluation.get('generated_trade_eligible') and not package_blocked:
+         return 'CREDIBLE RECOMMENDATION'
+     label = evaluation.get('recommendation')
+     if label is None:
+@@ -40,6 +43,9 @@ def classify(evaluation):
+                 'ANALYSIS GOAL REQUIRED' if goal else 'STRATEGICALLY POOR')
+     if label in ('REJECT', 'NOT WORTH IT'):
+         return 'STRATEGICALLY POOR'
++    if package_blocked:
++        partner = evaluation['package_adjustment'].get('partner') or {}
++        return 'COUNTERPARTY LIMITED' if partner.get('blocks_recommendation') else 'STRATEGICALLY POOR'
+     counterparty = (dimensions.get('counterparty_plausibility') or {}).get('assessment')
+     if counterparty not in ('STRONG', 'PLAUSIBLE'):
+         return 'COUNTERPARTY LIMITED'
+@@ -232,6 +238,10 @@ def rank_key(row):
+     if intent != 'REBUILD':
+         benefit = benefit[::-1]
+     package = (dimensions.get('package_quality') or {}).get('active') or {}
++    adjustments = e.get('package_adjustment') or {}
++    package_order = {'COMPARABLE': 0, 'COMPENSATED': 1, 'UNVERIFIED': 2, 'LIMITED': 3}
++    bilateral_package = tuple(package_order.get((adjustments.get(side) or {}).get('assessment'), 2)
++                              for side in ('partner', 'active'))
+     ratio = (e.get('values') or {}).get('ratio')
+     diagnostic = (dimensions.get('roster_diagnostics') or {}).get('sides') or {}
+     def contextual_fit(side):
+@@ -243,7 +253,7 @@ def rank_key(row):
+             *benefit,
+             {'STRONG': 0, 'PLAUSIBLE': 1}.get((dimensions.get('counterparty_plausibility') or {}).get('assessment'), 2),
+             {'HIGH': 0, 'MEDIUM': 0}.get((dimensions.get('confidence') or {}).get('assessment'), 2),
+-            package.get('assessment') == 'POOR', ratio is None, abs(1 - ratio) if ratio is not None else 0,
++            *bilateral_package, package.get('assessment') == 'POOR', ratio is None, abs(1 - ratio) if ratio is not None else 0,
+             not contextual_fit('active'), not contextual_fit('partner'),
+             -int((dimensions.get('league_partner_context') or {}).get('soft_tie_break') or 0),
+             {'HIGH': 0, 'MEDIUM': 1}.get((dimensions.get('confidence') or {}).get('assessment'), 2),
+diff --git a/src/core/intelligence/__init__.py b/src/core/intelligence/__init__.py
+index 350dbd5..f818c82 100644
+--- a/src/core/intelligence/__init__.py
++++ b/src/core/intelligence/__init__.py
+@@ -23,6 +23,7 @@ from src.core.trade_intelligence.lineup import _eligible as lineup_slot_eligible
+ from src.core.trade_intelligence.lineup import BENCH_SLOTS as lineup_bench_slots, eligible_positions as lineup_eligible_positions
+ from src.core.trade_intelligence.lineup_memo import SearchLineupMemo
+ from src.core.trade_intelligence.market_balance import market_balance as trade_market_balance
++from src.core.trade_intelligence.package_quality import package_blocks_recommendation
+ from src.core.trade_intelligence.roster_space import (
+     active_player_ids as trade_active_player_ids,
+     configured_active_slots as trade_configured_active_slots,
+@@ -40,4 +41,4 @@ def evaluate_horizon_impact(data, proposal, service):
+     return evaluate(data, proposal, service)
+ 
+ 
+-__all__ = ["AssetContext", "IntelligenceCache", "IntelligenceContext", "IntelligenceOrchestrator", "IntelligenceRegistry", "IntelligenceResult", "SearchLineupMemo", "TradeAsset", "TradeEvidenceContext", "TradeProposal", "TRADE_EVALUATION_POLICY_VERSION", "UnifiedConfidence", "UnifiedEvidence", "UnifiedRecommendation", "apply_positional_ranks", "build_asset_pool", "build_context", "build_league_model", "build_trade_evidence_context", "calculate_confidence", "evaluate_bilateral", "evaluate_horizon_impact", "generate_proposals", "intelligence_cache", "intelligence_orchestrator", "intelligence_registry", "lineup_slot_eligible", "lineup_bench_slots", "lineup_eligible_positions", "pickup_ir_evidence", "pickup_roster_space", "qualify_partner_explanation", "resolve_trade_strategy", "sleeper_membership_verified", "trade_active_player_ids", "trade_configured_active_slots", "trade_market_balance", "trade_pick_identity_errors"]
++__all__ = ["AssetContext", "IntelligenceCache", "IntelligenceContext", "IntelligenceOrchestrator", "IntelligenceRegistry", "IntelligenceResult", "SearchLineupMemo", "TradeAsset", "TradeEvidenceContext", "TradeProposal", "TRADE_EVALUATION_POLICY_VERSION", "UnifiedConfidence", "UnifiedEvidence", "UnifiedRecommendation", "apply_positional_ranks", "build_asset_pool", "build_context", "build_league_model", "build_trade_evidence_context", "calculate_confidence", "evaluate_bilateral", "evaluate_horizon_impact", "generate_proposals", "intelligence_cache", "intelligence_orchestrator", "intelligence_registry", "lineup_slot_eligible", "lineup_bench_slots", "lineup_eligible_positions", "package_blocks_recommendation", "pickup_ir_evidence", "pickup_roster_space", "qualify_partner_explanation", "resolve_trade_strategy", "sleeper_membership_verified", "trade_active_player_ids", "trade_configured_active_slots", "trade_market_balance", "trade_pick_identity_errors"]
+diff --git a/src/core/trade_intelligence/bilateral.py b/src/core/trade_intelligence/bilateral.py
+index b678197..3e12329 100644
+--- a/src/core/trade_intelligence/bilateral.py
++++ b/src/core/trade_intelligence/bilateral.py
+@@ -195,7 +195,7 @@ def evaluate_bilateral(
+                 'profile_rebuilds': 0, 'trend_rebuilds': 0,
+             },
+         }
+-        result = reconcile_result(result, proposal, horizon_impact, historical, team_windows=team_windows,
++        result = reconcile_result(result, proposal, horizon_impact, historical, league=league, team_windows=team_windows,
+                                   manager_strategies=manager_strategies or {
+                                       str(proposal.active_roster_id): active_team.get('strategy'),
+                                       str(proposal.partner_roster_id): partner_team.get('strategy')})
+@@ -227,7 +227,7 @@ def evaluate_bilateral(
+         }
+         if horizon_impact is not None:
+             from src.core.trade_intelligence.strategy_dimensions import reconcile_result
+-            return reconcile_result(result, proposal, horizon_impact, team_windows=team_windows)
++            return reconcile_result(result, proposal, horizon_impact, league=league, team_windows=team_windows)
+         return result
+     sent_value, received_value = market['sent']['total'], market['received']['total']
+     ratio = received_value / sent_value if sent_value else 1.0 if not received_value else float('inf')
+@@ -404,5 +404,5 @@ def evaluate_bilateral(
+     }
+     if horizon_impact is not None:
+         from src.core.trade_intelligence.strategy_dimensions import reconcile_result
+-        return reconcile_result(result, proposal, horizon_impact, historical, team_windows=team_windows)
++        return reconcile_result(result, proposal, horizon_impact, historical, league=league, team_windows=team_windows)
+     return result
+diff --git a/src/core/trade_intelligence/capital_assessment.py b/src/core/trade_intelligence/capital_assessment.py
+index 25e87b7..a399d8b 100644
+--- a/src/core/trade_intelligence/capital_assessment.py
++++ b/src/core/trade_intelligence/capital_assessment.py
+@@ -3,7 +3,7 @@ from decimal import Decimal
+ 
+ # Existing capital and counterparty safety policy, shared by player-only offers.
+ SEVERE_MARKET_LOSS_RATIO = .50
+-TRADE_EVALUATION_POLICY_VERSION = 'scoped-trade-effects-v6-reserve-quality'
++TRADE_EVALUATION_POLICY_VERSION = 'scoped-trade-effects-v7-package-adjustment'
+ 
+ 
+ def pick_identity_errors(asset):
+diff --git a/src/core/trade_intelligence/package_quality.py b/src/core/trade_intelligence/package_quality.py
+index b603473..2fb1c5b 100644
+--- a/src/core/trade_intelligence/package_quality.py
++++ b/src/core/trade_intelligence/package_quality.py
+@@ -166,3 +166,101 @@ def package_profile(incoming, outgoing, impact):
+             'roster_capacity': capacity, 'cut_cost': None,
+             'capacity_availability': 'configured_slots_only' if capacity else 'unavailable',
+             'liquidity_availability': 'unavailable', 'universal_package_discount': False}
++
++
++def package_adjustment(incoming, outgoing, impact, package, strategy, league, *,
++                       incoming_total, outgoing_total):
++    """Qualify top-player tradeoffs without pricing NFL points or useful depth."""
++    from src.core.valuation.config import DEFAULT_CONFIG
++
++    slots = tuple(str(slot).upper() for slot in (league.get('roster_positions') or ()))
++    extra_qb_slot = slots.count('QB') > 1 or 'SUPER_FLEX' in slots
++    best_ball = (league.get('settings') or {}).get('best_ball') == 1
++    required_spots = (package.get('roster_capacity') or {}).get('additional_spots_to_resolve', 0)
++    extra_players = max(0, package['net_player_roster_spots'])
++    result = {
++        'assessment': 'UNVERIFIED', 'blocks_recommendation': False,
++        'explanation': 'Complete prices are needed to compare the top assets in these packages.',
++        'best_ball': best_ball, 'extra_qb_slot': extra_qb_slot,
++        'extra_active_players': extra_players, 'spots_to_resolve': required_spots,
++    }
++    if required_spots:
++        result.update(assessment='LIMITED', blocks_recommendation=True,
++                      explanation=f'The incoming package exceeds the active roster limit by {required_spots}. No drop or exception is assumed.')
++        return result
++
++    if incoming_total is None or outgoing_total is None:
++        return result
++    top = max((asset for asset in outgoing if asset.kind == 'player'),
++              key=lambda asset: (asset.trade_value, asset.asset_id), default=None)
++    scarce_qb = bool(top and top.position == 'QB' and extra_qb_slot)
++    tier_floor = DEFAULT_CONFIG.premium_asset_threshold if scarce_qb else DEFAULT_CONFIG.elite_asset_threshold
++    best_incoming = max((a.trade_value for a in incoming if a.kind == 'player'
++                         and (not scarce_qb or a.position == 'QB')), default=0)
++    gap = bool(top and top.trade_value >= tier_floor and best_incoming < top.trade_value * .85)
++    production = strategy['production_evidence']
++    quality = package['reserve_quality']
++    incoming_ids = {a.asset_id.removeprefix('player:') for a in incoming if a.kind == 'player'}
++    distinct_roles = 0
++    for week, row in ((impact or {}).get('weekly') or {}).items():
++        if row.get('delta') is None:
++            continue
++        post = row['post']
++        assigned = list(post['optimal']['entries'])
++        reserve = package['reserve_quality_by_week'].get(week) or {}
++        if best_ball and reserve.get('conclusion_state') == 'current' and reserve.get('material_gain'):
++            # These are disjoint assignments, not separate one-player removal scenarios.
++            assigned += post['reserve_capacity'].get('entries') or []
++        distinct_roles = max(distinct_roles, len(incoming_ids.intersection(entry['asset_id'] for entry in assigned)))
++    complete = strategy['projection_coverage_complete']
++    loss = production['material_loss'] or any(
++        row.get('delta') is not None
++        and row['delta'] <= -max(1.0, (row.get('pre_total') or 0) * .03)
++        for row in strategy['horizons'].values())
++    depth = (distinct_roles >= 2 and quality['material_gain'] and not loss
++             and quality['conclusion_state'] == 'current')
++    production_compensation = complete and not loss and (production['material_gain'] or depth)
++    capital = strategy['future_capital'].get('assessment') or {}
++    premium = incoming_total - outgoing_total >= outgoing_total * .05
++    premium_compensation = complete and premium and capital.get('meaningful_gain')
++    capacity_note = (
++        f' Adds {extra_players} to the active roster. No drop value is assumed.'
++        if extra_players else '')
++    result.update(distinct_incoming_roles=distinct_roles, major_top_player_gap=gap)
++    # Preserve the established non-elite capital-only tradeoff. Here the
++    # concern is a mixed package using picks to make up for lost production
++    # from its player substitutions without an independently supported premium.
++    mixed_capital_with_loss = (
++        incoming_ids and complete and loss and capital.get('meaningful_gain')
++        and not premium_compensation and strategy['manager_strategy']['strategy'] is None
++    )
++    if not gap and mixed_capital_with_loss:
++        result.update(assessment='LIMITED', blocks_recommendation=True, explanation=(
++            'The draft capital adds flexibility, but the team gives up projected lineup points. '
++            'The return does not establish enough compensation, and this team’s direction is unconfirmed.'
++            + capacity_note))
++    elif not gap:
++        result.update(assessment='COMPARABLE', explanation=(
++            'No major drop from the top player was identified.' + capacity_note))
++    else:
++        role = 'quarterback for this league’s QB-eligible slots' if scarce_qb else 'top player'
++        lead = f'Gives up {top.label} without receiving a comparable {role}. '
++        if production_compensation:
++            support = ('The incoming players fill distinct useful roles and improve supported backup coverage.'
++                       if depth else 'The return improves supported optimal-lineup production.')
++        elif premium_compensation:
++            support = 'Receives a separate Market premium and meaningful priced draft capital. Any projected lineup loss still matters.'
++        else:
++            fit = ('They lose projected lineup points. ' if loss else
++                   'A complete lineup benefit is unconfirmed. ' if not complete else '')
++            support = fit + ('The pick adds flexibility, but the return does not establish enough compensation.'
++                             if capital.get('meaningful_gain') else 'The return does not establish enough lineup, depth or priced-capital compensation.')
++        accepted = bool(production_compensation or premium_compensation)
++        result.update(assessment='COMPENSATED' if accepted else 'LIMITED',
++                      blocks_recommendation=not accepted, explanation=lead + support + capacity_note)
++    return result
++
++
++def package_blocks_recommendation(evaluation):
++    return any(row.get('blocks_recommendation') is True
++               for row in (evaluation.get('package_adjustment') or {}).values())
+diff --git a/src/core/trade_intelligence/strategy_dimensions.py b/src/core/trade_intelligence/strategy_dimensions.py
+index a5e5116..ec62155 100644
+--- a/src/core/trade_intelligence/strategy_dimensions.py
++++ b/src/core/trade_intelligence/strategy_dimensions.py
+@@ -152,9 +152,10 @@ def disclosed_costs(strategy, market_return):
+     return costs
+ 
+ 
+-def reconcile_result(result, proposal, impact, historical=None, *, team_windows=None, manager_strategies=None):
++def reconcile_result(result, proposal, impact, historical=None, *, league=None,
++                     team_windows=None, manager_strategies=None):
+     """Migrate the existing canonical result, including partial-Market results."""
+-    from .package_quality import package_profile
++    from .package_quality import package_adjustment, package_blocks_recommendation, package_profile
+     sides = impact.get('sides') or {}
+     packages, strategies = {}, {}
+     for side, incoming, outgoing in (('active', proposal.assets_received, proposal.assets_sent),
+@@ -174,7 +175,9 @@ def reconcile_result(result, proposal, impact, historical=None, *, team_windows=
+             pick['hypothetical_owner'] = str(other)
+     market = result['market_evidence']
+     difference = market['difference']
+-    for side in ('active', 'partner'):
++    result['package_adjustment'] = {}
++    for side, received, sent in (('active', proposal.assets_received, proposal.assets_sent),
++                                 ('partner', proposal.assets_sent, proposal.assets_received)):
+         strategy = strategies[side]
+         outgoing = market['sent' if side == 'active' else 'received']['total']
+         incoming = market['received' if side == 'active' else 'sent']['total']
+@@ -182,8 +185,17 @@ def reconcile_result(result, proposal, impact, historical=None, *, team_windows=
+         if strategy['future_capital']['received'] or strategy['future_capital']['sent']:
+             strategy['capital_strategy_fit'] = assess_capital(strategy, packages[side], market,
+                                                             outgoing_total=outgoing, incoming_total=incoming)
++        result['package_adjustment'][side] = package_adjustment(
++            received, sent, sides.get(side), packages[side], strategy, league or {},
++            incoming_total=incoming, outgoing_total=outgoing)
+     plausible = plausibility(strategies['partner'], packages['partner'],
+                               -difference if difference is not None else None, historical)
++    partner_adjustment = result['package_adjustment']['partner']
++    if (partner_adjustment['blocks_recommendation'] and not partner_adjustment['spots_to_resolve']
++            and 'COUNTERPARTY_SEVERE_MARKET_LOSS' not in plausible['reason_codes']):
++        # Keep observed capital as evidence and remove its automatic promotion.
++        plausible.update(assessment='LOW', explanation=partner_adjustment['explanation'],
++                         reason_codes=['COUNTERPARTY_PACKAGE_COMPENSATION_UNESTABLISHED'])
+     active = strategies['active']
+     values = [row['delta'] for row in active['horizons'].values() if row.get('delta') is not None]
+     gains, losses = any(d > 0 for d in values), any(d < 0 for d in values)
+@@ -251,6 +263,8 @@ def reconcile_result(result, proposal, impact, historical=None, *, team_windows=
+     else:
+         trace.append('MATERIAL_TRADEOFF_UNRESOLVED')
+     codes = list(active['reason_codes']) + list(packages['active']['reason_codes'])
++    if result['package_adjustment']['active']['blocks_recommendation']:
++        codes.append('ACTIVE_PACKAGE_COMPENSATION_UNESTABLISHED')
+     if difference is not None and difference != 0:
+         codes.append('MARKET_VALUE_EDGE' if difference > 0 else 'MARKET_OVERPAY')
+     if market['availability'] != 'full':
+@@ -293,7 +307,8 @@ def reconcile_result(result, proposal, impact, historical=None, *, team_windows=
+                   recommendation_availability='bounded' if recommendation else 'unavailable',
+                   dominant_reason='User-side conclusion from separate Market, optimal-lineup, package, capital and strategy evidence; counterparty plausibility is separate.',
+                   reason_codes=sorted(set(codes)), major_limitations=limitations,
+-                  generated_trade_eligible=bool(result['legal'] and plausible['assessment'] in ('STRONG', 'PLAUSIBLE')
++                  generated_trade_eligible=bool(result['legal'] and not package_blocks_recommendation(result)
++                                                and plausible['assessment'] in ('STRONG', 'PLAUSIBLE')
+                                                 and recommendation in ('SMASH ACCEPT', 'WORTH PURSUING') and confidence != 'LIMITED'))
+     unresolved_capacity = any((s.get('roster_capacity') or {}).get('additional_spots_to_resolve') for s in strategies.values())
+     result['legality'] = {'ownership_and_identity_valid': result['legal'],
+diff --git a/static/js/trade_workspace.js b/static/js/trade_workspace.js
+index 712a5ec..1aac84b 100644
+--- a/static/js/trade_workspace.js
++++ b/static/js/trade_workspace.js
+@@ -588,6 +588,16 @@
+       box.append(list); packages.append(box);
+     }
+     header.append(packages, assessedGauge(e, retained));
++    const adjustment = e.package_adjustment;
++    if (adjustment?.active?.explanation || adjustment?.partner?.explanation) {
++      const panel = node('section', null, 'tw-trade-essentials');
++      panel.append(node('h4', 'Package adjustment'));
++      for (const [side, label] of [['active', 'Your team'], ['partner', 'Their team']]) {
++        if (adjustment[side]?.explanation) panel.append(node('p', label + ': ' + customerText(adjustment[side].explanation)));
++      }
++      panel.append(node('small', 'This affects recommendations. The totals above are the sum of the individual values.'));
++      header.append(panel);
++    }
+     const decision = decisionPresentation(e);
+     const benefit = decision.decisive_reason || e.why_you_would_do_it;
+     const cost = decision.main_cost || e.major_drawback;
+diff --git a/tests/test_trade_package_adjustment.py b/tests/test_trade_package_adjustment.py
+new file mode 100644
+index 0000000..e5c9407
+--- /dev/null
++++ b/tests/test_trade_package_adjustment.py
+@@ -0,0 +1,273 @@
++"""Screenshot-shaped disposable replay through prepared Trade Center evidence."""
++from datetime import datetime, timezone
++from pathlib import Path
++from tempfile import TemporaryDirectory
++import unittest
++from unittest.mock import patch
++
++from src.core.trade_intelligence.models import TradeProposal
++
++from services.trade_intelligence import evaluate_trade_request, generate_trade_workflow
++from src.core.intelligence.team_strength import prepare_for_data
++from src.core.projection_intelligence.service import ProjectionService
++from src.core.valuation.config import NORMALIZATION_VERSION
++from tests.test_trade_intelligence import fixture_data
++
++PICK = '2028-R3-1'
++
++
++class TradePackageAdjustmentTests(unittest.TestCase):
++    def setUp(self):
++        temp = TemporaryDirectory()
++        self.addCleanup(temp.cleanup)
++        self.projections = ProjectionService(Path(temp.name) / 'projections.sqlite3')
++        self.data = fixture_data()
++        self.data['teams'] = self.data['teams'][:2]
++        self.data['week'] = 12
++        self.data['league'].update(
++            season=2026, sport='nfl',
++            roster_positions=['QB', 'SUPER_FLEX', 'RB', 'BN', 'BN', 'BN'],
++            scoring_settings={'pass_yd': 1}, settings={'leg': 12, 'last_scored_leg': 11,
++                'start_week': 1, 'playoff_week_start': 14, 'playoff_teams': 4,
++                'playoff_round_type': 0, 'playoff_type': 0, 'best_ball': 1})
++        self.data['players'] = {}
++        # The screenshots do not identify the split of the 955 combined points.
++        # These two prices and all unshown source fields are synthetic.
++        self.players = {
++            'nix': ('Bo Nix', 'QB', 480, 18, 18),
++            'young': ('Bryce Young', 'QB', 475, 15, 15),
++            'active-qb': ('Fixture QB A', 'QB', 100, 13, 13),
++            'active-rb': ('Fixture RB A', 'RB', 100, 10, 10),
++            'burrow': ('Joe Burrow', 'QB', 776, 35.10, 27.38),
++            'skattebo': ('Cam Skattebo', 'RB', 390, 10, 10),
++            'partner-qb': ('Fixture QB B', 'QB', 100, 19, 19),
++            'partner-rb': ('Fixture RB B', 'RB', 100, 7.05, 7.05),
++        }
++        team_names = ('The tankers', 'Crayon Eaters')
++        for i, team in enumerate(self.data['teams']):
++            team.update(team_name=team_names[i], players=[], picks_owned=[])
++            for key in tuple(self.players)[i * 4:(i + 1) * 4]:
++                name, position, *_ = self.players[key]
++                player = dict(name=name, full_name=name, position=position, status='Active')
++                self.data['players'][key] = player
++                team['players'].append(dict(player, id=key, roster_slot='Bench'))
++        self.data['teams'][0]['picks_owned'] = [
++            {'year': 2028, 'round': 3, 'original_roster_id': 1, 'current_owner_id': 1}]
++        self.publish()
++
++    def publish(self, *, fresh=False):
++        now = datetime.now(timezone.utc).isoformat()
++        self.data['market_data'] = {'providers': {'FantasyCalc': {
++                key: {'value': row[2] * 12, 'confidence': 90, 'retrieved_at': now}
++                for key, row in self.players.items()
++            }}, 'pick_quotes': {'FantasyCalc': [
++                {'provider': 'FantasyCalc', 'market_format': 'fc:12:2qb:ppr',
++                 'year': 2028, 'round': 3, 'pick_type': 'generic_round',
++                 'availability': 'current', 'retrieved_at': now, 'value': 211 * 12,
++                 'confidence': 80, 'normalization_reference': {
++                     'provider': 'FantasyCalc', 'raw_value': float(211 * 12),
++                     'normalized_value': 211, 'version': NORMALIZATION_VERSION,
++                     'generation': 'disposable-package', 'method': 'provider_range_linear'}}
++            ]}}
++        payloads = {week: [{'player_id': key, 'season': 2026, 'week': week,
++                           'stats': {'pass_yd': row[3 if week == 12 else 4]},
++                           'player': {'position': row[1], 'status': 'Active'},
++                           **({'updated_at': now} if fresh else {})}
++                           for key, row in self.players.items()]
++                    for week in (12, 13, 14, 15)}
++        self.projections.publish_horizon(payloads, data=self.data, league_id='league-1',
++                                         season=2026, current_week=12)
++        with patch('services.global_evidence.retained_global_evidence', return_value=None):
++            prepare_for_data(self.projections, self.data)
++
++    def evaluate(self, assets_sent=('nix', 'young', PICK), assets_received=('burrow', 'skattebo')):
++        return evaluate_trade_request(self.data, {
++            'active_roster_id': 1, 'partner_roster_id': 2, 'strategy': 'WIN NOW',
++            'assets_sent': list(assets_sent), 'assets_received': list(assets_received)
++        }, projection_reader=self.projections)['evaluation']
++
++    def search(self):
++        # Pin only construction to make sure the same exact candidate is actually
++        # evaluated. Search admission, classification, ranking, and DTOs are real.
++        def construction(active, partner, outgoing, incoming, **options):
++            sent, received = {a.asset_id: a for a in outgoing}, {a.asset_id: a for a in incoming}
++            self.assertEqual(options['required_received_asset_id'], 'burrow')
++            return (TradeProposal(active, partner, (sent['nix'], sent['young'], sent[PICK]),
++                                  (received['burrow'], received['skattebo']), '3-for-2'),)
++
++        with patch('services.trade_intelligence._trade_projection_service', return_value=self.projections), \
++                patch('services.trade_intelligence.generate_proposals', side_effect=construction):
++            return generate_trade_workflow(self.data, {
++                'workflow': 'trade_for', 'asset_id': 'burrow', 'active_roster_id': 1,
++                'strategy': 'WIN NOW'})
++
++    def change_player(self, key, *, value=None, points=None):
++        label, pos, old_value, selected_week, later = self.players[key]
++        self.players[key] = (label, pos, old_value if value is None else value,
++                             selected_week if points is None else points, later if points is None else points)
++
++    def test_burrow_package_remains_evaluable_but_cannot_rank_as_recommended(self):
++        report = self.evaluate()
++        self.assertEqual(report['values'], {'sent': 1166, 'received': 1166, 'ratio': 1})
++        self.assertEqual(report['market_evidence']['difference'], 0)
++        self.assertAlmostEqual(report['lineup_impact']['active']['delta'], 15.10)
++        self.assertAlmostEqual(report['lineup_impact']['partner']['delta'], -20.05)
++        dimensions = report['dimensions']
++        self.assertAlmostEqual(dimensions['strategic_fit']['partner']['production_evidence']['mean_weekly_delta'], -14.26)
++        self.assertEqual(dimensions['strategic_fit']['partner']['future_capital']['assessment']['net_market_value'], 211)
++        self.assertEqual(dimensions['counterparty_plausibility']['reason_codes'], ['COUNTERPARTY_PACKAGE_COMPENSATION_UNESTABLISHED'])
++        self.assertEqual(report['decision_context']['final_decision']['headline'], 'COUNTERPARTY LIMITED')
++        self.assertFalse(report['generated_trade_eligible'])
++        search = self.search()
++        self.assertEqual(search['search_evidence']['full_evaluations'], 1)
++        miss, = search['near_misses']
++        self.assertIn('COUNTERPARTY_PACKAGE_COMPENSATION_UNESTABLISHED', miss['blockers'])
++        self.assertEqual(miss['evaluation']['package_adjustment'], report['package_adjustment'])
++        self.assertEqual(search['count'], 0)
++        self.assertFalse(any(row['evaluation']['package_adjustment']['partner']['blocks_recommendation'] for row in search['results']))
++        self.assertFalse(any(set(row['proposal']['assets_sent']) == {'nix', 'young', PICK}
++                             and set(row['proposal']['assets_received']) == {'burrow', 'skattebo'} for row in search['results']))
++
++        # The screenshot only establishes the two-QB subtotal. A comparable
++        # incoming quarterback must not make the same documented cost vanish.
++        self.change_player('nix', value=700)
++        self.change_player('young', value=255)
++        self.publish()
++        other_split = self.evaluate()
++        self.assertEqual(other_split['market_evidence'], report['market_evidence'])
++        self.assertFalse(other_split['package_adjustment']['partner']['major_top_player_gap'])
++        self.assertFalse(other_split['generated_trade_eligible'])
++        self.assertIn('direction is unconfirmed', other_split['package_adjustment']['partner']['explanation'])
++        self.assertEqual(self.search()['count'], 0)
++
++    def test_premium_and_exact_capital_can_compensate_seller(self):
++        self.change_player('young', value=575)
++        self.publish()
++        report = self.evaluate()
++        self.assertTrue(report['generated_trade_eligible'])
++        self.assertEqual(report['package_adjustment']['partner']['assessment'], 'COMPENSATED')
++        self.assertAlmostEqual(report['lineup_impact']['partner']['delta'], -20.05)
++        self.assertEqual(report['market_evidence']['difference'], -100)
++        self.assertIn('Market premium', report['package_adjustment']['partner']['explanation'])
++        search = self.search()
++        rows = [row for row in search['results'] if set(row['proposal']['assets_sent']) == {'nix', 'young', PICK}
++                and set(row['proposal']['assets_received']) == {'burrow', 'skattebo'}]
++        self.assertEqual(len(rows), 1)
++        self.assertEqual(rows[0]['evaluation']['package_adjustment'], report['package_adjustment'])
++        self.assertEqual(rows[0]['evaluation']['dimensions']['counterparty_plausibility'], report['dimensions']['counterparty_plausibility'])
++
++    def test_balanced_star_for_star_has_no_package_penalty(self):
++        self.change_player('nix', value=776, points=25)
++        self.change_player('burrow', points=25)
++        self.publish()
++        report = self.evaluate(assets_sent=('nix',), assets_received=('burrow',))
++        self.assertEqual(report['values']['sent'], report['values']['received'])
++        self.assertEqual(report['recommendation'], 'FAIR / OPTIONAL')
++        self.assertFalse(report['generated_trade_eligible'])
++        for row in report['package_adjustment'].values():
++            self.assertEqual(row['assessment'], 'COMPARABLE')
++            self.assertFalse(row['blocks_recommendation'])
++
++    def test_distinct_best_ball_depth_is_supported_without_pricing_it(self):
++        for key, points in {'nix': 20, 'young': 17, 'burrow': 20, 'active-qb': 16, 'active-rb': 5, 'partner-rb': 10}.items():
++            self.change_player(key, points=points)
++        self.publish(fresh=True)
++        report = self.evaluate()
++        self.assertEqual(report['market_evidence']['difference'], 0)
++        partner = report['package_adjustment']['partner']
++        self.assertEqual(partner['distinct_incoming_roles'], 2, report['dimensions']['package_quality']['partner'])
++        self.assertEqual(partner['assessment'], 'COMPENSATED')
++        self.assertIn('distinct useful roles', partner['explanation'])
++        self.assertTrue(report['generated_trade_eligible'])
++        self.publish()
++        stale = self.evaluate()
++        self.assertEqual(stale['package_adjustment']['partner']['assessment'], 'LIMITED')
++        self.assertFalse(stale['generated_trade_eligible'])
++
++    def test_review_keeps_equal_market_gauge_and_explains_why_the_package_is_limited(self):
++        import os
++        from unittest.mock import AsyncMock
++        from urllib.parse import urlsplit
++        from fastapi import FastAPI
++        from fastapi.testclient import TestClient
++        from playwright.sync_api import sync_playwright
++        from routes.trades import create_trades_router
++        from tools.validation.browser_runtime import launch_chromium
++
++        app = FastAPI()
++        app.include_router(create_trades_router(ensure_fresh=AsyncMock(), require_data=lambda: self.data,
++                                               page=lambda title, body: body))
++        with TestClient(app) as client, patch('src.core.projection_intelligence.projection_service', self.projections), \
++                sync_playwright() as engine:
++            for width in (320, 390, 1280):
++                with self.subTest(width=width):
++                    browser = launch_chromium(engine, headless=True)
++                    try:
++                        page = browser.new_page(viewport={'width': width, 'height': 844})
++                        page.set_default_timeout(8000)
++                        assessments = []
++
++                        def route(intercept):
++                            request = intercept.request
++                            url = urlsplit(request.url)
++                            if url.netloc != 'dtos.test':
++                                return intercept.abort()
++                            response = client.request(request.method, url.path + '?' + url.query,
++                                content=request.post_data, headers={k: v for k, v in request.headers.items()
++                                                                   if k == 'content-type'})
++                            if url.path == '/api/trades/evaluate':
++                                assessments.append((response.status_code, response.json()))
++                            intercept.fulfill(status=response.status_code, content_type=response.headers.get('content-type'),
++                                              body=response.content)
++
++                        page.route('**/*', route)
++                        page.goto('https://dtos.test/trades/create?front_office=1')
++                        page.get_by_label('Trade partner', exact=True).select_option('2')
++                        page.get_by_label('Trade strategy', exact=True).select_option('WIN NOW')
++                        if width < 760:
++                            page.get_by_role('button', name='My assets', exact=True).click()
++                        for key in ('nix', 'young', PICK):
++                            page.locator(f'#trade-sent-board button[data-asset-id="{key}"]').click()
++                        if width < 760:
++                            page.get_by_role('button', name='Their assets', exact=True).click()
++                        for key in ('burrow', 'skattebo'):
++                            page.locator(f'#trade-received-board button[data-asset-id="{key}"]').click()
++                        page.get_by_role('button', name='Evaluate Trade', exact=True).click()
++                        result = page.locator('#trade-result')
++                        section = result.locator('.tw-valuation-gauge + section')
++                        section.wait_for()
++                        self.assertEqual(assessments[0][0], 200, assessments[0][1])
++                        self.assertIn('Package adjustment', section.inner_text())
++                        self.assertIn('Gives up Joe Burrow', section.inner_text())
++                        self.assertIn('They lose projected lineup points', section.inner_text())
++                        self.assertIn('0 Market points', result.locator('.tw-valuation-gauge').inner_text())
++                        self.assertIn('COUNTERPARTY LIMITED', result.inner_text())
++                        self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
++                        if directory := os.environ.get('DTOS_PACKAGE_ADJUSTMENT_EVIDENCE'):
++                            folder = Path(directory)
++                            folder.mkdir(parents=True, exist_ok=True)
++                            result.screenshot(path=str(folder / f'package-review-{width}.png'))
++                    finally:
++                        browser.close()
++
++    def test_adjustment_changes_order_and_keeps_roster_space_and_severe_loss_guards(self):
++        from copy import deepcopy
++        from services.trade_search_policy import rank_key
++
++        self.change_player('young', value=575)
++        self.publish()
++        compensated = self.evaluate()
++        comparable = deepcopy(compensated)
++        comparable['package_adjustment']['partner']['assessment'] = 'COMPARABLE'
++        self.assertLess(rank_key({'evaluation': comparable}), rank_key({'evaluation': compensated}))
++        self.data['league']['roster_positions'] = ['QB', 'SUPER_FLEX', 'RB', 'BN']
++        self.publish()
++        capacity = self.evaluate(assets_received=('burrow',))
++        self.assertEqual(capacity['package_adjustment']['partner']['spots_to_resolve'], 1)
++        self.assertFalse(capacity['generated_trade_eligible'])
++        self.change_player('burrow', value=100)
++        self.change_player('skattebo', value=100)
++        self.publish()
++        severe = self.evaluate()
++        self.assertIn('SEVERE_MARKET_LOSS', severe['reason_codes'])
++        self.assertFalse(severe['generated_trade_eligible'])

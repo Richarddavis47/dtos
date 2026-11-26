@@ -1,0 +1,621 @@
+{
+  "source": {
+    "candidate": "66924fe6a566390570be45ac7abd6787445f6a3e",
+    "tree": "12715eee601c8850e740352513bd46af356aaa9a",
+    "baseline": "4a58ab3e83fb49de6e81518298691c99fdb8ff7d",
+    "baseline_tree": "353feba0c022a750229e748a04ebdab43eac71da",
+    "branch": "feat/trade-package-2282",
+    "version": "1.22.67",
+    "build": 2282,
+    "expected_test_count": 4689,
+    "pr": 371
+  },
+  "records": [
+    {
+      "label": "released 2281 local pass",
+      "test_events": [
+        {
+          "event": "start",
+          "test": "test_rebuild_roster_space_browser.RebuildRosterSpaceBrowserTests.test_full_rosters_unseeded_strategies_and_qualified_zero_states_at_four_sizes",
+          "time": 1795650860.4114165,
+          "pid": 32,
+          "rss": 1019412480,
+          "cgroup": 1251926016
+        },
+        {
+          "event": "stop",
+          "test": "test_rebuild_roster_space_browser.RebuildRosterSpaceBrowserTests.test_full_rosters_unseeded_strategies_and_qualified_zero_states_at_four_sizes",
+          "time": 1795650904.4419081,
+          "pid": 32,
+          "rss": 952074240,
+          "cgroup": 1187291136
+        }
+      ],
+      "kernel_sample": {
+        "rss_bytes": 42934272,
+        "vms_bytes": 127291392,
+        "system_available_bytes": 7125917696,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 1860063232,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 100548608,
+        "cgroup_anonymous_bytes": 1657413632,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "cgroup_stat_by_bytes": {
+        "anon": 1657413632,
+        "file": 169238528,
+        "shmem": 13524992,
+        "active_file": 55160832,
+        "inactive_file": 100548608,
+        "kernel": 32428032
+      },
+      "pss_at_peak_by_process_family": {
+        "python": 1136100352,
+        "MainThread": 323800064,
+        "chromium": 502839296
+      },
+      "actual_admission_observations": [
+        {
+          "timestamp": "2026-11-25T23:54:21.377991+00:00",
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1252331520,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 895152128,
+            "clean_inactive_file_bytes": 82149376,
+            "conditional_file_credit_bytes": 41074688,
+            "admission_headroom_bytes": 936226816,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        {
+          "timestamp": "2026-11-25T23:54:23.725304+00:00",
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1534160896,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 613322752,
+            "clean_inactive_file_bytes": 81330176,
+            "conditional_file_credit_bytes": 40665088,
+            "admission_headroom_bytes": 653987840,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        {
+          "timestamp": "2026-11-25T23:54:26.085838+00:00",
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1646665728,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 500817920,
+            "clean_inactive_file_bytes": 81399808,
+            "conditional_file_credit_bytes": 40699904,
+            "admission_headroom_bytes": 541517824,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        {
+          "timestamp": "2026-11-25T23:54:28.313314+00:00",
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1698443264,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 449040384,
+            "clean_inactive_file_bytes": 81399808,
+            "conditional_file_credit_bytes": 40699904,
+            "admission_headroom_bytes": 489740288,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        {
+          "timestamp": "2026-11-25T23:54:32.424337+00:00",
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1777971200,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 369512448,
+            "clean_inactive_file_bytes": 81879040,
+            "conditional_file_credit_bytes": 40939520,
+            "admission_headroom_bytes": 410451968,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        {
+          "timestamp": "2026-11-25T23:54:34.333231+00:00",
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1656569856,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 490913792,
+            "clean_inactive_file_bytes": 81747968,
+            "conditional_file_credit_bytes": 40873984,
+            "admission_headroom_bytes": 531787776,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        {
+          "timestamp": "2026-11-25T23:54:36.371469+00:00",
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1717657600,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 429826048,
+            "clean_inactive_file_bytes": 81747968,
+            "conditional_file_credit_bytes": 40873984,
+            "admission_headroom_bytes": 470700032,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        {
+          "timestamp": "2026-11-25T23:54:38.668934+00:00",
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1777995776,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 369487872,
+            "clean_inactive_file_bytes": 81842176,
+            "conditional_file_credit_bytes": 40921088,
+            "admission_headroom_bytes": 410408960,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        {
+          "timestamp": "2026-11-25T23:54:42.496854+00:00",
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1758564352,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 388919296,
+            "clean_inactive_file_bytes": 81842176,
+            "conditional_file_credit_bytes": 40921088,
+            "admission_headroom_bytes": 429840384,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        {
+          "timestamp": "2026-11-25T23:54:44.426570+00:00",
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1635606528,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 511877120,
+            "clean_inactive_file_bytes": 80650240,
+            "conditional_file_credit_bytes": 40325120,
+            "admission_headroom_bytes": 552202240,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        {
+          "timestamp": "2026-11-25T23:54:46.541419+00:00",
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1763667968,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 383815680,
+            "clean_inactive_file_bytes": 80744448,
+            "conditional_file_credit_bytes": 40372224,
+            "admission_headroom_bytes": 424187904,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        {
+          "timestamp": "2026-11-25T23:54:49.036237+00:00",
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1665622016,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 481861632,
+            "clean_inactive_file_bytes": 82550784,
+            "conditional_file_credit_bytes": 41275392,
+            "admission_headroom_bytes": 523137024,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": {
+            "expired_entries": 72,
+            "idle_worker_retired": false,
+            "allocator_trimmed": true
+          }
+        },
+        {
+          "timestamp": "2026-11-25T23:54:52.598568+00:00",
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1741799424,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 405684224,
+            "clean_inactive_file_bytes": 82542592,
+            "conditional_file_credit_bytes": 41271296,
+            "admission_headroom_bytes": 446955520,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        {
+          "timestamp": "2026-11-25T23:54:54.875586+00:00",
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1632108544,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 515375104,
+            "clean_inactive_file_bytes": 82432000,
+            "conditional_file_credit_bytes": 41216000,
+            "admission_headroom_bytes": 556591104,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        {
+          "timestamp": "2026-11-25T23:54:57.165025+00:00",
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1722384384,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 425099264,
+            "clean_inactive_file_bytes": 82526208,
+            "conditional_file_credit_bytes": 41263104,
+            "admission_headroom_bytes": 466362368,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        {
+          "timestamp": "2026-11-25T23:54:59.502795+00:00",
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1779716096,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 367767552,
+            "clean_inactive_file_bytes": 82522112,
+            "conditional_file_credit_bytes": 41261056,
+            "admission_headroom_bytes": 409028608,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        {
+          "timestamp": "2026-11-25T23:55:03.758006+00:00",
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1769840640,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 377643008,
+            "clean_inactive_file_bytes": 82579456,
+            "conditional_file_credit_bytes": 41289728,
+            "admission_headroom_bytes": 418932736,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": {
+            "expired_entries": 144,
+            "idle_worker_retired": false,
+            "allocator_trimmed": true
+          }
+        }
+      ],
+      "images_emitted": [
+        "full-roster-qualified-1280.png",
+        "full-roster-qualified-320.png",
+        "full-roster-qualified-375.png",
+        "full-roster-qualified-390.png",
+        "full-roster-zero-1280.png",
+        "full-roster-zero-320.png",
+        "full-roster-zero-375.png",
+        "full-roster-zero-390.png"
+      ]
+    },
+    {
+      "label": "candidate 2282 local",
+      "test_events": [
+        {
+          "event": "start",
+          "test": "test_rebuild_roster_space_browser.RebuildRosterSpaceBrowserTests.test_full_rosters_unseeded_strategies_and_qualified_zero_states_at_four_sizes",
+          "time": 1795664360.8416767,
+          "pid": 32,
+          "rss": 1006141440,
+          "cgroup": 1267990528
+        },
+        {
+          "event": "error",
+          "test": "test_rebuild_roster_space_browser.RebuildRosterSpaceBrowserTests.test_full_rosters_unseeded_strategies_and_qualified_zero_states_at_four_sizes",
+          "time": 1795664383.4829328,
+          "pid": 32,
+          "rss": 923627520,
+          "cgroup": 1185812480,
+          "error_type": "TimeoutError",
+          "error_text": "Page.wait_for_function: Timeout 10000ms exceeded."
+        },
+        {
+          "event": "stop",
+          "test": "test_rebuild_roster_space_browser.RebuildRosterSpaceBrowserTests.test_full_rosters_unseeded_strategies_and_qualified_zero_states_at_four_sizes",
+          "time": 1795664383.4864378,
+          "pid": 32,
+          "rss": 923652096,
+          "cgroup": 1185656832
+        }
+      ],
+      "kernel_sample": {
+        "rss_bytes": 44240896,
+        "vms_bytes": 127299584,
+        "system_available_bytes": 6452060160,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 1937526784,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 106061824,
+        "cgroup_anonymous_bytes": 1709293568,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "cgroup_stat_by_bytes": {
+        "anon": 1709293568,
+        "file": 195039232,
+        "shmem": 12951552,
+        "active_file": 76017664,
+        "inactive_file": 106061824,
+        "kernel": 32600064
+      },
+      "pss_at_peak_by_process_family": {
+        "python": 1127755776,
+        "MainThread": 350159872,
+        "chromium": 562330624
+      },
+      "actual_admission_observations": [
+        {
+          "timestamp": "2026-11-26T03:39:21.807081+00:00",
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1269039104,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 878444544,
+            "clean_inactive_file_bytes": 91856896,
+            "conditional_file_credit_bytes": 45928448,
+            "admission_headroom_bytes": 924372992,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        {
+          "timestamp": "2026-11-26T03:39:24.558590+00:00",
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1559597056,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 587886592,
+            "clean_inactive_file_bytes": 93130752,
+            "conditional_file_credit_bytes": 46565376,
+            "admission_headroom_bytes": 634451968,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        {
+          "timestamp": "2026-11-26T03:39:26.973117+00:00",
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1656221696,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 491261952,
+            "clean_inactive_file_bytes": 86736896,
+            "conditional_file_credit_bytes": 43368448,
+            "admission_headroom_bytes": 534630400,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        {
+          "timestamp": "2026-11-26T03:39:29.159676+00:00",
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1705627648,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 441856000,
+            "clean_inactive_file_bytes": 86736896,
+            "conditional_file_credit_bytes": 43368448,
+            "admission_headroom_bytes": 485224448,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        {
+          "timestamp": "2026-11-26T03:39:33.235508+00:00",
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": false,
+            "reason": "capacity",
+            "current_bytes": 1796943872,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 350539776,
+            "clean_inactive_file_bytes": 86765568,
+            "conditional_file_credit_bytes": 43382784,
+            "admission_headroom_bytes": 393922560,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": {
+            "expired_entries": 32,
+            "idle_worker_retired": false,
+            "allocator_trimmed": true
+          }
+        }
+      ],
+      "images_emitted": [
+        "full-roster-qualified-320.png"
+      ]
+    }
+  ],
+  "scope": "Aligned test identity in full local 2 GiB runs. Process/counter observations do not establish what caused the browser and driver footprint difference."
+}
