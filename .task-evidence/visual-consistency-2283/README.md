@@ -7,3 +7,5 @@ The six additional matched captures show grouped exact picks with ownership and 
 The browser journey checks the last Apply button with fixed navigation, and restores the filters and expanded Market row after Player Details. The short-phone roster gate retains its original 600-pixel limit. These are Chromium fixture captures. Signed-in Day Traders and physical iPhone Safari remain unverified.
 
 The release remains held until complete local, hosted and guarded publisher evidence is available.
+
+The History follow-through browser test follows the single shared Back. The difference from the screenshot commit is confined to that browser test. The original 2 GiB focused run passed both retained History journeys, including the exact asset, scope reset and return to page 2. The superseded hosted failure is in [run 45876701515](https://github.com/Richarddavis47/dtos/actions/runs/45876701515/job/140105486190).

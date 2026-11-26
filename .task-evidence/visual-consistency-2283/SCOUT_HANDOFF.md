@@ -1,6 +1,6 @@
 # Scout acceptance · Visual consistency
 
-Candidate 26856433d4e0b88ab542868f5ec779579dece8c8, tree c26aa5c5fdf012f336f177b4b6b814ff7def2552. Baseline b85342dcc719b7dbac58753662cea06cb2f4260c, v1.22.67 build 2282.
+Candidate 107aa55cd8a27de58f861778a66383a53d0ff9cf, tree 18d96c2f7d9ca4ce42e7d3ebecb79af5d0333231. Baseline b85342dcc719b7dbac58753662cea06cb2f4260c, v1.22.67 build 2282.
 
 In a safely prepared Day Traders / Chase Bank session, open Home at a phone width. Check that Do this first is the strongest action and This Week works without forcing a sync. Follow View all trades. Check the active historical filters, visible results, and expand Search and filters and Current-week activity counts. Open a completed deal and use the single contextual Back link. Verify the original filters and pagination.
 
