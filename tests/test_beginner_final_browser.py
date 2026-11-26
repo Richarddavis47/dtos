@@ -13,6 +13,7 @@ from fastapi.testclient import TestClient
 
 from routes.trades import create_trades_router
 from routes.home import create_home_router
+from routes.navigation import create_navigation_router
 from routes.teams import create_teams_router
 from routes.transactions import create_transactions_router
 from tools.validation.browser_runtime import launch_chromium
@@ -33,6 +34,7 @@ class FinalResetBrowserTests(unittest.TestCase):
         self.addCleanup(f.doCleanups)
         app = f.client.app
         app.router.routes.clear()
+        app.include_router(create_navigation_router())
         acquired = f.data["teams"][1]["picks_owned"].pop(0)
         acquired["current_owner_id"] = 1
         from datetime import datetime, timezone
@@ -187,7 +189,7 @@ class FinalResetBrowserTests(unittest.TestCase):
                     )
                     player = page.locator('#full-roster a[href^="/players/"]').first
                     player.click()
-                    page.get_by_role("link", name="← Back to My Team roster").click()
+                    page.locator("#dtos-back").click()
                     self.assertTrue(
                         page.locator("#my-team-roster").evaluate("e=>e.open")
                     )
@@ -488,6 +490,7 @@ class FinalNavigationBrowserTests(unittest.TestCase):
         from types import SimpleNamespace
 
         f.client.app.router.routes.clear()
+        f.client.app.include_router(create_navigation_router())
         f.client.app.include_router(
             create_market_router(
                 require_data=lambda: data,
@@ -605,16 +608,16 @@ class FinalNavigationBrowserTests(unittest.TestCase):
                     self.assertEqual(shop_query["asset_id"], [f"{season}-R{round_number}-{original}"])
                     self.assertEqual(shop_query["owner_roster_id"], ["1"])
                     page.reload()
-                    back = page.get_by_role("link", name="← Back to Market results")
+                    back = page.locator("#dtos-back")
                     back.click()
                     page.wait_for_url(selected)
                     page.locator(".market-asset").first.wait_for()
                     self.assertEqual(page.url, selected)
                     self.assertEqual(page.locator(".market-asset").count(), 3)
-                    page.go_back()
+                    page.go_forward()
                     page.wait_for_url(lambda url: urlsplit(url).path.startswith("/picks/"), wait_until="domcontentloaded")
                     self.assertIn("/picks/", page.url)
-                    page.go_forward()
+                    page.go_back()
                     page.wait_for_url(lambda url: url == selected, wait_until="domcontentloaded")
                     self.assertEqual(page.url, selected)
                     page.goto(
@@ -626,7 +629,8 @@ class FinalNavigationBrowserTests(unittest.TestCase):
                     page.get_by_role("link", name="Open pick", exact=True).click()
                     # A newer explicit Market origin wins over stale team context.
                     page.goto(page.url + "&from_team=1")
-                    page.get_by_role("link", name="← Back to Market results").click()
+                    page.locator("#dtos-back").click()
+                    page.wait_for_url(offset_selected)
                     self.assertEqual(page.url, offset_selected)
                     self.assertIn("offset=10", page.url)
                     # A syntactically valid old pick without a current native
