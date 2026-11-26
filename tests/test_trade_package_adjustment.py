@@ -128,6 +128,18 @@ class TradePackageAdjustmentTests(unittest.TestCase):
         self.assertFalse(any(set(row['proposal']['assets_sent']) == {'nix', 'young', PICK}
                              and set(row['proposal']['assets_received']) == {'burrow', 'skattebo'} for row in search['results']))
 
+        # The screenshot only establishes the two-QB subtotal. A comparable
+        # incoming quarterback must not make the same documented cost vanish.
+        self.change_player('nix', value=700)
+        self.change_player('young', value=255)
+        self.publish()
+        other_split = self.evaluate()
+        self.assertEqual(other_split['market_evidence'], report['market_evidence'])
+        self.assertFalse(other_split['package_adjustment']['partner']['major_top_player_gap'])
+        self.assertFalse(other_split['generated_trade_eligible'])
+        self.assertIn('direction is unconfirmed', other_split['package_adjustment']['partner']['explanation'])
+        self.assertEqual(self.search()['count'], 0)
+
     def test_premium_and_exact_capital_can_compensate_seller(self):
         self.change_player('young', value=575)
         self.publish()

@@ -227,7 +227,16 @@ def package_adjustment(incoming, outgoing, impact, package, strategy, league, *,
         f' Adds {extra_players} to the active roster. No drop value is assumed.'
         if extra_players else '')
     result.update(distinct_incoming_roles=distinct_roles, major_top_player_gap=gap)
-    if not gap:
+    capital_only_with_loss = (
+        complete and loss and capital.get('meaningful_gain') and not premium_compensation
+        and strategy['manager_strategy']['strategy'] is None
+    )
+    if not gap and capital_only_with_loss:
+        result.update(assessment='LIMITED', blocks_recommendation=True, explanation=(
+            'The draft capital adds flexibility, but the team gives up projected lineup points. '
+            'The return does not establish enough compensation, and this team’s direction is unconfirmed.'
+            + capacity_note))
+    elif not gap:
         result.update(assessment='COMPARABLE', explanation=(
             'No major drop from the top player was identified.' + capacity_note))
     else:

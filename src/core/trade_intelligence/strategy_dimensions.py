@@ -191,7 +191,7 @@ def reconcile_result(result, proposal, impact, historical=None, *, league=None,
     plausible = plausibility(strategies['partner'], packages['partner'],
                               -difference if difference is not None else None, historical)
     partner_adjustment = result['package_adjustment']['partner']
-    if (partner_adjustment['blocks_recommendation'] and partner_adjustment.get('major_top_player_gap')
+    if (partner_adjustment['blocks_recommendation'] and not partner_adjustment['spots_to_resolve']
             and 'COUNTERPARTY_SEVERE_MARKET_LOSS' not in plausible['reason_codes']):
         # Keep observed capital as evidence and remove its automatic promotion.
         plausible.update(assessment='LOW', explanation=partner_adjustment['explanation'],

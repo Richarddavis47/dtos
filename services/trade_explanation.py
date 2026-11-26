@@ -40,7 +40,7 @@ REASONS = {
     'COUNTERPARTY_CAPACITY_UNRESOLVED': 'Their roster capacity still needs resolution.',
     'SUPPORTED_COUNTERPARTY_BENEFIT': 'The evaluation identifies a supported benefit for their team.',
     'COUNTERPARTY_LINEUP_AND_MARKET_GAIN': 'Their supported lineup and acquisition-price evidence both improve.',
-    'COUNTERPARTY_PACKAGE_COMPENSATION_UNESTABLISHED': 'The return does not establish enough compensation for the other team’s top player.',
+    'COUNTERPARTY_PACKAGE_COMPENSATION_UNESTABLISHED': 'The return does not establish enough compensation for what the other team gives up.',
     'POOR_COUNTERPARTY_PACKAGE': 'The accepted evaluation identifies poor package quality for their team.',
     'COUNTERPARTY_LINEUP_LOSS_WITHOUT_SUPPORTED_COMPENSATION': 'Their lineup declines without supported compensation.',
     'CURRENT_LINEUP_DOWNGRADE': 'The supported current-week optimal lineup loses projected points.',
