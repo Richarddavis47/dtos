@@ -4,7 +4,7 @@ These policies never price assets, change a recommendation or infer acceptance.
 """
 from collections import Counter
 
-from src.core.trade_intelligence.package_quality import package_blocks_recommendation
+from src.core.intelligence import package_blocks_recommendation
 
 
 def analysis_goal_required(evaluation):

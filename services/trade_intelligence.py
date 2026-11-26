@@ -9,7 +9,7 @@ import json
 from time import perf_counter
 from src.platform.trade_execution import trade_checkpoint
 
-from src.core.intelligence import AssetContext, TradeAsset, TradeEvidenceContext, TradeProposal, apply_positional_ranks, build_asset_pool, build_league_model, build_trade_evidence_context, evaluate_bilateral, generate_proposals
+from src.core.intelligence import AssetContext, TradeAsset, TradeEvidenceContext, TradeProposal, apply_positional_ranks, build_asset_pool, build_league_model, build_trade_evidence_context, evaluate_bilateral, generate_proposals, package_blocks_recommendation
 from src.core.valuation.calibration import cached_market_facts
 from src.core.player_ownership import PlayerOwnershipIndex, targeted_player_action
 from services.trade_cheaper_repair import (
@@ -215,7 +215,6 @@ def _personal_evaluation(evaluation, proposal, context, *, active_team, partner_
     strategy_sides = custom['dimensions']['strategic_fit']
     capacity_unresolved = any((strategy_sides[side].get('roster_capacity') or {}).get('additional_spots_to_resolve')
                               for side in ('active', 'partner'))
-    from src.core.trade_intelligence.package_quality import package_blocks_recommendation
     custom['generated_trade_eligible'] = bool(custom.get('legal') and canonical_complete
         and not package_blocks_recommendation(custom)
         and personal_market['availability'] == 'full' and plausible in ('STRONG', 'PLAUSIBLE')
@@ -1248,7 +1247,6 @@ def _distinct_trade_for_offers(rows, by_id):
 
 def _trade_for_eligible(evaluation: dict[str, Any]) -> bool:
     """Target acquisition may be optional; never reinterpret the shared judgment."""
-    from src.core.trade_intelligence.package_quality import package_blocks_recommendation
     if package_blocks_recommendation(evaluation):
         return False
     if evaluation.get('generated_trade_eligible'):
