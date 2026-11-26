@@ -1,0 +1,534 @@
+{
+  "source": {
+    "candidate": "168ed86d3328444ecef286f0d28bb9fa954cab10",
+    "tree": "036fb9dc0083466d0d972d94440a08a51c7d59d6",
+    "baseline": "4a58ab3e83fb49de6e81518298691c99fdb8ff7d",
+    "baseline_tree": "353feba0c022a750229e748a04ebdab43eac71da",
+    "branch": "feat/trade-package-2282",
+    "version": "1.22.67",
+    "build": 2282,
+    "expected_test_count": 4689,
+    "pr": 371
+  },
+  "matched": {
+    "baseline": {
+      "result": {
+        "commit": "4a58ab3e83fb49de6e81518298691c99fdb8ff7d",
+        "tree": "353feba0c022a750229e748a04ebdab43eac71da",
+        "tests": 10,
+        "passed": true,
+        "errors": 0,
+        "failures": 0,
+        "peak": 1146372096,
+        "events": {
+          "low": "0",
+          "high": "0",
+          "max": "0",
+          "oom": "0",
+          "oom_kill": "0",
+          "oom_group_kill": "0"
+        }
+      },
+      "rebuild_admissions": 17,
+      "narrowest_rebuild_headroom_bytes": 1045661696,
+      "snapshots": {
+        "first_test_start": {
+          "cgroup": 78188544,
+          "stats": {
+            "anon": 68222976,
+            "file": 8491008,
+            "shmem": 217088,
+            "active_file": 7921664,
+            "inactive_file": 352256,
+            "kernel": 774144
+          },
+          "pss": {
+            "python": 85663744
+          },
+          "driver_pids": []
+        },
+        "rebuild_start": {
+          "cgroup": 407982080,
+          "stats": {
+            "anon": 278872064,
+            "file": 124530688,
+            "shmem": 393216,
+            "active_file": 96190464,
+            "inactive_file": 27947008,
+            "kernel": 4395008
+          },
+          "pss": {
+            "python": 297418752
+          },
+          "driver_pids": []
+        },
+        "rebuild_tightest_admission": {
+          "cgroup": 1115086848,
+          "stats": {
+            "anon": 944267264,
+            "file": 152408064,
+            "shmem": 28704768,
+            "active_file": 96460800,
+            "inactive_file": 27242496,
+            "kernel": 17764352
+          },
+          "pss": {
+            "python": 352699392,
+            "MainThread": 365152256,
+            "chromium": 561957888
+          },
+          "driver_pids": [
+            2930
+          ]
+        },
+        "rebuild_stop": {
+          "cgroup": 434769920,
+          "stats": {
+            "anon": 305700864,
+            "file": 124477440,
+            "shmem": 520192,
+            "active_file": 96641024,
+            "inactive_file": 27299840,
+            "kernel": 4063232
+          },
+          "pss": {
+            "python": 324108288
+          },
+          "driver_pids": []
+        },
+        "last_test_stop": {
+          "cgroup": 434769920,
+          "stats": {
+            "anon": 305700864,
+            "file": 124477440,
+            "shmem": 520192,
+            "active_file": 96641024,
+            "inactive_file": 27299840,
+            "kernel": 4063232
+          },
+          "pss": {
+            "python": 324108288
+          },
+          "driver_pids": []
+        }
+      },
+      "originals": {
+        "original-exit.txt": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+        "memory-original.jsonl": "a4524832a1d526b15b6a9662370bb7712b007a2f1373920f4fbf51219c113cef",
+        "invocation.json": "469d75522c5507b07a4915f9a5650fd7016fb401984886aafcfdfc0ad2e3c2f7",
+        "result.json": "86af7a8bbb79d9beb2ed6ba04d9881f4357b8a9a6b2437b4bbb247bda6fdd11c",
+        "original-console.log": "ec0277b4ec27ba6cd72535ef1eea040362415ee443f6769235c0a97a802850e7"
+      }
+    },
+    "candidate": {
+      "result": {
+        "commit": "168ed86d3328444ecef286f0d28bb9fa954cab10",
+        "tree": "036fb9dc0083466d0d972d94440a08a51c7d59d6",
+        "tests": 10,
+        "passed": true,
+        "errors": 0,
+        "failures": 0,
+        "peak": 970678272,
+        "events": {
+          "low": "0",
+          "high": "0",
+          "max": "0",
+          "oom": "0",
+          "oom_kill": "0",
+          "oom_group_kill": "0"
+        }
+      },
+      "rebuild_admissions": 17,
+      "narrowest_rebuild_headroom_bytes": 1206927360,
+      "snapshots": {
+        "first_test_start": {
+          "cgroup": 62992384,
+          "stats": {
+            "anon": 58589184,
+            "file": 2940928,
+            "shmem": 217088,
+            "active_file": 1863680,
+            "inactive_file": 860160,
+            "kernel": 696320
+          },
+          "pss": {
+            "python": 76038144
+          },
+          "driver_pids": []
+        },
+        "rebuild_start": {
+          "cgroup": 285413376,
+          "stats": {
+            "anon": 273608704,
+            "file": 7376896,
+            "shmem": 393216,
+            "active_file": 5009408,
+            "inactive_file": 1974272,
+            "kernel": 3866624
+          },
+          "pss": {
+            "python": 292134912
+          },
+          "driver_pids": []
+        },
+        "rebuild_tightest_admission": {
+          "cgroup": 941154304,
+          "stats": {
+            "anon": 900972544,
+            "file": 22564864,
+            "shmem": 13975552,
+            "active_file": 6574080,
+            "inactive_file": 2015232,
+            "kernel": 17141760
+          },
+          "pss": {
+            "python": 320055296,
+            "MainThread": 355182592,
+            "chromium": 539304960
+          },
+          "driver_pids": [
+            2937
+          ]
+        },
+        "rebuild_stop": {
+          "cgroup": 343760896,
+          "stats": {
+            "anon": 328519680,
+            "file": 10924032,
+            "shmem": 520192,
+            "active_file": 7307264,
+            "inactive_file": 3096576,
+            "kernel": 5140480
+          },
+          "pss": {
+            "python": 346456064
+          },
+          "driver_pids": []
+        },
+        "last_test_stop": {
+          "cgroup": 343760896,
+          "stats": {
+            "anon": 328519680,
+            "file": 10924032,
+            "shmem": 520192,
+            "active_file": 7307264,
+            "inactive_file": 3096576,
+            "kernel": 5140480
+          },
+          "pss": {
+            "python": 346456064
+          },
+          "driver_pids": []
+        }
+      },
+      "originals": {
+        "original-exit.txt": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+        "memory-original.jsonl": "f74ca6690c2ce06f569ae1d5583fa36422425efbcd41b2c533b14c179d7cad4f",
+        "invocation.json": "ee7d0dd55208ee01ad39b380b33eadefaf47211ec6e76bc62a7351ad38cfc1e7",
+        "result.json": "c703b210a5eed7fd9498a269d3076e8726ae33a1c7c2251c89ab83a0e43da39d",
+        "original-console.log": "76320576426124d5e2536467216faf7444d95ed0366dc373cc75d2140d7ec6ba"
+      }
+    }
+  },
+  "before_full_rebuild": {
+    "hosted": {
+      "time_before_start": -0.20692729949951172,
+      "memory": {
+        "rss_bytes": 47247360,
+        "vms_bytes": 137187328,
+        "system_available_bytes": 14260436992,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 1273425920,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 155500544,
+        "cgroup_anonymous_bytes": 1099808768,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0,
+          "sock_throttled": 0
+        }
+      },
+      "processes_by_pss": {
+        "python": 1133472768
+      },
+      "driver_processes": []
+    },
+    "local": {
+      "time_before_start": -0.08679485321044922,
+      "memory": {
+        "rss_bytes": 44638208,
+        "vms_bytes": 127299584,
+        "system_available_bytes": 6917132288,
+        "memory_accounting_scope": "cgroup",
+        "cgroup_current_bytes": 1239519232,
+        "cgroup_limit_bytes": 2147483648,
+        "cgroup_inactive_file_bytes": 116965376,
+        "cgroup_anonymous_bytes": 1053233152,
+        "cgroup_memory_events": {
+          "low": 0,
+          "high": 0,
+          "max": 0,
+          "oom": 0,
+          "oom_kill": 0,
+          "oom_group_kill": 0
+        }
+      },
+      "processes_by_pss": {
+        "python": 1073580032
+      },
+      "driver_processes": []
+    }
+  },
+  "full": {
+    "hosted": {
+      "observation": {
+        "admitted": false,
+        "reason": "capacity",
+        "current_bytes": 1871302656,
+        "limit_bytes": 2147483648,
+        "raw_headroom_bytes": 276180992,
+        "clean_inactive_file_bytes": 150544384,
+        "conditional_file_credit_bytes": 75272192,
+        "admission_headroom_bytes": 351453184,
+        "working_bytes": 268435456,
+        "safety_bytes": 134217728,
+        "events": {
+          "oom": 0,
+          "oom_kill": 0
+        }
+      },
+      "samples": [
+        {
+          "timestamp": 1795667521.467263,
+          "accounting": {
+            "rss_bytes": 47247360,
+            "vms_bytes": 137187328,
+            "system_available_bytes": 13497266176,
+            "memory_accounting_scope": "cgroup",
+            "cgroup_current_bytes": 1871302656,
+            "cgroup_limit_bytes": 2147483648,
+            "cgroup_inactive_file_bytes": 158314496,
+            "cgroup_anonymous_bytes": 1664585728,
+            "cgroup_memory_events": {
+              "low": 0,
+              "high": 0,
+              "max": 0,
+              "oom": 0,
+              "oom_kill": 0,
+              "oom_group_kill": 0,
+              "sock_throttled": 0
+            }
+          },
+          "approximate_process_pss_bytes": {
+            "python": 1047321600,
+            "MainThread": 420885504,
+            "chromium": 554232832
+          },
+          "cgroup_stat": {
+            "anon": 1664585728,
+            "file": 171524096,
+            "shmem": 13205504,
+            "active_file": 4096,
+            "inactive_file": 158314496,
+            "kernel": 34516992
+          }
+        },
+        {
+          "timestamp": 1795667520.9373581,
+          "accounting": {
+            "rss_bytes": 47247360,
+            "vms_bytes": 137187328,
+            "system_available_bytes": 13464920064,
+            "memory_accounting_scope": "cgroup",
+            "cgroup_current_bytes": 1932136448,
+            "cgroup_limit_bytes": 2147483648,
+            "cgroup_inactive_file_bytes": 158310400,
+            "cgroup_anonymous_bytes": 1729490944,
+            "cgroup_memory_events": {
+              "low": 0,
+              "high": 0,
+              "max": 0,
+              "oom": 0,
+              "oom_kill": 0,
+              "oom_group_kill": 0,
+              "sock_throttled": 0
+            }
+          },
+          "approximate_process_pss_bytes": {
+            "python": 1118317568,
+            "MainThread": 418821120,
+            "chromium": 546041856
+          },
+          "cgroup_stat": {
+            "anon": 1729490944,
+            "file": 167571456,
+            "shmem": 9256960,
+            "active_file": 4096,
+            "inactive_file": 158310400,
+            "kernel": 34586624
+          }
+        },
+        {
+          "timestamp": 1795667521.9949532,
+          "accounting": {
+            "rss_bytes": 47247360,
+            "vms_bytes": 137187328,
+            "system_available_bytes": 13497266176,
+            "memory_accounting_scope": "cgroup",
+            "cgroup_current_bytes": 1870962688,
+            "cgroup_limit_bytes": 2147483648,
+            "cgroup_inactive_file_bytes": 158314496,
+            "cgroup_anonymous_bytes": 1664262144,
+            "cgroup_memory_events": {
+              "low": 0,
+              "high": 0,
+              "max": 0,
+              "oom": 0,
+              "oom_kill": 0,
+              "oom_group_kill": 0,
+              "sock_throttled": 0
+            }
+          },
+          "approximate_process_pss_bytes": {
+            "python": 1047321600,
+            "MainThread": 420885504,
+            "chromium": 553577472
+          },
+          "cgroup_stat": {
+            "anon": 1664262144,
+            "file": 171528192,
+            "shmem": 13205504,
+            "active_file": 4096,
+            "inactive_file": 158314496,
+            "kernel": 34512896
+          }
+        }
+      ]
+    },
+    "local": {
+      "observation": {
+        "admitted": true,
+        "reason": "ready",
+        "current_bytes": 1787260928,
+        "limit_bytes": 2147483648,
+        "raw_headroom_bytes": 360222720,
+        "clean_inactive_file_bytes": 105287680,
+        "conditional_file_credit_bytes": 52643840,
+        "admission_headroom_bytes": 412866560,
+        "working_bytes": 268435456,
+        "safety_bytes": 134217728,
+        "events": {
+          "oom": 0,
+          "oom_kill": 0
+        }
+      },
+      "samples": [
+        {
+          "timestamp": 1795668609.4297767,
+          "accounting": {
+            "rss_bytes": 44638208,
+            "vms_bytes": 127299584,
+            "system_available_bytes": 6330195968,
+            "memory_accounting_scope": "cgroup",
+            "cgroup_current_bytes": 1787092992,
+            "cgroup_limit_bytes": 2147483648,
+            "cgroup_inactive_file_bytes": 124592128,
+            "cgroup_anonymous_bytes": 1545158656,
+            "cgroup_memory_events": {
+              "low": 0,
+              "high": 0,
+              "max": 0,
+              "oom": 0,
+              "oom_kill": 0,
+              "oom_group_kill": 0
+            }
+          },
+          "approximate_process_pss_bytes": {
+            "python": 1075866624,
+            "MainThread": 247151616,
+            "chromium": 579352576
+          },
+          "cgroup_stat": {
+            "anon": 1545158656,
+            "file": 210317312,
+            "shmem": 31887360,
+            "active_file": 53837824,
+            "inactive_file": 124592128,
+            "kernel": 30531584
+          }
+        },
+        {
+          "timestamp": 1795668608.889825,
+          "accounting": {
+            "rss_bytes": 44638208,
+            "vms_bytes": 127299584,
+            "system_available_bytes": 6331133952,
+            "memory_accounting_scope": "cgroup",
+            "cgroup_current_bytes": 1775775744,
+            "cgroup_limit_bytes": 2147483648,
+            "cgroup_inactive_file_bytes": 124588032,
+            "cgroup_anonymous_bytes": 1540427776,
+            "cgroup_memory_events": {
+              "low": 0,
+              "high": 0,
+              "max": 0,
+              "oom": 0,
+              "oom_kill": 0,
+              "oom_group_kill": 0
+            }
+          },
+          "approximate_process_pss_bytes": {
+            "python": 1075850240,
+            "MainThread": 247020544,
+            "chromium": 561900544
+          },
+          "cgroup_stat": {
+            "anon": 1540427776,
+            "file": 204128256,
+            "shmem": 25702400,
+            "active_file": 53837824,
+            "inactive_file": 124588032,
+            "kernel": 30367744
+          }
+        },
+        {
+          "timestamp": 1795668609.968103,
+          "accounting": {
+            "rss_bytes": 44638208,
+            "vms_bytes": 127299584,
+            "system_available_bytes": 6753652736,
+            "memory_accounting_scope": "cgroup",
+            "cgroup_current_bytes": 1255411712,
+            "cgroup_limit_bytes": 2147483648,
+            "cgroup_inactive_file_bytes": 122155008,
+            "cgroup_anonymous_bytes": 1060827136,
+            "cgroup_memory_events": {
+              "low": 0,
+              "high": 0,
+              "max": 0,
+              "oom": 0,
+              "oom_kill": 0,
+              "oom_group_kill": 0
+            }
+          },
+          "approximate_process_pss_bytes": {
+            "python": 1081133056
+          },
+          "cgroup_stat": {
+            "anon": 1060827136,
+            "file": 179245056,
+            "shmem": 3661824,
+            "active_file": 53448704,
+            "inactive_file": 122155008,
+            "kernel": 14643200
+          }
+        }
+      ]
+    }
+  },
+  "limits": "Focused journey ran after the same nine tests on each tree. It does not reproduce the full canonical process or establish the cause of hosted process variation. PSS accounting is from the observed process tree."
+}
