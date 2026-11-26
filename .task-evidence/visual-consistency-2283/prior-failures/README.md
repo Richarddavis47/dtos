@@ -1,0 +1,1 @@
+Original hosted failures are available in runs/45873011266. The candidate’s local run stopped with status 143 after observing the legacy Back locator error. The original fc43789 verification confirmed the updated controls and exposed two remaining dossier selectors.
