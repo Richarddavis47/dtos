@@ -90,7 +90,7 @@ class ChampionshipEvidenceBrowserTests(unittest.TestCase):
                             self.assertEqual(trophies.count() > 0, supported, path)
                             if supported:
                                 if not trophies.first.is_visible():
-                                    page.locator('#standings-evidence > summary').click()
+                                    page.locator('#standings-evidence > summary').press('Enter')
                                 summary = trophies.first.locator(':scope > summary')
                                 summary.focus()
                                 self.assertNotEqual(summary.evaluate('(e)=>getComputedStyle(e).outlineStyle'), 'none')

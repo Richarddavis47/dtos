@@ -98,16 +98,19 @@ class MatchupsPhoneBrowserTests(unittest.TestCase):
                                 standings.focus()
                                 standings.press('Enter')
                                 self.assertTrue(standings.evaluate('e=>e.parentElement.open'))
-                            table=page.locator('.compact-standings')
+                            table=page.locator('.compact-standings' if path == '/' else '.league-standings-table')
                             self.assertEqual(table.count(),1)
                             self.assertTrue(table.is_visible())
                             self.assertIn('123.45',table.inner_text())
-                            self.assertIn('110.67',table.inner_text())
+                            if path == '/':
+                                self.assertIn('110.67',table.inner_text())
                             self.assertEqual(table.locator('.standings-you').count(),1)
                             details=page.get_by_text('Standings and playoff evidence',exact=True)
                             details.focus()
                             details.press('Enter')
                             self.assertTrue(details.evaluate('e=>e.parentElement.open'))
+                            if path == '/league':
+                                self.assertIn('Points Against: 110.67',details.locator('..').inner_text())
                             self.no_overflow(page,width)
             finally:
                 browser.close()

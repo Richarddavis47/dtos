@@ -1,0 +1,57 @@
+.ds-shell .top.league-top {grid-template-columns:max-content minmax(0,1fr)}
+.league-top .account-context {margin:0;min-width:0}
+.league-top .account-context summary {overflow-wrap:anywhere}
+.league-hub {display:grid;gap:16px;min-width:0}
+.league-hub h1,.league-hub h2,.league-hub p {margin:0}
+.league-heading,.league-section-heading {display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.league-heading nav {display:flex;align-items:center;border:1px solid var(--border);border-radius:10px;background:var(--surface)}
+.league-heading nav>* {display:grid;min-height:44px;min-width:44px;place-items:center;padding-inline:4px}
+.league-heading nav strong {padding-inline:10px}
+.league-heading nav a {font-size:1.3rem}
+.league-week-unavailable {color:var(--muted)}
+.league-section-heading h2 {font-size:clamp(1.2rem,4vw,1.5rem)}
+.league-section-heading a {display:flex;align-items:center;min-height:44px;color:var(--accent);text-decoration:underline;text-underline-offset:3px}
+.league-standings {display:grid;gap:6px}
+.league-hub .league-reporting-week {font-size:.83rem}
+.league-standings-table {width:100%;table-layout:fixed;border:1px solid var(--border);border-spacing:0;border-radius:12px;overflow:hidden;font-variant-numeric:tabular-nums;background:var(--surface)}
+.league-col-rank {width:8%}
+.league-col-record {width:16%}
+.league-col-pf {width:21%}
+.league-col-streak {width:15%}
+.league-col-change {width:13%}
+.league-standings-table th,.league-standings-table td {font-size:.875rem;line-height:1.25;padding:3px 2px;text-align:center;vertical-align:middle;border-bottom:1px solid var(--border);overflow-wrap:anywhere}
+.league-standings-table thead {background:var(--surface-2)}
+.league-standings-table thead th {font-size:.75rem;overflow-wrap:normal}
+.league-standings-table th:nth-child(2) {text-align:left}
+.league-standings-table .league-team {text-align:left;padding-block:0}
+.league-team a {display:flex;align-items:center;min-height:44px;color:var(--text);overflow-wrap:anywhere}
+.league-team a:hover,.league-team a:focus-visible {text-decoration:underline}
+.league-team .ds-you,.league-team .standing-position {margin:0 0 4px}
+.league-standings-table .standings-you {background:color-mix(in srgb,var(--accent) 11%,var(--surface))}
+.league-standings-table .standings-you td:first-child {box-shadow:inset 3px 0 var(--accent)}
+.league-streak,.league-rank-change {font-weight:750}
+.league-streak[data-result=W],.league-rank-change[data-direction=up] {color:var(--accent)}
+.league-streak[data-result=L],.league-rank-change[data-direction=down] {color:#ffaaaa}
+.league-standings-table .league-cutoff td {border-block:1px solid #d4ad54;color:#f8d383;padding:6px 4px}
+.league-cutoff small {display:block;color:var(--text)}
+.league-cutoff a {display:inline-flex;align-items:center;min-height:44px;text-decoration:underline}
+.league-hub details>summary {min-height:44px;align-content:center}
+.league-hub .standing-indicators {display:block}
+.league-hub .standing-indicators .ds-badge-detail {max-width:none;width:100%}
+.league-hub .standing-indicators .ds-badge-detail p {max-width:none;overflow-wrap:anywhere}
+.league-matchup-preview {display:grid;gap:8px;text-align:center;padding:12px;background:var(--surface)}
+.league-score-pair {display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+.league-score-pair div {display:grid;align-content:start;gap:4px;min-width:0;padding-inline:4px;overflow-wrap:anywhere}
+.league-score-pair div+div {border-left:1px solid var(--border)}
+.league-score-pair strong {font-size:clamp(1.45rem,8vw,2.15rem);font-variant-numeric:tabular-nums}
+.league-score-pair small,.league-matchup-preview p {color:var(--muted)}
+.league-matchup-preview .ux-primary-action {justify-content:center;min-height:44px;background:var(--accent);color:#10160d;font-weight:800}
+.league-recap {display:flex;align-items:center;justify-content:space-between;min-height:44px;font-weight:700}
+.league-destinations {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;text-align:center}
+.league-destinations a {display:grid;min-width:0;min-height:50px;place-items:center;padding:6px 3px;overflow-wrap:anywhere}
+@media (max-width:360px) {
+  .league-col-record {width:18%}
+  .league-col-streak {width:17%}
+  .league-hub .league-section-heading a {font-size:.875rem}
+  .league-cutoff small {display:inline;margin-left:4px}
+}

@@ -4,10 +4,11 @@ from __future__ import annotations
 from html import escape
 from datetime import datetime, timezone
 import json
+from pathlib import Path
 from typing import Any, Awaitable, Callable, Hashable
 
 from fastapi import APIRouter, Query, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, Response
 
 from services.team_headquarters import build_team_directory
 from services.team_assessment_presentation import MODEL_NOTE
@@ -15,7 +16,7 @@ from services.transactions import normalize_transactions
 from services.home_trade_news import recent_candidates, news_identity, build_news, capture_news_data
 from src.ui.home_trade_opportunities import section as opportunity_section, CSS as OPPORTUNITY_CSS
 from src.ui.home_trade_news import render_news, NEWS_CSS
-from services.matchup_season import current_matchup_groups
+from services.matchup_season import current_matchup_groups, season_week_view
 from services.season_performance import season_performance
 from services.standings import standings_order
 from src.ui.season_performance import season_panel
@@ -26,6 +27,7 @@ from src.ui.render_cache import GenerationRenderCache
 from src.ui.front_office_brief import CSS as BRIEF_CSS
 from src.ui.customer_experience import readable_time
 from src.ui.standings import render_standings
+from src.ui.league_hub import league_week_heading, matchup_preview
 from src.platform.league_context import current_league_context
 from src.core.request_execution import run_manager_read
 from src.platform.request_diagnostics import diagnosed, span
@@ -71,6 +73,11 @@ def create_home_router(
 ) -> APIRouter:
     """Create the manager briefing and league-wide hub."""
     router = APIRouter(tags=["manager-experience"])
+
+    @router.get("/static/css/league_hub.css", include_in_schema=False)
+    def league_styles() -> Response:
+        css = Path(__file__).resolve().parents[1] / "static/css/league_hub.css"
+        return Response(css.read_text(encoding="utf-8"), media_type="text/css", headers={"Cache-Control": "no-cache"})
 
     @router.get("/", response_class=HTMLResponse)
     async def home(front_office: int | None = Query(None)) -> HTMLResponse:
@@ -273,25 +280,43 @@ def create_home_router(
         return body
 
     @router.get("/league", response_class=HTMLResponse)
-    async def league(request: Request) -> HTMLResponse:
+    async def league(request: Request, week: int | None = Query(default=None, ge=1, le=18)) -> HTMLResponse:
         await ensure_fresh()
-        return await run_manager_read(lambda: render_league(request))
+        return await run_manager_read(lambda: render_league(request, week))
 
-    def render_league(request: Request) -> HTMLResponse:
+    def render_league(request: Request, week: int | None) -> HTMLResponse:
         data = require_data()
         teams = data.get("teams") or []
         preseason = league_is_preseason(data)
-        visual_standings = render_standings(data)
+        league = data.get("league") or {}
+        settings = league.get("settings") or {}
+        current = int(data.get("week") or 1)
+        selected = week if week is not None else current if 1 <= current <= 18 else 1
+        account = current_account()
+        membership = account.membership if account else None
+        viewer = membership.roster_id if membership and str(membership.league_id) == str(league.get('league_id')) else None
+        start = settings.get('playoff_week_start')
+        playoff_href = f'/teams/{viewer}#season-so-far' if viewer else (
+            f'/matchups?week={start}' if type(start) is int and 1 <= start <= 18 else None)
+        visual_standings = render_standings(data, league_hub=True, playoff_href=playoff_href)
+        view = {}
+        if viewer:
+            from src.core.projection_intelligence import projection_service
+            context = current_league_context()
+            service = context.projection if context else projection_service
+            view = season_week_view(data, selected, service, preview_roster_id=viewer)
         preseason_analysis = ''
         if preseason:
             directory = build_team_directory(data, prepared_only=True) if teams else {}
             ordered = sorted(teams, key=lambda t: directory.get(int(t['roster_id']), {}).get('rank') or 999)
             rows = ''.join(f'<li><a href="/teams/{int(t["roster_id"])}">{escape(str(t.get("team_name") or "Franchise"))}</a> · {escape("Team assessment #" + str(directory[int(t["roster_id"])]["rank"]) if directory.get(int(t["roster_id"]), {}).get("rank") is not None else directory.get(int(t["roster_id"]), {}).get("weekly_comparison") or "Weekly lineup comparison is not ready.")}</li>' for t in ordered)
-            preseason_analysis = '<details><summary>Preseason team comparisons</summary><ul>' + rows + '</ul></details>'
+            preseason_analysis = ('<details><summary>Preseason team comparisons</summary>'
+                                  '<h2>Preseason League Briefing</h2>'
+                                  '<p>Regular-season games have not started. Compare prepared roster and lineup evidence before Week 1.</p>'
+                                  '<ul>' + rows + '</ul></details>')
         from src.core.intelligence.orchestrator import intelligence_orchestrator
         from src.ui.league_gm_diagnostics import league_observations
-        account = current_account()
-        active_id = int(account.membership.roster_id) if account and account.membership else int(teams[0]['roster_id']) if teams else 0
+        active_id = int(viewer or 0) if account else int(teams[0]['roster_id']) if teams else 0
         observations_html = ''
         if active_id:
             from services.strategy_session import COOKIE, selected_strategy
@@ -299,20 +324,19 @@ def create_home_router(
             intelligence = intelligence_orchestrator.analyze(data, active_id,
                 user_preferences={'strategy': strategy}, include_trade_opportunities=False)
             observations_html = league_observations(intelligence, data, active_id)
-        destinations = (
-            ("Weekly Report", "This week’s scores and changes", "/reports/weekly"),
-            ("Matchups", "Weekly competition and starter evidence", "/matchups"),
-
-            ("Transactions", "Trades, waivers, adds, and drops", "/transactions"),
-            ("Draft Capital", "League pick ownership", "/picks"),
-            ("History", "Past seasons, completed trades and draft results", "/history"),
-        )
-        links = '<div class="grid">' + "".join(f'<a class="card" href="{href}"><h3>{title}</h3><p class="muted">{description}</p></a>' for title, description, href in destinations) + "</div>"
-        body = (
-            _section("Preseason League Briefing" if preseason else "League Recap", "Your league’s teams, results and recent activity", f'<div class="card ux-recap"><p>{escape("Regular-season games have not started. Review roster direction, recent activity, market movement, and Week 1 preparation." if preseason else f"{len(teams)} franchises · Week {data.get('week') or '—'} · Season {(data.get('league') or {}).get('season') or '—'}")}</p></div>')
-            + observations_html + _section("Standings", "League-specific Sleeper records and scoring", visual_standings) + preseason_analysis
-            + _section("Explore your league", "Matchups, picks and completed activity", links) + '<details class="cx-evidence"><summary>Manager grades and specialist tools</summary><a class="ds-action" href="/fois">Manager grades (FOIS)</a></details>'
-        )
+        done = settings.get('last_scored_leg')
+        recap = (f'<a class="card league-recap" href="/reports/weekly?week={done}">Week {done} recap <span aria-hidden="true">›</span></a>'
+                 if type(done) is int and 1 <= done <= 18 and not preseason else
+                 '<a class="card league-recap" href="/reports/weekly">Weekly report <span aria-hidden="true">›</span></a>')
+        links = '<nav class="league-destinations" aria-label="Explore your league">' + ''.join(
+            f'<a class="card" href="{href}">{label}</a>'
+            for label, href in (("Transactions", "/transactions"), ("Draft Capital", "/picks"), ("History", "/history"))
+        ) + '</nav>'
+        body = ('<link rel="stylesheet" href="/static/css/league_hub.css"><div class="league-hub">'
+                + league_week_heading(data, selected) + visual_standings + matchup_preview(selected, view, viewer)
+                + recap + links + preseason_analysis + observations_html
+                + '<details class="cx-evidence"><summary>Manager grades and specialist tools</summary>'
+                + '<a class="ds-action" href="/fois">Manager grades (FOIS)</a><!--league-secondary-chrome--></details></div>')
         return page("League", body)
 
     return router
