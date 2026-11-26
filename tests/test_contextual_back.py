@@ -671,13 +671,14 @@ class ContextualBackTests(unittest.TestCase):
                     ),
                     count,
                 )
-                p.locator('a[href="#draft-capital"]').first.click()
-                p.wait_for_url("**#draft-capital")
+                p.get_by_role("navigation", name="My Team sections").get_by_role("link", name="Picks", exact=True).click()
+                p.wait_for_url("**#team-picks")
                 p.go_back()
                 p.wait_for_url("**/teams/1")
                 p.go_forward()
-                p.wait_for_url("**#draft-capital")
+                p.wait_for_url("**#team-picks")
                 p.reload()
+                p.locator("#draft-capital").wait_for(state="visible")
                 self.back(p, "/teams/1")
                 p.locator('.manager-nav a[href="/market"]').click()
                 p.wait_for_url("**/market")
