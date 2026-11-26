@@ -749,6 +749,123 @@ index 1da2894..0d6c60d 100644
                      self.assertIn('Evaluate Trade', response.text)
                  else:
                      self.assertIn('Find a trade</a>', response.text)
+diff --git a/tests/test_beginner_browser.py b/tests/test_beginner_browser.py
+index eff5497..839e25f 100644
+--- a/tests/test_beginner_browser.py
++++ b/tests/test_beginner_browser.py
+@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, patch
+ from playwright.sync_api import sync_playwright
+ from fastapi.testclient import TestClient
+ 
++from routes.navigation import create_navigation_router
+ from routes.home import create_home_router
+ from routes.teams import create_teams_router
+ from routes.transactions import create_transactions_router
+@@ -26,6 +27,7 @@ class BeginnerBrowserTests(unittest.TestCase):
+         f.setUp()
+         self.addCleanup(f.doCleanups)
+         app = f.client.app
++        app.include_router(create_navigation_router())
+         common = dict(ensure_fresh=AsyncMock(), require_data=lambda: f.data, page=dtos_app.page)
+         app.include_router(create_home_router(**common))
+         app.include_router(create_teams_router(**common, state={'data': f.data}))
+@@ -69,7 +71,8 @@ class BeginnerBrowserTests(unittest.TestCase):
+                     self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
+                     player = page.locator('#full-roster a[href^="/players/"]').first
+                     player.click()
+-                    page.get_by_role('link', name='← Back to My Team roster').click()
++                    page.locator('#dtos-back').click()
++                    page.wait_for_url('**/teams/1')
+                     self.assertTrue(page.locator('#my-team-roster').evaluate('e=>e.open'))
+                     page.goto('https://dtos.test/trades/create')
+                     own = page.locator('#trade-sent-board')
+diff --git a/tests/test_beginner_final_browser.py b/tests/test_beginner_final_browser.py
+index 7731255..389b52d 100644
+--- a/tests/test_beginner_final_browser.py
++++ b/tests/test_beginner_final_browser.py
+@@ -13,6 +13,7 @@ from fastapi.testclient import TestClient
+ 
+ from routes.trades import create_trades_router
+ from routes.home import create_home_router
++from routes.navigation import create_navigation_router
+ from routes.teams import create_teams_router
+ from routes.transactions import create_transactions_router
+ from tools.validation.browser_runtime import launch_chromium
+@@ -33,6 +34,7 @@ class FinalResetBrowserTests(unittest.TestCase):
+         self.addCleanup(f.doCleanups)
+         app = f.client.app
+         app.router.routes.clear()
++        app.include_router(create_navigation_router())
+         acquired = f.data["teams"][1]["picks_owned"].pop(0)
+         acquired["current_owner_id"] = 1
+         from datetime import datetime, timezone
+@@ -187,7 +189,8 @@ class FinalResetBrowserTests(unittest.TestCase):
+                     )
+                     player = page.locator('#full-roster a[href^="/players/"]').first
+                     player.click()
+-                    page.get_by_role("link", name="← Back to My Team roster").click()
++                    page.locator("#dtos-back").click()
++                    page.wait_for_url("**/teams/1")
+                     self.assertTrue(
+                         page.locator("#my-team-roster").evaluate("e=>e.open")
+                     )
+@@ -467,6 +470,12 @@ class FinalNavigationBrowserTests(unittest.TestCase):
+     def test_pick_market_origin_and_read_only_franchise_routes(self):
+         import dtos_app
+         from urllib.parse import parse_qs
++
++        def same_market_view(actual, expected):
++            actual_url, expected_url = urlsplit(actual), urlsplit(expected)
++            return actual_url.path == expected_url.path and parse_qs(
++                actual_url.query, keep_blank_values=True
++            ) == parse_qs(expected_url.query, keep_blank_values=True)
+         from routes.historical_assets import create_historical_assets_router
+         from routes.hq import create_hq_router
+         from tests import test_beginner_market as market_base
+@@ -531,6 +540,7 @@ class FinalNavigationBrowserTests(unittest.TestCase):
+             require_data=lambda: owner.data,
+             page=dtos_app.page,
+         )
++        owner.client.app.include_router(create_navigation_router())
+         owner.client.app.include_router(create_home_router(**common))
+         owner.client.app.include_router(
+             create_teams_router(**common, state={"data": owner.data})
+@@ -605,18 +615,14 @@ class FinalNavigationBrowserTests(unittest.TestCase):
+                     self.assertEqual(shop_query["asset_id"], [f"{season}-R{round_number}-{original}"])
+                     self.assertEqual(shop_query["owner_roster_id"], ["1"])
+                     page.reload()
+-                    back = page.get_by_role("link", name="← Back to Market results")
+-                    back.click()
+-                    page.wait_for_url(selected)
+-                    page.locator(".market-asset").first.wait_for()
+-                    self.assertEqual(page.url, selected)
+-                    self.assertEqual(page.locator(".market-asset").count(), 3)
+                     page.go_back()
+-                    page.wait_for_url(lambda url: urlsplit(url).path.startswith("/picks/"), wait_until="domcontentloaded")
+-                    self.assertIn("/picks/", page.url)
++                    page.wait_for_url(lambda url: same_market_view(url, selected), wait_until="domcontentloaded")
+                     page.go_forward()
+-                    page.wait_for_url(lambda url: url == selected, wait_until="domcontentloaded")
+-                    self.assertEqual(page.url, selected)
++                    page.wait_for_url(lambda url: urlsplit(url).path == destination, wait_until="domcontentloaded")
++                    page.locator("#dtos-back").click()
++                    page.wait_for_url(lambda url: same_market_view(url, selected))
++                    page.locator(".market-asset").first.wait_for()
++                    self.assertEqual(page.locator(".market-asset").count(), 3)
+                     page.goto(
+                         "https://dtos.test/market?position=PICK&sort=confidence&direction=asc&offset=10&limit=10&front_office=1"
+                     )
+@@ -626,8 +632,8 @@ class FinalNavigationBrowserTests(unittest.TestCase):
+                     page.get_by_role("link", name="Open pick", exact=True).click()
+                     # A newer explicit Market origin wins over stale team context.
+                     page.goto(page.url + "&from_team=1")
+-                    page.get_by_role("link", name="← Back to Market results").click()
+-                    self.assertEqual(page.url, offset_selected)
++                    page.locator("#dtos-back").click()
++                    page.wait_for_url(lambda url: same_market_view(url, offset_selected))
+                     self.assertIn("offset=10", page.url)
+                     # A syntactically valid old pick without a current native
+                     # right is historical/unknown, never an acquisition target.
 diff --git a/tests/test_contextual_back.py b/tests/test_contextual_back.py
 index 3316cc1..710a993 100644
 --- a/tests/test_contextual_back.py
@@ -771,6 +888,72 @@ index 3316cc1..710a993 100644
                  self.back(p, "/teams/1")
                  p.locator('.manager-nav a[href="/market"]').click()
                  p.wait_for_url("**/market")
+diff --git a/tests/test_historical_tracker_phase2_browser.py b/tests/test_historical_tracker_phase2_browser.py
+index 8a2434b..77075fb 100644
+--- a/tests/test_historical_tracker_phase2_browser.py
++++ b/tests/test_historical_tracker_phase2_browser.py
+@@ -66,6 +66,7 @@ class TrackerPhase2BrowserTests(unittest.TestCase):
+                 page.goto('http://fixture/league')
+                 page.get_by_role('navigation', name='Explore your league').get_by_role(
+                     'link', name='Transactions', exact=True).click()
++                page.get_by_text('Search and filters', exact=True).press('Enter')
+                 page.locator('select[name="scope"]').select_option('all_history')
+                 page.locator('select[name="type"]').select_option('trade')
+                 page.get_by_role('button', name='Apply filters', exact=False).click()
+diff --git a/tests/test_home_trade_news_browser.py b/tests/test_home_trade_news_browser.py
+index 16e3940..1991a12 100644
+--- a/tests/test_home_trade_news_browser.py
++++ b/tests/test_home_trade_news_browser.py
+@@ -11,6 +11,7 @@ from urllib.parse import urlsplit
+ from fastapi.testclient import TestClient
+ from playwright.sync_api import sync_playwright
+ from routes.home import create_home_router
++from routes.navigation import create_navigation_router
+ from routes.historical_assets import create_historical_assets_router
+ from tests import test_trade_workspace_batch1 as auth
+ from tests import test_home_trade_news as fixtures
+@@ -69,6 +70,7 @@ class TradeNewsBrowserTests(unittest.TestCase):
+         active = [data]
+         app = f.client.app
+         app.router.routes.clear()
++        app.include_router(create_navigation_router())
+         app.include_router(
+             create_home_router(
+                 ensure_fresh=AsyncMock(),
+@@ -210,13 +212,15 @@ class TradeNewsBrowserTests(unittest.TestCase):
+                     link.scroll_into_view_if_needed()
+                     link.click()
+                     self.assertIn("Historical Trade Timeline", page.title())
+-                    page.get_by_role("link", name="← Back to Home", exact=True).click()
+-                    page.locator(".league-trade-news").wait_for()
+-                    self.assertTrue(page.locator("[data-news-trade]").count() == 1)
+-                    page.reload(wait_until="networkidle")
+-                    self.assertTrue(page.locator("[data-news-trade]").count() == 1)
+                     page.go_back(wait_until="networkidle")
++                    self.assertTrue(page.locator(".league-trade-news").is_visible())
+                     page.go_forward(wait_until="networkidle")
++                    self.assertIn("Historical Trade Timeline", page.title())
++                    page.locator("#dtos-back").click()
++                    page.locator(".league-trade-news").wait_for()
++                    self.assertEqual(page.locator("[data-news-trade]").count(), 1)
++                    page.reload(wait_until="networkidle")
++                    self.assertEqual(page.locator("[data-news-trade]").count(), 1)
+                     self.assertLessEqual(
+                         page.evaluate("document.documentElement.scrollWidth"), width
+                     )
+diff --git a/tests/test_market_directory_browser.py b/tests/test_market_directory_browser.py
+index cf6174a..d3a50cc 100644
+--- a/tests/test_market_directory_browser.py
++++ b/tests/test_market_directory_browser.py
+@@ -78,7 +78,7 @@ class MarketDirectoryBrowserTests(unittest.TestCase):
+         page.goto(fixture.helper.origin + "/market?position=RB&availability=rostered&sort=market&direction=asc&limit=100")
+         self.assertEqual(page.locator('.market-position-tabs [aria-current="true"]').inner_text(), "RB")
+         brand = page.locator(".market-top .brand-mark").bounding_box()
+-        switcher = page.locator(".market-top .account-context summary").bounding_box()
++        switcher = page.locator(".market-top .account-context > summary").bounding_box()
+         self.assertLessEqual(brand["x"] + brand["width"], switcher["x"])
+         self.assertLessEqual(switcher["x"] + switcher["width"], width)
+         other = page.locator(".market-result:not([data-asset-id='" + fixture.asset_id + "']) .market-row-change").first
 diff --git a/tests/test_player_api.py b/tests/test_player_api.py
 index 3600161..d1b5ce2 100644
 --- a/tests/test_player_api.py
