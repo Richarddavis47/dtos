@@ -1,0 +1,946 @@
+guarded-release-publisher	Set up job	﻿2026-11-26T06:51:43.3027974Z Current runner version: '2.338.2'
+guarded-release-publisher	Set up job	2026-11-26T06:51:43.3047067Z ##[group]Runner Image Provisioner
+guarded-release-publisher	Set up job	2026-11-26T06:51:43.3047729Z Hosted Compute Agent
+guarded-release-publisher	Set up job	2026-11-26T06:51:43.3048187Z Version: 20261111.635
+guarded-release-publisher	Set up job	2026-11-26T06:51:43.3048697Z Commit: b8a594ea514ff44cadb5342986c68b1eac6e22ed
+guarded-release-publisher	Set up job	2026-11-26T06:51:43.3049215Z Build Date: 2026-11-11T01:49:01Z
+guarded-release-publisher	Set up job	2026-11-26T06:51:43.3049733Z Worker ID: {194ee310-8e80-4c3c-99ee-40898c28adfe}
+guarded-release-publisher	Set up job	2026-11-26T06:51:43.3050245Z Region: us-west-2
+guarded-release-publisher	Set up job	2026-11-26T06:51:43.3050640Z Cloud: AWS
+guarded-release-publisher	Set up job	2026-11-26T06:51:43.3051353Z ##[endgroup]
+guarded-release-publisher	Set up job	2026-11-26T06:51:43.3052380Z ##[group]Operating System
+guarded-release-publisher	Set up job	2026-11-26T06:51:43.3052840Z Ubuntu
+guarded-release-publisher	Set up job	2026-11-26T06:51:43.3053202Z 24.04.5
+guarded-release-publisher	Set up job	2026-11-26T06:51:43.3053573Z LTS
+guarded-release-publisher	Set up job	2026-11-26T06:51:43.3053969Z ##[endgroup]
+guarded-release-publisher	Set up job	2026-11-26T06:51:43.3054365Z ##[group]Runner Image
+guarded-release-publisher	Set up job	2026-11-26T06:51:43.3054830Z Image: ubuntu-24.04
+guarded-release-publisher	Set up job	2026-11-26T06:51:43.3055255Z Version: 20261116.133.1
+guarded-release-publisher	Set up job	2026-11-26T06:51:43.3056023Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261116.133/images/ubuntu/Ubuntu2404-Readme.md
+guarded-release-publisher	Set up job	2026-11-26T06:51:43.3057325Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261116.133
+guarded-release-publisher	Set up job	2026-11-26T06:51:43.3058053Z ##[endgroup]
+guarded-release-publisher	Set up job	2026-11-26T06:51:43.3059040Z ##[group]GITHUB_TOKEN Permissions
+guarded-release-publisher	Set up job	2026-11-26T06:51:43.3060655Z Actions: read
+guarded-release-publisher	Set up job	2026-11-26T06:51:43.3061292Z Checks: read
+guarded-release-publisher	Set up job	2026-11-26T06:51:43.3061657Z Contents: write
+guarded-release-publisher	Set up job	2026-11-26T06:51:43.3062325Z Metadata: read
+guarded-release-publisher	Set up job	2026-11-26T06:51:43.3062720Z PullRequests: read
+guarded-release-publisher	Set up job	2026-11-26T06:51:43.3063108Z ##[endgroup]
+guarded-release-publisher	Set up job	2026-11-26T06:51:43.3064627Z Secret source: Actions
+guarded-release-publisher	Set up job	2026-11-26T06:51:43.3065282Z Cache mode: write
+guarded-release-publisher	Set up job	2026-11-26T06:51:43.3065785Z Prepare workflow directory
+guarded-release-publisher	Set up job	2026-11-26T06:51:43.3329592Z Prepare all required actions
+guarded-release-publisher	Set up job	2026-11-26T06:51:43.3365896Z Getting action download info
+guarded-release-publisher	Set up job	2026-11-26T06:51:43.7250732Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+guarded-release-publisher	Set up job	2026-11-26T06:51:44.7417646Z Download action repository 'actions/setup-python@v5' (SHA:a26af69be951a213d495a4c3e4e4022e16d87065)
+guarded-release-publisher	Set up job	2026-11-26T06:51:44.8528199Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+guarded-release-publisher	Set up job	2026-11-26T06:51:45.1687951Z Complete job name: guarded-release-publisher
+guarded-release-publisher	Run actions/checkout@v4	﻿2026-11-26T06:51:45.2331451Z ##[group]Run actions/checkout@v4
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:45.2332072Z with:
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:45.2332416Z   ref: bb668d9658256c49671b38761be910f959445f4f
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:45.2332781Z   fetch-depth: 0
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:45.2333063Z   persist-credentials: false
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:45.2333380Z   repository: Richarddavis47/dtos
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:45.2335615Z   token: ***
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:45.2335888Z   ssh-strict: true
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:45.2336160Z   ssh-user: git
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:45.2336450Z   clean: true
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:45.2336732Z   sparse-checkout-cone-mode: true
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:45.2337057Z   fetch-tags: false
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:45.2337344Z   show-progress: true
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:45.2337608Z   lfs: false
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:45.2337847Z   submodules: false
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:45.2338172Z   set-safe-directory: true
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:45.2338486Z   allow-unsafe-pr-checkout: false
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:45.2338887Z env:
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:45.2339192Z   NODE_OPTIONS: --max-old-space-size=256
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:45.2339519Z ##[endgroup]
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.3109293Z Syncing repository: Richarddavis47/dtos
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.3111263Z ##[group]Getting Git version info
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.3111701Z Working directory is '/home/runner/work/dtos/dtos'
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.3112304Z [command]/usr/bin/git version
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.4947086Z git version 2.56.1
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.4963050Z ##[endgroup]
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.4974351Z Temporarily overriding HOME='/home/runner/work/_temp/b1a8fcb0-01e1-4fc9-8453-35b0a59b3cb9' before making global git config changes
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.4975547Z Adding repository directory to the temporary git global config as a safe directory
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.4978922Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/dtos/dtos
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.5293652Z Deleting the contents of '/home/runner/work/dtos/dtos'
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.5296797Z ##[group]Initializing the repository
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.5300291Z [command]/usr/bin/git init /home/runner/work/dtos/dtos
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.5421529Z hint: Using 'master' as the name for the initial branch. This default branch name
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.5422254Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.5422749Z hint: to use in all of your new repositories, which will suppress this warning,
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.5423557Z hint: call:
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.5423832Z hint:
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.5424179Z hint: 	git config --global init.defaultBranch <name>
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.5424554Z hint:
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.5424882Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.5425379Z hint: 'development'. The just-created branch can be renamed via this command:
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.5425797Z hint:
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.5426064Z hint: 	git branch -m <name>
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.5426394Z hint:
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.5426853Z hint: Disable this message with "git config set advice.defaultBranchName false"
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.5427502Z Initialized empty Git repository in /home/runner/work/dtos/dtos/.git/
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.5435059Z [command]/usr/bin/git remote add origin https://github.com/Richarddavis47/dtos
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.5474508Z ##[endgroup]
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.5475070Z ##[group]Disabling automatic garbage collection
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.5476617Z [command]/usr/bin/git config --local gc.auto 0
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.5498629Z ##[endgroup]
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.5499194Z ##[group]Setting up auth
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.5503435Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.5529523Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.7919895Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.7947418Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.8103087Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.8127252Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.8274893Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.8300504Z ##[endgroup]
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.8301561Z ##[group]Fetching the repository
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:51:47.8312999Z [command]/usr/bin/git -c protocol.version=2 fetch --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/*
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3625805Z From https://github.com/Richarddavis47/dtos
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3642173Z  * [new branch]        agent/repository-guidance-changelog -> origin/agent/repository-guidance-changelog
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3643295Z  * [new branch]        audit/2225-cache-admission-corrigendum -> origin/audit/2225-cache-admission-corrigendum
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3644136Z  * [new branch]        audit/granite-restoration-study-handoff -> origin/audit/granite-restoration-study-handoff
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3644802Z  * [new branch]        codex/build2201-final-memory -> origin/codex/build2201-final-memory
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3645358Z  * [new branch]        codex/build2201-headroom-audit -> origin/codex/build2201-headroom-audit
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3645976Z  * [new branch]        codex/storage-architecture-correction -> origin/codex/storage-architecture-correction
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3646628Z  * [new branch]        codex/v1.21.96-public-welcome -> origin/codex/v1.21.96-public-welcome
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3647181Z  * [new branch]        codex/v1.22.11-granite-preflight -> origin/codex/v1.22.11-granite-preflight
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3648170Z  * [new branch]        dtos-chatgpt-fetch-probe -> origin/dtos-chatgpt-fetch-probe
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3648691Z  * [new branch]        dtos-release-automation -> origin/dtos-release-automation
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3649207Z  * [new branch]        dtos-v0.8.9-draft-migration -> origin/dtos-v0.8.9-draft-migration
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3649786Z  * [new branch]        dtos-v0.9.0-front-office-foundation -> origin/dtos-v0.9.0-front-office-foundation
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3650826Z  * [new branch]        dtos-v1.10.0-live-projection-forward-production -> origin/dtos-v1.10.0-live-projection-forward-production
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3652020Z  * [new branch]        dtos-v1.10.37-chatgpt-current-visual-mirror -> origin/dtos-v1.10.37-chatgpt-current-visual-mirror
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3652886Z  * [new branch]        dtos-v1.10.56-mobile-trade-filter-visibility -> origin/dtos-v1.10.56-mobile-trade-filter-visibility
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3653631Z  * [new branch]        dtos-v1.10.68-visual-fidelity-correction -> origin/dtos-v1.10.68-visual-fidelity-correction
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3654414Z  * [new branch]        dtos-v1.13.0-multi-league-intelligence-isolation -> origin/dtos-v1.13.0-multi-league-intelligence-isolation
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3655161Z  * [new branch]        dtos-v1.13.1-account-league-context-isolation -> origin/dtos-v1.13.1-account-league-context-isolation
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3655856Z  * [new branch]        dtos-v1.13.2-projection-restore-league-isolation -> origin/dtos-v1.13.2-projection-restore-league-isolation
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3656527Z  * [new branch]        dtos-v1.13.3-semantic-freshness-restart-evidence -> origin/dtos-v1.13.3-semantic-freshness-restart-evidence
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3657231Z  * [new branch]        dtos-v1.13.4-restart-evidence-deduplication -> origin/dtos-v1.13.4-restart-evidence-deduplication
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3658003Z  * [new branch]        dtos-v1.13.5-fois-tenure-continuity -> origin/dtos-v1.13.5-fois-tenure-continuity
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3658755Z  * [new branch]        dtos-v1.13.6-dins-bounded-capture -> origin/dtos-v1.13.6-dins-bounded-capture
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3659454Z  * [new branch]        dtos-v1.8.10-market-health-dataset-scope -> origin/dtos-v1.8.10-market-health-dataset-scope
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3660437Z  * [new branch]        dtos-v1.8.12-market-memory-admission -> origin/dtos-v1.8.12-market-memory-admission
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3661479Z  * [new branch]        dtos-v1.8.9-semantic-market-artifact-identity -> origin/dtos-v1.8.9-semantic-market-artifact-identity
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3662476Z  * [new branch]        dtos-v1.9.4-valuation-fois-history-corrections -> origin/dtos-v1.9.4-valuation-fois-history-corrections
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3663357Z  * [new branch]        evidence/bye-availability-2270 -> origin/evidence/bye-availability-2270
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3664075Z  * [new branch]        evidence/bye-pickup-dependencies-2272 -> origin/evidence/bye-pickup-dependencies-2272
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3664753Z  * [new branch]        evidence/bye-pickup-drop-2275 -> origin/evidence/bye-pickup-drop-2275
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3665456Z  * [new branch]        evidence/bye-pickup-ir-2274 -> origin/evidence/bye-pickup-ir-2274
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3666131Z  * [new branch]        evidence/bye-pickup-roster-space-2273 -> origin/evidence/bye-pickup-roster-space-2273
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3666784Z  * [new branch]        evidence/bye-pickups-2271 -> origin/evidence/bye-pickups-2271
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3667479Z  * [new branch]        evidence/cache-string-sharing-2237 -> origin/evidence/cache-string-sharing-2237
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3668265Z  * [new branch]        evidence/current-production-coverage-2233 -> origin/evidence/current-production-coverage-2233
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3669151Z  * [new branch]        evidence/current-season-history-2230 -> origin/evidence/current-season-history-2230
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3669968Z  * [new branch]        evidence/franchise-history-2229 -> origin/evidence/franchise-history-2229
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3670808Z  * [new branch]        evidence/franchise-outlook-2260 -> origin/evidence/franchise-outlook-2260
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3671757Z  * [new branch]        evidence/history-trade-followthrough-2231 -> origin/evidence/history-trade-followthrough-2231
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3672450Z  * [new branch]        evidence/home-priority-2277 -> origin/evidence/home-priority-2277
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3673089Z  * [new branch]        evidence/league-redesign-2281 -> origin/evidence/league-redesign-2281
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3673811Z  * [new branch]        evidence/lineup-fallback-2266 -> origin/evidence/lineup-fallback-2266
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3674469Z  * [new branch]        evidence/lineup-recheck-2267 -> origin/evidence/lineup-recheck-2267
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3675199Z  * [new branch]        evidence/market-history-coverage-2232 -> origin/evidence/market-history-coverage-2232
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3675875Z  * [new branch]        evidence/market-redesign-2280 -> origin/evidence/market-redesign-2280
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3676519Z  * [new branch]        evidence/my-team-redesign-2278 -> origin/evidence/my-team-redesign-2278
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3677258Z  * [new branch]        evidence/next-trade-package-2259 -> origin/evidence/next-trade-package-2259
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3677900Z  * [new branch]        evidence/playoff-race-2265 -> origin/evidence/playoff-race-2265
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3678438Z  * [new branch]        evidence/positional-scope-2261 -> origin/evidence/positional-scope-2261
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3678940Z  * [new branch]        evidence/recent-workload-2258 -> origin/evidence/recent-workload-2258
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3679622Z  * [new branch]        evidence/restoration-recovery-2235 -> origin/evidence/restoration-recovery-2235
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3680251Z  * [new branch]        evidence/season-peer-record-2264 -> origin/evidence/season-peer-record-2264
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3680811Z  * [new branch]        evidence/season-performance-2262 -> origin/evidence/season-performance-2262
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3681571Z  * [new branch]        evidence/season-score-rollover-2263 -> origin/evidence/season-score-rollover-2263
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3682137Z  * [new branch]        evidence/signed-in-home-2276 -> origin/evidence/signed-in-home-2276
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3682764Z  * [new branch]        evidence/sleeper-actuals-restoration-2236 -> origin/evidence/sleeper-actuals-restoration-2236
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3683549Z  * [new branch]        evidence/sleeper-combined-ir-2274 -> origin/evidence/sleeper-combined-ir-2274
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3684144Z  * [new branch]        evidence/sleeper-only-fantasy-results-2234 -> origin/evidence/sleeper-only-fantasy-results-2234
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3684771Z  * [new branch]        evidence/snap-participation-permissions -> origin/evidence/snap-participation-permissions
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3685358Z  * [new branch]        evidence/team-assessment-cd400cf -> origin/evidence/team-assessment-cd400cf
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3685936Z  * [new branch]        evidence/trade-center-redesign-2279 -> origin/evidence/trade-center-redesign-2279
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3686504Z  * [new branch]        evidence/trade-package-2282 -> origin/evidence/trade-package-2282
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3686980Z  * [new branch]        evidence/trade-reserve-2228 -> origin/evidence/trade-reserve-2228
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3687467Z  * [new branch]        evidence/upcoming-byes-2268 -> origin/evidence/upcoming-byes-2268
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3687961Z  * [new branch]        evidence/upcoming-byes-2269 -> origin/evidence/upcoming-byes-2269
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3688592Z  * [new branch]        feat/league-redesign-2281 -> origin/feat/league-redesign-2281
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3689145Z  * [new branch]        feat/recommended-protections-2245 -> origin/feat/recommended-protections-2245
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3689983Z  * [new branch]        feat/season-performance-2262 -> origin/feat/season-performance-2262
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3690468Z  * [new branch]        feat/signed-in-home-2276 -> origin/feat/signed-in-home-2276
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3691019Z  * [new branch]        feat/trade-package-2282 -> origin/feat/trade-package-2282
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3691592Z  * [new branch]        fix/activation-deferral-2246 -> origin/fix/activation-deferral-2246
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3692090Z  * [new branch]        fix/customer-acceptance-2253 -> origin/fix/customer-acceptance-2253
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3692648Z  * [new branch]        fix/resident-refresh-reference-release -> origin/fix/resident-refresh-reference-release
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3693247Z  * [new branch]        fix/restoration-unused-memory -> origin/fix/restoration-unused-memory
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3693771Z  * [new branch]        fix/sleeper-actuals-restoration -> origin/fix/sleeper-actuals-restoration
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3694309Z  * [new branch]        fix/source-health-history-2257 -> origin/fix/source-health-history-2257
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3694817Z  * [new branch]        fix/trade-time-market-evidence -> origin/fix/trade-time-market-evidence
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3695341Z  * [new branch]        fix/v1.21.105-history-decision-continuity -> origin/fix/v1.21.105-history-decision-continuity
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3696023Z  * [new branch]        fix/v1.21.72-fois-navigation -> origin/fix/v1.21.72-fois-navigation
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3696762Z  * [new branch]        fix/v1.21.83-fois-flight-source-retention -> origin/fix/v1.21.83-fois-flight-source-retention
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3697371Z  * [new branch]        main                    -> origin/main
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3697774Z  * [new branch]        release/2221-actions-publisher -> origin/release/2221-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3698259Z  * [new branch]        release/2222-actions-publisher -> origin/release/2222-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3698753Z  * [new branch]        release/2223-actions-publisher -> origin/release/2223-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3699250Z  * [new branch]        release/2224-actions-publisher -> origin/release/2224-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3699744Z  * [new branch]        release/2225-actions-publisher -> origin/release/2225-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3700244Z  * [new branch]        release/2226-actions-publisher -> origin/release/2226-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3700720Z  * [new branch]        release/2227-actions-publisher -> origin/release/2227-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3701434Z  * [new branch]        release/2228-actions-publisher -> origin/release/2228-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3701952Z  * [new branch]        release/2229-actions-publisher -> origin/release/2229-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3702419Z  * [new branch]        release/2230-actions-publisher -> origin/release/2230-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3702923Z  * [new branch]        release/2231-actions-publisher -> origin/release/2231-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3703459Z  * [new branch]        release/2232-actions-publisher -> origin/release/2232-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3704069Z  * [new branch]        release/2233-actions-publisher -> origin/release/2233-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3704717Z  * [new branch]        release/2234-actions-publisher -> origin/release/2234-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3705339Z  * [new branch]        release/2235-actions-publisher -> origin/release/2235-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3705956Z  * [new branch]        release/2236-actions-publisher -> origin/release/2236-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3706582Z  * [new branch]        release/2237-actions-publisher -> origin/release/2237-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3707219Z  * [new branch]        release/2238-actions-publisher -> origin/release/2238-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3707894Z  * [new branch]        release/2239-actions-publisher -> origin/release/2239-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3708543Z  * [new branch]        release/2240-actions-publisher -> origin/release/2240-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3709163Z  * [new branch]        release/2241-actions-publisher -> origin/release/2241-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3709768Z  * [new branch]        release/2242-actions-publisher -> origin/release/2242-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3710662Z  * [new branch]        release/2243-actions-publisher -> origin/release/2243-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3711507Z  * [new branch]        release/2244-actions-publisher -> origin/release/2244-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3712230Z  * [new branch]        release/2245-actions-publisher -> origin/release/2245-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3712917Z  * [new branch]        release/2246-actions-publisher -> origin/release/2246-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3713586Z  * [new branch]        release/2247-actions-publisher -> origin/release/2247-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3714289Z  * [new branch]        release/2248-actions-publisher -> origin/release/2248-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3714933Z  * [new branch]        release/2249-actions-publisher -> origin/release/2249-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3715556Z  * [new branch]        release/2250-actions-publisher -> origin/release/2250-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3716235Z  * [new branch]        release/2251-actions-publisher -> origin/release/2251-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3716922Z  * [new branch]        release/2252-actions-publisher -> origin/release/2252-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3717618Z  * [new branch]        release/2253-actions-publisher -> origin/release/2253-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3718212Z  * [new branch]        release/2254-actions-publisher -> origin/release/2254-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3718757Z  * [new branch]        release/2255-actions-publisher -> origin/release/2255-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3719452Z  * [new branch]        release/2256-actions-publisher -> origin/release/2256-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3720088Z  * [new branch]        release/2257-actions-publisher -> origin/release/2257-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3720633Z  * [new branch]        release/2258-actions-publisher -> origin/release/2258-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3721386Z  * [new branch]        release/2259-actions-publisher -> origin/release/2259-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3721900Z  * [new branch]        release/2260-actions-publisher -> origin/release/2260-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3722555Z  * [new branch]        release/2261-actions-publisher -> origin/release/2261-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3723071Z  * [new branch]        release/2262-actions-publisher -> origin/release/2262-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3723720Z  * [new branch]        release/2263-actions-publisher -> origin/release/2263-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3724446Z  * [new branch]        release/2264-actions-publisher -> origin/release/2264-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3725117Z  * [new branch]        release/2265-actions-publisher -> origin/release/2265-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3725782Z  * [new branch]        release/2266-actions-publisher -> origin/release/2266-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3726384Z  * [new branch]        release/2267-actions-publisher -> origin/release/2267-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3727094Z  * [new branch]        release/2268-actions-publisher -> origin/release/2268-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3727823Z  * [new branch]        release/2269-actions-publisher -> origin/release/2269-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3728505Z  * [new branch]        release/2270-actions-publisher -> origin/release/2270-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3729208Z  * [new branch]        release/2271-actions-publisher -> origin/release/2271-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3729835Z  * [new branch]        release/2272-actions-publisher -> origin/release/2272-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3730467Z  * [new branch]        release/2273-actions-publisher -> origin/release/2273-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3731482Z  * [new branch]        release/2274-actions-publisher -> origin/release/2274-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3732176Z  * [new branch]        release/2275-actions-publisher -> origin/release/2275-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3733067Z  * [new branch]        release/2276-actions-publisher -> origin/release/2276-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3733721Z  * [new branch]        release/2277-actions-publisher -> origin/release/2277-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3734421Z  * [new branch]        release/2278-actions-publisher -> origin/release/2278-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3735096Z  * [new branch]        release/2279-actions-publisher -> origin/release/2279-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3735819Z  * [new branch]        release/2280-actions-publisher -> origin/release/2280-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3736523Z  * [new branch]        release/2281-actions-publisher -> origin/release/2281-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3737219Z  * [new branch]        release/2282-actions-publisher -> origin/release/2282-actions-publisher
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3737889Z  * [new branch]        tooling/cloud-validation-polish -> origin/tooling/cloud-validation-polish
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3738525Z  * [new branch]        validation/2221-focused-resources -> origin/validation/2221-focused-resources
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3738971Z  * [new tag]           v0.9.4                  -> v0.9.4
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3739306Z  * [new tag]           v0.9.5                  -> v0.9.5
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3739624Z  * [new tag]           v0.9.6                  -> v0.9.6
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3739989Z  * [new tag]           v0.9.7                  -> v0.9.7
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3740376Z  * [new tag]           v0.9.8                  -> v0.9.8
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3740744Z  * [new tag]           v0.9.9                  -> v0.9.9
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3741372Z  * [new tag]           v1.0.0                  -> v1.0.0
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3741870Z  * [new tag]           v1.1.0                  -> v1.1.0
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3742279Z  * [new tag]           v1.10.0                 -> v1.10.0
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3742723Z  * [new tag]           v1.10.1                 -> v1.10.1
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3743152Z  * [new tag]           v1.10.10                -> v1.10.10
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3743562Z  * [new tag]           v1.10.11                -> v1.10.11
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3743976Z  * [new tag]           v1.10.12                -> v1.10.12
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3744531Z  * [new tag]           v1.10.13                -> v1.10.13
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3744982Z  * [new tag]           v1.10.14                -> v1.10.14
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3745353Z  * [new tag]           v1.10.15                -> v1.10.15
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3745728Z  * [new tag]           v1.10.16                -> v1.10.16
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3746151Z  * [new tag]           v1.10.17                -> v1.10.17
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3746526Z  * [new tag]           v1.10.18                -> v1.10.18
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3746930Z  * [new tag]           v1.10.19                -> v1.10.19
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3747346Z  * [new tag]           v1.10.2                 -> v1.10.2
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3747732Z  * [new tag]           v1.10.20                -> v1.10.20
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3748228Z  * [new tag]           v1.10.21                -> v1.10.21
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3748670Z  * [new tag]           v1.10.22                -> v1.10.22
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3749158Z  * [new tag]           v1.10.23                -> v1.10.23
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3749613Z  * [new tag]           v1.10.24                -> v1.10.24
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3749999Z  * [new tag]           v1.10.25                -> v1.10.25
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3750440Z  * [new tag]           v1.10.26                -> v1.10.26
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3750816Z  * [new tag]           v1.10.27                -> v1.10.27
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3751478Z  * [new tag]           v1.10.28                -> v1.10.28
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3751911Z  * [new tag]           v1.10.29                -> v1.10.29
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3752299Z  * [new tag]           v1.10.3                 -> v1.10.3
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3752720Z  * [new tag]           v1.10.30                -> v1.10.30
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3753103Z  * [new tag]           v1.10.31                -> v1.10.31
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3753620Z  * [new tag]           v1.10.32                -> v1.10.32
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3754021Z  * [new tag]           v1.10.33                -> v1.10.33
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3754422Z  * [new tag]           v1.10.34                -> v1.10.34
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3754790Z  * [new tag]           v1.10.35                -> v1.10.35
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3755192Z  * [new tag]           v1.10.36                -> v1.10.36
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3755595Z  * [new tag]           v1.10.37                -> v1.10.37
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3755986Z  * [new tag]           v1.10.38                -> v1.10.38
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3756390Z  * [new tag]           v1.10.39                -> v1.10.39
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3756757Z  * [new tag]           v1.10.4                 -> v1.10.4
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3757051Z  * [new tag]           v1.10.40                -> v1.10.40
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3757333Z  * [new tag]           v1.10.41                -> v1.10.41
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3757709Z  * [new tag]           v1.10.42                -> v1.10.42
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3758107Z  * [new tag]           v1.10.43                -> v1.10.43
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3758518Z  * [new tag]           v1.10.44                -> v1.10.44
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3758858Z  * [new tag]           v1.10.45                -> v1.10.45
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3759202Z  * [new tag]           v1.10.46                -> v1.10.46
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3759725Z  * [new tag]           v1.10.47                -> v1.10.47
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3760120Z  * [new tag]           v1.10.48                -> v1.10.48
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3760438Z  * [new tag]           v1.10.49                -> v1.10.49
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3760734Z  * [new tag]           v1.10.5                 -> v1.10.5
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3761228Z  * [new tag]           v1.10.50                -> v1.10.50
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3761559Z  * [new tag]           v1.10.51                -> v1.10.51
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3761876Z  * [new tag]           v1.10.52                -> v1.10.52
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3762221Z  * [new tag]           v1.10.53                -> v1.10.53
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3762519Z  * [new tag]           v1.10.54                -> v1.10.54
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3762803Z  * [new tag]           v1.10.55                -> v1.10.55
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3763264Z  * [new tag]           v1.10.56                -> v1.10.56
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3763552Z  * [new tag]           v1.10.57                -> v1.10.57
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3763846Z  * [new tag]           v1.10.58                -> v1.10.58
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3764192Z  * [new tag]           v1.10.59                -> v1.10.59
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3764492Z  * [new tag]           v1.10.6                 -> v1.10.6
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3764894Z  * [new tag]           v1.10.60                -> v1.10.60
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3765271Z  * [new tag]           v1.10.61                -> v1.10.61
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3765609Z  * [new tag]           v1.10.62                -> v1.10.62
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3765921Z  * [new tag]           v1.10.63                -> v1.10.63
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3766219Z  * [new tag]           v1.10.64                -> v1.10.64
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3766539Z  * [new tag]           v1.10.65                -> v1.10.65
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3766832Z  * [new tag]           v1.10.66                -> v1.10.66
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3767117Z  * [new tag]           v1.10.67                -> v1.10.67
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3767458Z  * [new tag]           v1.10.68                -> v1.10.68
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3767756Z  * [new tag]           v1.10.69                -> v1.10.69
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3768078Z  * [new tag]           v1.10.7                 -> v1.10.7
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3768379Z  * [new tag]           v1.10.70                -> v1.10.70
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3768662Z  * [new tag]           v1.10.71                -> v1.10.71
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3768982Z  * [new tag]           v1.10.8                 -> v1.10.8
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3769285Z  * [new tag]           v1.10.9                 -> v1.10.9
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3769709Z  * [new tag]           v1.12.0                 -> v1.12.0
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3770006Z  * [new tag]           v1.12.1                 -> v1.12.1
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3770304Z  * [new tag]           v1.12.2                 -> v1.12.2
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3770649Z  * [new tag]           v1.12.3                 -> v1.12.3
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3771207Z  * [new tag]           v1.12.4                 -> v1.12.4
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3771910Z  * [new tag]           v1.12.5                 -> v1.12.5
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3772292Z  * [new tag]           v1.12.6                 -> v1.12.6
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3772654Z  * [new tag]           v1.12.7                 -> v1.12.7
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3773095Z  * [new tag]           v1.12.8                 -> v1.12.8
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3773490Z  * [new tag]           v1.12.9                 -> v1.12.9
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3773927Z  * [new tag]           v1.13.0                 -> v1.13.0
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3774359Z  * [new tag]           v1.13.1                 -> v1.13.1
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3774778Z  * [new tag]           v1.13.2                 -> v1.13.2
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3775211Z  * [new tag]           v1.13.3                 -> v1.13.3
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3775609Z  * [new tag]           v1.13.4                 -> v1.13.4
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3776000Z  * [new tag]           v1.13.5                 -> v1.13.5
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3776436Z  * [new tag]           v1.13.6                 -> v1.13.6
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3776790Z  * [new tag]           v1.13.7                 -> v1.13.7
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3777182Z  * [new tag]           v1.14.0                 -> v1.14.0
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3777550Z  * [new tag]           v1.14.1                 -> v1.14.1
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3777922Z  * [new tag]           v1.15.0                 -> v1.15.0
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3778312Z  * [new tag]           v1.15.1                 -> v1.15.1
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3778699Z  * [new tag]           v1.16.0                 -> v1.16.0
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3779104Z  * [new tag]           v1.16.1                 -> v1.16.1
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3779570Z  * [new tag]           v1.17.0                 -> v1.17.0
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3779943Z  * [new tag]           v1.17.1                 -> v1.17.1
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3780369Z  * [new tag]           v1.17.2                 -> v1.17.2
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3781178Z  * [new tag]           v1.18.0                 -> v1.18.0
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3781597Z  * [new tag]           v1.18.1                 -> v1.18.1
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3782007Z  * [new tag]           v1.19.0                 -> v1.19.0
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3782380Z  * [new tag]           v1.19.1                 -> v1.19.1
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3782781Z  * [new tag]           v1.2.0                  -> v1.2.0
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3783217Z  * [new tag]           v1.20.0                 -> v1.20.0
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3783601Z  * [new tag]           v1.21.0                 -> v1.21.0
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3784016Z  * [new tag]           v1.21.1                 -> v1.21.1
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3784422Z  * [new tag]           v1.21.10                -> v1.21.10
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3784847Z  * [new tag]           v1.21.100               -> v1.21.100
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3785231Z  * [new tag]           v1.21.101               -> v1.21.101
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3785662Z  * [new tag]           v1.21.102               -> v1.21.102
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3786094Z  * [new tag]           v1.21.103               -> v1.21.103
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3786523Z  * [new tag]           v1.21.104               -> v1.21.104
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3786932Z  * [new tag]           v1.21.105               -> v1.21.105
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3787308Z  * [new tag]           v1.21.106               -> v1.21.106
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3787686Z  * [new tag]           v1.21.107               -> v1.21.107
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3788126Z  * [new tag]           v1.21.108               -> v1.21.108
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3788542Z  * [new tag]           v1.21.109               -> v1.21.109
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3788965Z  * [new tag]           v1.21.11                -> v1.21.11
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3789554Z  * [new tag]           v1.21.110               -> v1.21.110
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3789961Z  * [new tag]           v1.21.111               -> v1.21.111
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3790415Z  * [new tag]           v1.21.112               -> v1.21.112
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3790820Z  * [new tag]           v1.21.113               -> v1.21.113
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3791517Z  * [new tag]           v1.21.114               -> v1.21.114
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3791941Z  * [new tag]           v1.21.12                -> v1.21.12
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3792355Z  * [new tag]           v1.21.13                -> v1.21.13
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3792804Z  * [new tag]           v1.21.14                -> v1.21.14
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3793246Z  * [new tag]           v1.21.15                -> v1.21.15
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3793647Z  * [new tag]           v1.21.16                -> v1.21.16
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3794065Z  * [new tag]           v1.21.17                -> v1.21.17
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3794466Z  * [new tag]           v1.21.18                -> v1.21.18
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3794910Z  * [new tag]           v1.21.19                -> v1.21.19
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3795324Z  * [new tag]           v1.21.2                 -> v1.21.2
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3795711Z  * [new tag]           v1.21.20                -> v1.21.20
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3796143Z  * [new tag]           v1.21.21                -> v1.21.21
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3796598Z  * [new tag]           v1.21.22                -> v1.21.22
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3797021Z  * [new tag]           v1.21.23                -> v1.21.23
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3797422Z  * [new tag]           v1.21.24                -> v1.21.24
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3797800Z  * [new tag]           v1.21.25                -> v1.21.25
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3798221Z  * [new tag]           v1.21.26                -> v1.21.26
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3798623Z  * [new tag]           v1.21.27                -> v1.21.27
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3799048Z  * [new tag]           v1.21.28                -> v1.21.28
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3799591Z  * [new tag]           v1.21.29                -> v1.21.29
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3800024Z  * [new tag]           v1.21.3                 -> v1.21.3
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3800477Z  * [new tag]           v1.21.30                -> v1.21.30
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3801234Z  * [new tag]           v1.21.31                -> v1.21.31
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3801657Z  * [new tag]           v1.21.32                -> v1.21.32
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3802077Z  * [new tag]           v1.21.33                -> v1.21.33
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3802496Z  * [new tag]           v1.21.34                -> v1.21.34
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3802945Z  * [new tag]           v1.21.35                -> v1.21.35
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3803373Z  * [new tag]           v1.21.36                -> v1.21.36
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3803818Z  * [new tag]           v1.21.37                -> v1.21.37
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3804226Z  * [new tag]           v1.21.38                -> v1.21.38
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3804630Z  * [new tag]           v1.21.39                -> v1.21.39
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3805049Z  * [new tag]           v1.21.4                 -> v1.21.4
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3805476Z  * [new tag]           v1.21.40                -> v1.21.40
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3805870Z  * [new tag]           v1.21.41                -> v1.21.41
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3806328Z  * [new tag]           v1.21.42                -> v1.21.42
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3806766Z  * [new tag]           v1.21.43                -> v1.21.43
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3807238Z  * [new tag]           v1.21.44                -> v1.21.44
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3807658Z  * [new tag]           v1.21.45                -> v1.21.45
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3808045Z  * [new tag]           v1.21.46                -> v1.21.46
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3808477Z  * [new tag]           v1.21.47                -> v1.21.47
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3808885Z  * [new tag]           v1.21.48                -> v1.21.48
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3809292Z  * [new tag]           v1.21.49                -> v1.21.49
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3809727Z  * [new tag]           v1.21.5                 -> v1.21.5
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3810256Z  * [new tag]           v1.21.50                -> v1.21.50
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3810674Z  * [new tag]           v1.21.51                -> v1.21.51
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3811264Z  * [new tag]           v1.21.52                -> v1.21.52
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3811654Z  * [new tag]           v1.21.53                -> v1.21.53
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3812077Z  * [new tag]           v1.21.54                -> v1.21.54
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3812503Z  * [new tag]           v1.21.55                -> v1.21.55
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3812943Z  * [new tag]           v1.21.56                -> v1.21.56
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3813357Z  * [new tag]           v1.21.57                -> v1.21.57
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3813820Z  * [new tag]           v1.21.58                -> v1.21.58
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3814270Z  * [new tag]           v1.21.59                -> v1.21.59
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3814697Z  * [new tag]           v1.21.6                 -> v1.21.6
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3815150Z  * [new tag]           v1.21.60                -> v1.21.60
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3815579Z  * [new tag]           v1.21.61                -> v1.21.61
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3816138Z  * [new tag]           v1.21.62                -> v1.21.62
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3816618Z  * [new tag]           v1.21.63                -> v1.21.63
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3817042Z  * [new tag]           v1.21.64                -> v1.21.64
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3817508Z  * [new tag]           v1.21.65                -> v1.21.65
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3817921Z  * [new tag]           v1.21.66                -> v1.21.66
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3818331Z  * [new tag]           v1.21.67                -> v1.21.67
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3818790Z  * [new tag]           v1.21.68                -> v1.21.68
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3819201Z  * [new tag]           v1.21.69                -> v1.21.69
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3819620Z  * [new tag]           v1.21.7                 -> v1.21.7
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3820053Z  * [new tag]           v1.21.70                -> v1.21.70
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3820477Z  * [new tag]           v1.21.71                -> v1.21.71
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3828269Z  * [new tag]           v1.21.72                -> v1.21.72
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3828817Z  * [new tag]           v1.21.73                -> v1.21.73
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3829444Z  * [new tag]           v1.21.74                -> v1.21.74
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3829889Z  * [new tag]           v1.21.75                -> v1.21.75
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3830340Z  * [new tag]           v1.21.76                -> v1.21.76
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3830778Z  * [new tag]           v1.21.77                -> v1.21.77
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3831430Z  * [new tag]           v1.21.78                -> v1.21.78
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3831899Z  * [new tag]           v1.21.79                -> v1.21.79
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3832339Z  * [new tag]           v1.21.8                 -> v1.21.8
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3832786Z  * [new tag]           v1.21.80                -> v1.21.80
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3833229Z  * [new tag]           v1.21.81                -> v1.21.81
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3833645Z  * [new tag]           v1.21.82                -> v1.21.82
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3834049Z  * [new tag]           v1.21.83                -> v1.21.83
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3834499Z  * [new tag]           v1.21.84                -> v1.21.84
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3834937Z  * [new tag]           v1.21.85                -> v1.21.85
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3835403Z  * [new tag]           v1.21.86                -> v1.21.86
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3835837Z  * [new tag]           v1.21.87                -> v1.21.87
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3836243Z  * [new tag]           v1.21.88                -> v1.21.88
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3836710Z  * [new tag]           v1.21.89                -> v1.21.89
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3837199Z  * [new tag]           v1.21.9                 -> v1.21.9
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3837626Z  * [new tag]           v1.21.90                -> v1.21.90
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3838052Z  * [new tag]           v1.21.91                -> v1.21.91
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3838581Z  * [new tag]           v1.21.92                -> v1.21.92
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3839076Z  * [new tag]           v1.21.93                -> v1.21.93
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3839631Z  * [new tag]           v1.21.94                -> v1.21.94
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3840085Z  * [new tag]           v1.21.95                -> v1.21.95
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3840533Z  * [new tag]           v1.21.96                -> v1.21.96
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3841139Z  * [new tag]           v1.21.97                -> v1.21.97
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3841632Z  * [new tag]           v1.21.98                -> v1.21.98
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3842072Z  * [new tag]           v1.21.99                -> v1.21.99
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3842502Z  * [new tag]           v1.22.0                 -> v1.22.0
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3842980Z  * [new tag]           v1.22.1                 -> v1.22.1
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3843399Z  * [new tag]           v1.22.10                -> v1.22.10
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3843872Z  * [new tag]           v1.22.11                -> v1.22.11
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3844293Z  * [new tag]           v1.22.12                -> v1.22.12
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3844696Z  * [new tag]           v1.22.13                -> v1.22.13
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3845142Z  * [new tag]           v1.22.14                -> v1.22.14
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3845559Z  * [new tag]           v1.22.15                -> v1.22.15
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3845966Z  * [new tag]           v1.22.16                -> v1.22.16
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3846452Z  * [new tag]           v1.22.17                -> v1.22.17
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3846853Z  * [new tag]           v1.22.18                -> v1.22.18
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3847291Z  * [new tag]           v1.22.19                -> v1.22.19
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3847708Z  * [new tag]           v1.22.2                 -> v1.22.2
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3848158Z  * [new tag]           v1.22.20                -> v1.22.20
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3848574Z  * [new tag]           v1.22.21                -> v1.22.21
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3848993Z  * [new tag]           v1.22.22                -> v1.22.22
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3849457Z  * [new tag]           v1.22.23                -> v1.22.23
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3849899Z  * [new tag]           v1.22.24                -> v1.22.24
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3850622Z  * [new tag]           v1.22.25                -> v1.22.25
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3851239Z  * [new tag]           v1.22.26                -> v1.22.26
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3851667Z  * [new tag]           v1.22.27                -> v1.22.27
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3852368Z  * [new tag]           v1.22.28                -> v1.22.28
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3852780Z  * [new tag]           v1.22.29                -> v1.22.29
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3853210Z  * [new tag]           v1.22.3                 -> v1.22.3
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3853702Z  * [new tag]           v1.22.30                -> v1.22.30
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3854126Z  * [new tag]           v1.22.31                -> v1.22.31
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3854547Z  * [new tag]           v1.22.32                -> v1.22.32
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3854966Z  * [new tag]           v1.22.33                -> v1.22.33
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3855394Z  * [new tag]           v1.22.34                -> v1.22.34
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3855837Z  * [new tag]           v1.22.35                -> v1.22.35
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3856257Z  * [new tag]           v1.22.36                -> v1.22.36
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3856669Z  * [new tag]           v1.22.37                -> v1.22.37
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3857152Z  * [new tag]           v1.22.38                -> v1.22.38
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3857554Z  * [new tag]           v1.22.39                -> v1.22.39
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3857999Z  * [new tag]           v1.22.4                 -> v1.22.4
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3858425Z  * [new tag]           v1.22.40                -> v1.22.40
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3858851Z  * [new tag]           v1.22.41                -> v1.22.41
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3859278Z  * [new tag]           v1.22.42                -> v1.22.42
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3859723Z  * [new tag]           v1.22.43                -> v1.22.43
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3860248Z  * [new tag]           v1.22.44                -> v1.22.44
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3860698Z  * [new tag]           v1.22.45                -> v1.22.45
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3861310Z  * [new tag]           v1.22.46                -> v1.22.46
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3861777Z  * [new tag]           v1.22.47                -> v1.22.47
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3862196Z  * [new tag]           v1.22.48                -> v1.22.48
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3862634Z  * [new tag]           v1.22.49                -> v1.22.49
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3863048Z  * [new tag]           v1.22.50                -> v1.22.50
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3863454Z  * [new tag]           v1.22.51                -> v1.22.51
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3863916Z  * [new tag]           v1.22.52                -> v1.22.52
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3864371Z  * [new tag]           v1.22.53                -> v1.22.53
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3864799Z  * [new tag]           v1.22.54                -> v1.22.54
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3865217Z  * [new tag]           v1.22.55                -> v1.22.55
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3865617Z  * [new tag]           v1.22.56                -> v1.22.56
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3866080Z  * [new tag]           v1.22.57                -> v1.22.57
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3866505Z  * [new tag]           v1.22.58                -> v1.22.58
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3866919Z  * [new tag]           v1.22.59                -> v1.22.59
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3867387Z  * [new tag]           v1.22.6                 -> v1.22.6
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3867792Z  * [new tag]           v1.22.60                -> v1.22.60
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3868262Z  * [new tag]           v1.22.61                -> v1.22.61
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3868682Z  * [new tag]           v1.22.62                -> v1.22.62
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3869107Z  * [new tag]           v1.22.63                -> v1.22.63
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3869537Z  * [new tag]           v1.22.64                -> v1.22.64
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3869953Z  * [new tag]           v1.22.65                -> v1.22.65
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3870411Z  * [new tag]           v1.22.66                -> v1.22.66
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3879596Z  * [new tag]           v1.22.7                 -> v1.22.7
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3880276Z  * [new tag]           v1.22.8                 -> v1.22.8
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3881104Z  * [new tag]           v1.22.9                 -> v1.22.9
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3881577Z  * [new tag]           v1.3.0                  -> v1.3.0
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3882057Z  * [new tag]           v1.4.0                  -> v1.4.0
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3882495Z  * [new tag]           v1.4.1                  -> v1.4.1
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3882914Z  * [new tag]           v1.4.2                  -> v1.4.2
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3883359Z  * [new tag]           v1.4.3                  -> v1.4.3
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3883817Z  * [new tag]           v1.4.4                  -> v1.4.4
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3884246Z  * [new tag]           v1.4.5                  -> v1.4.5
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3884649Z  * [new tag]           v1.5.0                  -> v1.5.0
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3885064Z  * [new tag]           v1.5.1                  -> v1.5.1
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3885582Z  * [new tag]           v1.5.10                 -> v1.5.10
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3886039Z  * [new tag]           v1.5.11                 -> v1.5.11
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3886498Z  * [new tag]           v1.5.2                  -> v1.5.2
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3886924Z  * [new tag]           v1.5.3                  -> v1.5.3
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3887378Z  * [new tag]           v1.5.4                  -> v1.5.4
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3887798Z  * [new tag]           v1.5.5                  -> v1.5.5
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3888255Z  * [new tag]           v1.5.6                  -> v1.5.6
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3888692Z  * [new tag]           v1.5.7                  -> v1.5.7
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3889116Z  * [new tag]           v1.5.8                  -> v1.5.8
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3889534Z  * [new tag]           v1.5.9                  -> v1.5.9
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3889979Z  * [new tag]           v1.6.0                  -> v1.6.0
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3890515Z  * [new tag]           v1.6.1                  -> v1.6.1
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3891510Z  * [new tag]           v1.6.2                  -> v1.6.2
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3892088Z  * [new tag]           v1.6.3                  -> v1.6.3
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3892514Z  * [new tag]           v1.6.4                  -> v1.6.4
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3892977Z  * [new tag]           v1.6.5                  -> v1.6.5
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3893437Z  * [new tag]           v1.6.6                  -> v1.6.6
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3893953Z  * [new tag]           v1.6.7                  -> v1.6.7
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3894391Z  * [new tag]           v1.7.0                  -> v1.7.0
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3894807Z  * [new tag]           v1.7.1                  -> v1.7.1
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3895301Z  * [new tag]           v1.7.10                 -> v1.7.10
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3895753Z  * [new tag]           v1.7.11                 -> v1.7.11
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3896181Z  * [new tag]           v1.7.12                 -> v1.7.12
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3896636Z  * [new tag]           v1.7.13                 -> v1.7.13
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3897065Z  * [new tag]           v1.7.14                 -> v1.7.14
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3897503Z  * [new tag]           v1.7.2                  -> v1.7.2
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3897950Z  * [new tag]           v1.7.3                  -> v1.7.3
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3898414Z  * [new tag]           v1.7.4                  -> v1.7.4
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3898864Z  * [new tag]           v1.7.5                  -> v1.7.5
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3899281Z  * [new tag]           v1.7.6                  -> v1.7.6
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3899711Z  * [new tag]           v1.7.7                  -> v1.7.7
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3900144Z  * [new tag]           v1.7.8                  -> v1.7.8
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3900571Z  * [new tag]           v1.7.9                  -> v1.7.9
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3901255Z  * [new tag]           v1.8.0                  -> v1.8.0
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3901686Z  * [new tag]           v1.8.1                  -> v1.8.1
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3902182Z  * [new tag]           v1.8.10                 -> v1.8.10
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3902604Z  * [new tag]           v1.8.11                 -> v1.8.11
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3903107Z  * [new tag]           v1.8.12                 -> v1.8.12
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3903549Z  * [new tag]           v1.8.13                 -> v1.8.13
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3903968Z  * [new tag]           v1.8.14                 -> v1.8.14
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3904413Z  * [new tag]           v1.8.15                 -> v1.8.15
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3904836Z  * [new tag]           v1.8.2                  -> v1.8.2
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3905256Z  * [new tag]           v1.8.3                  -> v1.8.3
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3905713Z  * [new tag]           v1.8.4                  -> v1.8.4
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3906124Z  * [new tag]           v1.8.5                  -> v1.8.5
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3906556Z  * [new tag]           v1.8.6                  -> v1.8.6
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3906988Z  * [new tag]           v1.8.7                  -> v1.8.7
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3907403Z  * [new tag]           v1.8.8                  -> v1.8.8
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3907823Z  * [new tag]           v1.8.9                  -> v1.8.9
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3908242Z  * [new tag]           v1.9.0                  -> v1.9.0
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3908654Z  * [new tag]           v1.9.1                  -> v1.9.1
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3909114Z  * [new tag]           v1.9.2                  -> v1.9.2
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3909527Z  * [new tag]           v1.9.3                  -> v1.9.3
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3909939Z  * [new tag]           v1.9.4                  -> v1.9.4
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3910355Z  * [new tag]           v1.9.5                  -> v1.9.5
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3910767Z  * [new tag]           v1.9.6                  -> v1.9.6
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3912393Z [command]/usr/bin/git rev-parse --verify --quiet bb668d9658256c49671b38761be910f959445f4f^{object}
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3913150Z bb668d9658256c49671b38761be910f959445f4f
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3914271Z ##[endgroup]
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3914801Z ##[group]Determining the checkout info
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3915380Z ##[endgroup]
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3915720Z [command]/usr/bin/git sparse-checkout disable
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3916634Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3917742Z ##[group]Checking out the ref
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:33.3918251Z [command]/usr/bin/git checkout --progress --force bb668d9658256c49671b38761be910f959445f4f
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:34.3461002Z Note: switching to 'bb668d9658256c49671b38761be910f959445f4f'.
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:34.3462515Z 
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:34.3462995Z You are in 'detached HEAD' state. You can look around, make experimental
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:34.3463779Z changes and commit them, and you can discard any commits you make in this
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:34.3464355Z state without impacting any branches by switching back to a branch.
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:34.3464695Z 
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:34.3464947Z If you want to create a new branch to retain commits you create, you may
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:34.3465521Z do so (now or later) by using -c with the switch command. Example:
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:34.3465808Z 
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:34.3465991Z   git switch -c <new-branch-name>
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:34.3466188Z 
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:34.3466378Z Or undo this operation with:
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:34.3466593Z 
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:34.3466698Z   git switch -
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:34.3466869Z 
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:34.3467095Z Turn off this advice by setting config variable advice.detachedHead to false
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:34.3467490Z 
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:34.3467716Z HEAD is now at bb668d96 Prepare guarded publication for validated build 2282
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:34.3502961Z ##[endgroup]
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:34.3541579Z [command]/usr/bin/git log -1 --format=%H
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:34.3563192Z bb668d9658256c49671b38761be910f959445f4f
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:34.3571047Z ##[group]Removing auth
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:34.3574832Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:34.3599559Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:34.3756515Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:34.3779243Z http.https://github.com/.extraheader
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:34.3786262Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:34.3805602Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:34.3964764Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:34.3987911Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+guarded-release-publisher	Run actions/checkout@v4	2026-11-26T06:54:34.4134945Z ##[endgroup]
+guarded-release-publisher	Run actions/setup-python@v5	﻿2026-11-26T06:54:34.4327283Z ##[group]Run actions/setup-python@v5
+guarded-release-publisher	Run actions/setup-python@v5	2026-11-26T06:54:34.4327571Z with:
+guarded-release-publisher	Run actions/setup-python@v5	2026-11-26T06:54:34.4327778Z   python-version: 3.12
+guarded-release-publisher	Run actions/setup-python@v5	2026-11-26T06:54:34.4328029Z   check-latest: false
+guarded-release-publisher	Run actions/setup-python@v5	2026-11-26T06:54:34.4330007Z   token: ***
+guarded-release-publisher	Run actions/setup-python@v5	2026-11-26T06:54:34.4330228Z   update-environment: true
+guarded-release-publisher	Run actions/setup-python@v5	2026-11-26T06:54:34.4330528Z   allow-prereleases: false
+guarded-release-publisher	Run actions/setup-python@v5	2026-11-26T06:54:34.4330754Z   freethreaded: false
+guarded-release-publisher	Run actions/setup-python@v5	2026-11-26T06:54:34.4331248Z env:
+guarded-release-publisher	Run actions/setup-python@v5	2026-11-26T06:54:34.4331492Z   NODE_OPTIONS: --max-old-space-size=256
+guarded-release-publisher	Run actions/setup-python@v5	2026-11-26T06:54:34.4331757Z ##[endgroup]
+guarded-release-publisher	Run actions/setup-python@v5	2026-11-26T06:54:34.5340165Z ##[group]Installed versions
+guarded-release-publisher	Run actions/setup-python@v5	2026-11-26T06:54:34.7008944Z (node:2262) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+guarded-release-publisher	Run actions/setup-python@v5	2026-11-26T06:54:34.7009836Z (Use `node --trace-deprecation ...` to show where the warning was created)
+guarded-release-publisher	Run actions/setup-python@v5	2026-11-26T06:54:34.7022189Z Successfully set up CPython (3.12.16)
+guarded-release-publisher	Run actions/setup-python@v5	2026-11-26T06:54:34.7031764Z ##[endgroup]
+guarded-release-publisher	Publisher guard regression and compilation	﻿2026-11-26T06:54:34.7098730Z ##[group]Run python -m unittest -v tests.test_release_publisher
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:34.7099263Z [36;1mpython -m unittest -v tests.test_release_publisher[0m
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:34.7099704Z [36;1mpython -m compileall -q tools/release tests/test_release_publisher.py[0m
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:34.7100078Z [36;1mgit diff --check[0m
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:34.9350763Z shell: /usr/bin/bash -e {0}
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:34.9351537Z env:
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:34.9352083Z   NODE_OPTIONS: --max-old-space-size=256
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:34.9352504Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:34.9352937Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:34.9353328Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:34.9353684Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:34.9354075Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:34.9354428Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:34.9354891Z ##[endgroup]
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.8391852Z test_acquisition_controls_cannot_be_omitted_from_plan (tests.test_release_publisher.AcquisitionPublicationTests.test_acquisition_controls_cannot_be_omitted_from_plan) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.8399956Z test_recovery_requires_exact_source_completed_resources_and_phone_data (tests.test_release_publisher.AcquisitionPublicationTests.test_recovery_requires_exact_source_completed_resources_and_phone_data) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.8436219Z test_twenty_exact_completed_controls_required (tests.test_release_publisher.AcquisitionPublicationTests.test_twenty_exact_completed_controls_required) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.8472854Z test_complete_typed_and_actual_retry_controls (tests.test_release_publisher.ActivationEvidenceIntegrityTests.test_complete_typed_and_actual_retry_controls) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.8497293Z test_deferred_retry_is_not_completion (tests.test_release_publisher.ActivationEvidenceIntegrityTests.test_deferred_retry_is_not_completion) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.8544585Z test_fixture_cannot_claim_live_access (tests.test_release_publisher.ActivationEvidenceIntegrityTests.test_fixture_cannot_claim_live_access) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.8568986Z test_generic_error_is_not_typed_deferral (tests.test_release_publisher.ActivationEvidenceIntegrityTests.test_generic_error_is_not_typed_deferral) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.8645528Z test_missing_phone_or_changed_account_cannot_pass (tests.test_release_publisher.ActivationEvidenceIntegrityTests.test_missing_phone_or_changed_account_cannot_pass) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.8715490Z test_wrong_source_cannot_pass (tests.test_release_publisher.ActivationEvidenceIntegrityTests.test_wrong_source_cannot_pass) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.8732381Z test_canonical_checksum_sidecar_cannot_disagree_with_manifest (tests.test_release_publisher.ArchiveIntegrityTests.test_canonical_checksum_sidecar_cannot_disagree_with_manifest) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.8748502Z test_complete_local_validation_is_required_in_recovery (tests.test_release_publisher.ArchiveIntegrityTests.test_complete_local_validation_is_required_in_recovery) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.8758876Z test_complete_source_pinned_evidence (tests.test_release_publisher.ArchiveIntegrityTests.test_complete_source_pinned_evidence) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.8762763Z test_credential_shaped_payload_holds_publication (tests.test_release_publisher.ArchiveIntegrityTests.test_credential_shaped_payload_holds_publication) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.8796821Z test_failure_skip_and_incomplete_tests_fail (tests.test_release_publisher.ArchiveIntegrityTests.test_failure_skip_and_incomplete_tests_fail) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.8804536Z test_incomplete_local_validation_holds_publication (tests.test_release_publisher.ArchiveIntegrityTests.test_incomplete_local_validation_holds_publication) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.8813980Z test_local_checksum_sidecar_is_required (tests.test_release_publisher.ArchiveIntegrityTests.test_local_checksum_sidecar_is_required) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.8839586Z test_local_manifest_and_every_payload_are_required (tests.test_release_publisher.ArchiveIntegrityTests.test_local_manifest_and_every_payload_are_required) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.8850199Z test_missing_gate_completion_fails (tests.test_release_publisher.ArchiveIntegrityTests.test_missing_gate_completion_fails) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.8859182Z test_older_python_cannot_replace_local_canonical (tests.test_release_publisher.ArchiveIntegrityTests.test_older_python_cannot_replace_local_canonical) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.8868711Z test_older_python_cannot_replace_production_canonical (tests.test_release_publisher.ArchiveIntegrityTests.test_older_python_cannot_replace_production_canonical) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.8877446Z test_path_escape_and_symlink_fail (tests.test_release_publisher.ArchiveIntegrityTests.test_path_escape_and_symlink_fail) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.8893500Z test_payload_changed_after_manifest_fails (tests.test_release_publisher.ArchiveIntegrityTests.test_payload_changed_after_manifest_fails) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.8901169Z test_prior_archive_hash_cannot_be_substituted (tests.test_release_publisher.ArchiveIntegrityTests.test_prior_archive_hash_cannot_be_substituted) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.8936298Z test_prior_attempts_require_their_own_source_association_and_payload_manifest (tests.test_release_publisher.ArchiveIntegrityTests.test_prior_attempts_require_their_own_source_association_and_payload_manifest) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.8968833Z test_wrong_source_and_resource_limit_fail (tests.test_release_publisher.ArchiveIntegrityTests.test_wrong_source_and_resource_limit_fail) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.9151805Z test_completed_feature_fail_closed_source_counts_unknown_and_interaction (tests.test_release_publisher.CompletedTradePublisherTests.test_completed_feature_fail_closed_source_counts_unknown_and_interaction) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.9189556Z test_new_browser_namespace_does_not_replace_original_history_screenshots (tests.test_release_publisher.CompletedTradePublisherTests.test_new_browser_namespace_does_not_replace_original_history_screenshots) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.9201710Z test_advanced_main_does_not_publish_old_merge (tests.test_release_publisher.ContextAdmissionTests.test_advanced_main_does_not_publish_old_merge) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.9211412Z test_candidate_revision_change_is_rejected (tests.test_release_publisher.ContextAdmissionTests.test_candidate_revision_change_is_rejected) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.9231540Z test_merged_identical_tree_is_required (tests.test_release_publisher.ContextAdmissionTests.test_merged_identical_tree_is_required) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.9241439Z test_prepare_accepts_only_unchanged_open_candidate (tests.test_release_publisher.ContextAdmissionTests.test_prepare_accepts_only_unchanged_open_candidate) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.9251015Z test_publish_refuses_unmerged_candidate (tests.test_release_publisher.ContextAdmissionTests.test_publish_refuses_unmerged_candidate) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.9256767Z test_rejected_context_has_no_upload_or_tag_side_effect (tests.test_release_publisher.ContextAdmissionTests.test_rejected_context_has_no_upload_or_tag_side_effect) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.9265923Z test_tooling_branch_cannot_smuggle_application_changes (tests.test_release_publisher.ContextAdmissionTests.test_tooling_branch_cannot_smuggle_application_changes) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.9302745Z test_wrong_actor_event_ref_and_repository_fail (tests.test_release_publisher.ContextAdmissionTests.test_wrong_actor_event_ref_and_repository_fail) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.9436912Z test_only_complete_exact_source_browser_evidence_is_accepted (tests.test_release_publisher.CurrentHistoryArtifactTests.test_only_complete_exact_source_browser_evidence_is_accepted) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:36.9763715Z test_exact_coverage_missing_safety_and_rendered_controls_are_required (tests.test_release_publisher.CurrentProductionIntegrityTests.test_exact_coverage_missing_safety_and_rendered_controls_are_required) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:37.0063632Z test_changed_png_bytes_and_missing_qualification_fail (tests.test_release_publisher.CustomerAcceptancePublicationTests.test_changed_png_bytes_and_missing_qualification_fail) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:37.0432962Z test_complete_corrective_proof (tests.test_release_publisher.CustomerAcceptancePublicationTests.test_complete_corrective_proof) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:37.1532172Z test_missing_source_or_viewport_is_rejected (tests.test_release_publisher.CustomerAcceptancePublicationTests.test_missing_source_or_viewport_is_rejected) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:37.2358004Z test_json_zero_integer_and_float_are_same_exact_score_not_boolean (tests.test_release_publisher.CustomerActualContractFormattingTests.test_json_zero_integer_and_float_are_same_exact_score_not_boolean) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:37.3104328Z test_primary_copy_can_remain_same_size_without_invented_larger_measurement (tests.test_release_publisher.CustomerActualContractFormattingTests.test_primary_copy_can_remain_same_size_without_invented_larger_measurement) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:37.3113266Z test_alias_from_other_pr_or_mismatched_tree_cannot_pass (tests.test_release_publisher.CustomerBaselineAliasTests.test_alias_from_other_pr_or_mismatched_tree_cannot_pass) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:37.3115670Z test_final_release_plan_aliases_match_its_actual_baseline (tests.test_release_publisher.CustomerBaselineAliasTests.test_final_release_plan_aliases_match_its_actual_baseline) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:37.3116898Z test_finalized_plan_transport_leaves_room_under_unchanged_aggregate_cap (tests.test_release_publisher.CustomerBaselineAliasTests.test_finalized_plan_transport_leaves_room_under_unchanged_aggregate_cap) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:37.3118133Z test_new_guards_are_required_by_actual_collector (tests.test_release_publisher.CustomerBaselineAliasTests.test_new_guards_are_required_by_actual_collector) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:37.3123395Z test_reviewed_premerge_alias_requires_actual_merged_pr_and_exact_tree (tests.test_release_publisher.CustomerBaselineAliasTests.test_reviewed_premerge_alias_requires_actual_merged_pr_and_exact_tree) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:37.3614900Z test_all_families_four_sizes_states_and_matched_visuals_required (tests.test_release_publisher.CustomerExperiencePublicationTests.test_all_families_four_sizes_states_and_matched_visuals_required) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:37.4102360Z test_equal_fabricated_summary_cannot_override_the_retained_missing_value (tests.test_release_publisher.CustomerExperiencePublicationTests.test_equal_fabricated_summary_cannot_override_the_retained_missing_value) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:37.4766701Z test_exact_new_test_ids_must_finish_once_in_both_canonical_streams (tests.test_release_publisher.CustomerExperiencePublicationTests.test_exact_new_test_ids_must_finish_once_in_both_canonical_streams) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:37.6616541Z test_hidden_risk_extra_http_or_lost_state_cannot_pass (tests.test_release_publisher.CustomerExperiencePublicationTests.test_hidden_risk_extra_http_or_lost_state_cannot_pass) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:37.8148754Z test_missing_is_not_zero_and_decision_is_not_promoted (tests.test_release_publisher.CustomerExperiencePublicationTests.test_missing_is_not_zero_and_decision_is_not_promoted) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:37.8989323Z test_missing_page_size_or_expanded_evidence_cannot_pass (tests.test_release_publisher.CustomerExperiencePublicationTests.test_missing_page_size_or_expanded_evidence_cannot_pass) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:37.9744390Z test_missing_screenshots_checksum_or_visual_review_cannot_pass (tests.test_release_publisher.CustomerExperiencePublicationTests.test_missing_screenshots_checksum_or_visual_review_cannot_pass) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.0572980Z test_missing_states_or_unknown_qualifications_cannot_pass (tests.test_release_publisher.CustomerExperiencePublicationTests.test_missing_states_or_unknown_qualifications_cannot_pass) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.1065313Z test_resolved_data_loss_requires_a_matched_regression (tests.test_release_publisher.CustomerExperiencePublicationTests.test_resolved_data_loss_requires_a_matched_regression) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.2089571Z test_smaller_fonts_cannot_substitute_for_compact_cards (tests.test_release_publisher.CustomerExperiencePublicationTests.test_smaller_fonts_cannot_substitute_for_compact_cards) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.2934636Z test_unchanged_or_only_slightly_shorter_cards_cannot_pass (tests.test_release_publisher.CustomerExperiencePublicationTests.test_unchanged_or_only_slightly_shorter_cards_cannot_pass) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.3747193Z test_unknown_publication_state_is_explicitly_unsupported_not_complete (tests.test_release_publisher.CustomerExperiencePublicationTests.test_unknown_publication_state_is_explicitly_unsupported_not_complete) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.4967268Z test_wrong_source_or_unqualified_alias_is_rejected (tests.test_release_publisher.CustomerExperiencePublicationTests.test_wrong_source_or_unqualified_alias_is_rejected) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.4978503Z test_actual_regression_population_and_required_bound_case (tests.test_release_publisher.DraftCapitalEvidenceTests.test_actual_regression_population_and_required_bound_case) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.5001708Z test_complete_two_alternatives_at_both_league_shapes_and_four_sizes (tests.test_release_publisher.DraftCapitalEvidenceTests.test_complete_two_alternatives_at_both_league_shapes_and_four_sizes) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.5020585Z test_disclosure_requests_are_rejected (tests.test_release_publisher.DraftCapitalEvidenceTests.test_disclosure_requests_are_rejected) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.5039639Z test_distinct_original_firsts_cannot_be_replaced_by_another_scope (tests.test_release_publisher.DraftCapitalEvidenceTests.test_distinct_original_firsts_cannot_be_replaced_by_another_scope) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.5057461Z test_foreign_source_is_rejected (tests.test_release_publisher.DraftCapitalEvidenceTests.test_foreign_source_is_rejected) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.5075769Z test_mismatched_phone_capture_is_rejected (tests.test_release_publisher.DraftCapitalEvidenceTests.test_mismatched_phone_capture_is_rejected) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.5094495Z test_missing_alternative_is_rejected (tests.test_release_publisher.DraftCapitalEvidenceTests.test_missing_alternative_is_rejected) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.5113713Z test_truncated_record_is_rejected (tests.test_release_publisher.DraftCapitalEvidenceTests.test_truncated_record_is_rejected) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.5136286Z test_actual_test_population_needs_completion_without_failure (tests.test_release_publisher.FranchiseProgressPublicationTests.test_actual_test_population_needs_completion_without_failure) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.5176564Z test_partial_unknown_and_conversion_boundaries_cannot_be_promoted (tests.test_release_publisher.FranchiseProgressPublicationTests.test_partial_unknown_and_conversion_boundaries_cannot_be_promoted) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.5232757Z test_phone_journey_requires_period_and_conversion_return (tests.test_release_publisher.FranchiseProgressPublicationTests.test_phone_journey_requires_period_and_conversion_return) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.5464177Z test_all_four_distinct_viewports_and_images_are_required (tests.test_release_publisher.FrontOfficeWorkflowIntegrityTests.test_all_four_distinct_viewports_and_images_are_required) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.5561445Z test_build_2277_checks_exact_priority_button_text (tests.test_release_publisher.FrontOfficeWorkflowIntegrityTests.test_build_2277_checks_exact_priority_button_text) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.5935518Z test_comparison_source_package_order_and_supported_numbers_are_required (tests.test_release_publisher.FrontOfficeWorkflowIntegrityTests.test_comparison_source_package_order_and_supported_numbers_are_required) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.6005972Z test_distinct_actual_league_configurations_are_required (tests.test_release_publisher.FrontOfficeWorkflowIntegrityTests.test_distinct_actual_league_configurations_are_required) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.6107248Z test_effective_and_prior_protections_cannot_be_relabelled (tests.test_release_publisher.FrontOfficeWorkflowIntegrityTests.test_effective_and_prior_protections_cannot_be_relabelled) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.6145088Z test_explicit_zero_lineup_change_remains_supported_recorded_evidence (tests.test_release_publisher.FrontOfficeWorkflowIntegrityTests.test_explicit_zero_lineup_change_remains_supported_recorded_evidence) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.6248665Z test_extra_search_or_comparison_and_missing_replacement_requests_block (tests.test_release_publisher.FrontOfficeWorkflowIntegrityTests.test_extra_search_or_comparison_and_missing_replacement_requests_block) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.6406298Z test_fingerprint_reason_and_editable_choice_are_bound (tests.test_release_publisher.FrontOfficeWorkflowIntegrityTests.test_fingerprint_reason_and_editable_choice_are_bound) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.6538908Z test_foreign_or_dirty_source_and_claimed_live_scope_block (tests.test_release_publisher.FrontOfficeWorkflowIntegrityTests.test_foreign_or_dirty_source_and_claimed_live_scope_block) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.6813211Z test_history_reload_replacement_and_league_clearing_are_required (tests.test_release_publisher.FrontOfficeWorkflowIntegrityTests.test_history_reload_replacement_and_league_clearing_are_required) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.6915543Z test_independent_evaluate_locks_and_authorized_scope_are_required (tests.test_release_publisher.FrontOfficeWorkflowIntegrityTests.test_independent_evaluate_locks_and_authorized_scope_are_required) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.7081606Z test_missing_native_population_and_leaked_or_promoted_offers_block (tests.test_release_publisher.FrontOfficeWorkflowIntegrityTests.test_missing_native_population_and_leaked_or_promoted_offers_block) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.7118832Z test_missing_near_miss_verdict_is_retained_without_becoming_an_offer (tests.test_release_publisher.FrontOfficeWorkflowIntegrityTests.test_missing_near_miss_verdict_is_retained_without_becoming_an_offer) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.7476416Z test_missing_null_empty_or_malformed_pools_never_prove_exclusion (tests.test_release_publisher.FrontOfficeWorkflowIntegrityTests.test_missing_null_empty_or_malformed_pools_never_prove_exclusion) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.7512551Z test_missing_overall_verdict_and_partial_market_do_not_erase_supported_lineup (tests.test_release_publisher.FrontOfficeWorkflowIntegrityTests.test_missing_overall_verdict_and_partial_market_do_not_erase_supported_lineup) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.7557431Z test_native_qualification_is_preserved_without_requiring_endorsement (tests.test_release_publisher.FrontOfficeWorkflowIntegrityTests.test_native_qualification_is_preserved_without_requiring_endorsement) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.7591920Z test_recovery_uses_the_same_guard (tests.test_release_publisher.FrontOfficeWorkflowIntegrityTests.test_recovery_uses_the_same_guard) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.7629061Z test_zero_offers_are_valid_with_actual_nonempty_exclusion_pools (tests.test_release_publisher.FrontOfficeWorkflowIntegrityTests.test_zero_offers_are_valid_with_actual_nonempty_exclusion_pools) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.7787727Z test_exact_source_complete_chain_context_and_cleanup_are_required (tests.test_release_publisher.HistoryFollowThroughArtifactTests.test_exact_source_complete_chain_context_and_cleanup_are_required) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.7788784Z test_handoff_requires_exact_source_and_no_credentials (tests.test_release_publisher.LeagueEntryIntegrityTests.test_handoff_requires_exact_source_and_no_credentials) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.7882833Z test_real_execution_deferral_recovery_ownership_and_liveness_are_required (tests.test_release_publisher.LeagueEntryIntegrityTests.test_real_execution_deferral_recovery_ownership_and_liveness_are_required) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.8296450Z test_complete_cache_transition_compatibility_and_cleanup_required (tests.test_release_publisher.MarketHistoryArtifactTests.test_complete_cache_transition_compatibility_and_cleanup_required) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.8332936Z test_complete_source_bound_roundtrip_required (tests.test_release_publisher.MarketRosterEvidenceGuards.test_complete_source_bound_roundtrip_required) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.8365666Z test_implicit_search_or_lost_state_rejected (tests.test_release_publisher.MarketRosterEvidenceGuards.test_implicit_search_or_lost_state_rejected) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.8391939Z test_mismatched_phone_capture_rejected (tests.test_release_publisher.MarketRosterEvidenceGuards.test_mismatched_phone_capture_rejected) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.8428290Z test_missing_stale_protection_rejected (tests.test_release_publisher.MarketRosterEvidenceGuards.test_missing_stale_protection_rejected) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.8457362Z test_partial_viewport_population_rejected (tests.test_release_publisher.MarketRosterEvidenceGuards.test_partial_viewport_population_rejected) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.8488164Z test_touch_and_keyboard_proof_required (tests.test_release_publisher.MarketRosterEvidenceGuards.test_touch_and_keyboard_proof_required) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.8516285Z test_wrong_source_rejected (tests.test_release_publisher.MarketRosterEvidenceGuards.test_wrong_source_rejected) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.8523008Z test_complete_execution_population (tests.test_release_publisher.MarketRosterTestPopulationGuards.test_complete_execution_population) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.8528940Z test_duplicate_execution_rejected (tests.test_release_publisher.MarketRosterTestPopulationGuards.test_duplicate_execution_rejected) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.8534957Z test_missing_completion_rejected (tests.test_release_publisher.MarketRosterTestPopulationGuards.test_missing_completion_rejected) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.8540341Z test_unrelated_tests_do_not_fill_population (tests.test_release_publisher.MarketRosterTestPopulationGuards.test_unrelated_tests_do_not_fill_population) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.8550829Z test_completed_generic_recovery_does_not_replace_native_actuals_parity (tests.test_release_publisher.NativeRestorationAdmissionTests.test_completed_generic_recovery_does_not_replace_native_actuals_parity) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.8563790Z test_changed_child_original_is_rejected (tests.test_release_publisher.NestedPriorEvidenceTests.test_changed_child_original_is_rejected) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.8574476Z test_checked_child_preserves_original_records (tests.test_release_publisher.NestedPriorEvidenceTests.test_checked_child_preserves_original_records) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.8585317Z test_child_source_mismatch_is_rejected (tests.test_release_publisher.NestedPriorEvidenceTests.test_child_source_mismatch_is_rejected) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.8598503Z test_second_nested_layer_is_rejected (tests.test_release_publisher.NestedPriorEvidenceTests.test_second_nested_layer_is_rejected) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.8609309Z test_unsafe_child_path_is_rejected (tests.test_release_publisher.NestedPriorEvidenceTests.test_unsafe_child_path_is_rejected) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.8613707Z test_all_ten_real_normal_execution_controls_are_required (tests.test_release_publisher.NormalExecutionRecoveryTests.test_all_ten_real_normal_execution_controls_are_required) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.8636152Z test_missing_duplicate_or_failed_execution_cannot_be_promoted (tests.test_release_publisher.NormalExecutionRecoveryTests.test_missing_duplicate_or_failed_execution_cannot_be_promoted) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.8638448Z test_normal_execution_population_cannot_be_omitted_from_plan (tests.test_release_publisher.NormalExecutionRecoveryTests.test_normal_execution_population_cannot_be_omitted_from_plan) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.8812379Z test_complete_source_bound_native_controls (tests.test_release_publisher.OfferComparisonEvidenceTests.test_complete_source_bound_native_controls) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.8852605Z test_extra_http_or_mutated_draft_blocks (tests.test_release_publisher.OfferComparisonEvidenceTests.test_extra_http_or_mutated_draft_blocks) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.8911889Z test_fabricated_gain_or_cost_controls_block (tests.test_release_publisher.OfferComparisonEvidenceTests.test_fabricated_gain_or_cost_controls_block) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.8931596Z test_fixture_cannot_claim_physical_or_live_scope (tests.test_release_publisher.OfferComparisonEvidenceTests.test_fixture_cannot_claim_physical_or_live_scope) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.9106731Z test_missing_depth_stale_scope_and_custom_controls_block (tests.test_release_publisher.OfferComparisonEvidenceTests.test_missing_depth_stale_scope_and_custom_controls_block) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.9152191Z test_missing_real_evaluation_or_qualified_control_blocks (tests.test_release_publisher.OfferComparisonEvidenceTests.test_missing_real_evaluation_or_qualified_control_blocks) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.9193421Z test_missing_viewport_or_screenshot_blocks (tests.test_release_publisher.OfferComparisonEvidenceTests.test_missing_viewport_or_screenshot_blocks) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.9252122Z test_source_revision_or_dirty_tree_cannot_pass (tests.test_release_publisher.OfferComparisonEvidenceTests.test_source_revision_or_dirty_tree_cannot_pass) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.9344054Z test_extra_work_lost_draft_filters_preview_or_exact_picks_block_publication (tests.test_release_publisher.PartnerHistoryLinkIntegrityTests.test_extra_work_lost_draft_filters_preview_or_exact_picks_block_publication) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.9427427Z test_two_source_bound_four_viewport_round_trips_are_required (tests.test_release_publisher.PartnerHistoryLinkIntegrityTests.test_two_source_bound_four_viewport_round_trips_are_required) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.9433004Z test_placeholder_or_incomplete_evidence_cannot_publish (tests.test_release_publisher.PlanFinalizationTests.test_placeholder_or_incomplete_evidence_cannot_publish) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.9588645Z test_advisory_scope_compatibility_and_reservations_are_required (tests.test_release_publisher.PreflightIntegrityTests.test_advisory_scope_compatibility_and_reservations_are_required) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.9598674Z test_changed_original_payload_holds_preflight (tests.test_release_publisher.PreflightIntegrityTests.test_changed_original_payload_holds_preflight) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.9608864Z test_exact_five_case_metadata_acceptance (tests.test_release_publisher.PreflightIntegrityTests.test_exact_five_case_metadata_acceptance) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.9666482Z test_fois_recovery_requires_same_pressure_and_live_reservation (tests.test_release_publisher.PreflightIntegrityTests.test_fois_recovery_requires_same_pressure_and_live_reservation) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.9781374Z test_source_resource_cleanup_and_completion_are_required (tests.test_release_publisher.PreflightIntegrityTests.test_source_resource_cleanup_and_completion_are_required) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.9783994Z test_history_cannot_substitute_latest_success_for_failed_attempt (tests.test_release_publisher.PriorAttemptIdentityTests.test_history_cannot_substitute_latest_success_for_failed_attempt) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.9787091Z test_history_uses_attempt_specific_endpoint_and_preserves_failure (tests.test_release_publisher.PriorAttemptIdentityTests.test_history_uses_attempt_specific_endpoint_and_preserves_failure) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.9791629Z test_invalid_history_reference_does_not_issue_a_request (tests.test_release_publisher.PriorAttemptIdentityTests.test_invalid_history_reference_does_not_issue_a_request) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.9798148Z test_declared_missing_parts_cannot_fall_back_to_a_legacy_zip (tests.test_release_publisher.PriorPartIntegrityTests.test_declared_missing_parts_cannot_fall_back_to_a_legacy_zip) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.9820490Z test_missing_tampered_reordered_and_wrong_full_checksum_fail_closed (tests.test_release_publisher.PriorPartIntegrityTests.test_missing_tampered_reordered_and_wrong_full_checksum_fail_closed) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.9826467Z test_prior_family_preserves_path_size_checksum_and_population_bounds (tests.test_release_publisher.PriorPartIntegrityTests.test_prior_family_preserves_path_size_checksum_and_population_bounds) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.9833855Z test_prior_parts_reassemble_original_bytes (tests.test_release_publisher.PriorPartIntegrityTests.test_prior_parts_reassemble_original_bytes) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.9851896Z test_complete_native_contract (tests.test_release_publisher.RecommendedProtectionIntegrityTests.test_complete_native_contract) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.9880784Z test_foreign_source_and_missing_phone_are_rejected (tests.test_release_publisher.RecommendedProtectionIntegrityTests.test_foreign_source_and_missing_phone_are_rejected) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.9897023Z test_protected_asset_in_result_is_rejected (tests.test_release_publisher.RecommendedProtectionIntegrityTests.test_protected_asset_in_result_is_rejected) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.9904903Z test_bad_full_archive_checksum_is_rejected (tests.test_release_publisher.RecoveryTransportTests.test_bad_full_archive_checksum_is_rejected) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.9912657Z test_bad_part_bytes_are_rejected (tests.test_release_publisher.RecoveryTransportTests.test_bad_part_bytes_are_rejected) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.9919326Z test_missing_part_is_rejected (tests.test_release_publisher.RecoveryTransportTests.test_missing_part_is_rejected) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.9927659Z test_original_archive_bytes_are_reassembled_before_existing_guards (tests.test_release_publisher.RecoveryTransportTests.test_original_archive_bytes_are_reassembled_before_existing_guards) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.9936687Z test_part_size_bound_and_existing_output_are_rejected (tests.test_release_publisher.RecoveryTransportTests.test_part_size_bound_and_existing_output_are_rejected) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.9941786Z test_path_traversal_is_rejected (tests.test_release_publisher.RecoveryTransportTests.test_path_traversal_is_rejected) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.9946709Z test_reversed_or_duplicate_parts_are_rejected (tests.test_release_publisher.RecoveryTransportTests.test_reversed_or_duplicate_parts_are_rejected) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.9958317Z test_symlink_part_is_rejected (tests.test_release_publisher.RecoveryTransportTests.test_symlink_part_is_rejected) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.9959319Z test_exact_readback_metadata (tests.test_release_publisher.RemoteAttachmentTests.test_exact_readback_metadata) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.9964151Z test_log_escape_bytes_are_retained_in_file_only (tests.test_release_publisher.RemoteAttachmentTests.test_log_escape_bytes_are_retained_in_file_only) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:38.9965687Z test_missing_partial_unexpected_duplicate_and_corrupt_assets (tests.test_release_publisher.RemoteAttachmentTests.test_missing_partial_unexpected_duplicate_and_corrupt_assets) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0100367Z test_resource_source_cleanup_execution_and_checksums_are_required (tests.test_release_publisher.ResidentRefreshIntegrityTests.test_resource_source_cleanup_execution_and_checksums_are_required) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0161287Z test_incomplete_or_weakened_restoration_records_cannot_publish (tests.test_release_publisher.RestorationAdmissionEvidenceTests.test_incomplete_or_weakened_restoration_records_cannot_publish) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0185735Z test_automatic_generation_or_wrong_target_is_rejected (tests.test_release_publisher.RosterSourceScopePublicationTests.test_automatic_generation_or_wrong_target_is_rejected) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0192945Z test_duplicate_execution_does_not_replace_a_missing_case (tests.test_release_publisher.RosterSourceScopePublicationTests.test_duplicate_execution_does_not_replace_a_missing_case) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0205030Z test_exact_new_population_is_required (tests.test_release_publisher.RosterSourceScopePublicationTests.test_exact_new_population_is_required) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0230271Z test_foreign_source_is_rejected (tests.test_release_publisher.RosterSourceScopePublicationTests.test_foreign_source_is_rejected) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0256711Z test_genuine_uncertainty_cannot_be_promoted (tests.test_release_publisher.RosterSourceScopePublicationTests.test_genuine_uncertainty_cannot_be_promoted) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0278470Z test_missing_image_cannot_be_replaced_by_a_summary (tests.test_release_publisher.RosterSourceScopePublicationTests.test_missing_image_cannot_be_replaced_by_a_summary) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0304490Z test_native_supported_and_withheld_controls_are_both_required (tests.test_release_publisher.RosterSourceScopePublicationTests.test_native_supported_and_withheld_controls_are_both_required) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0306544Z test_plan_cannot_omit_the_new_population (tests.test_release_publisher.RosterSourceScopePublicationTests.test_plan_cannot_omit_the_new_population) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0310765Z test_exact_thirteen_jobs_are_required (tests.test_release_publisher.RunAdmissionTests.test_exact_thirteen_jobs_are_required) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0318884Z test_later_failed_missing_and_wrong_source_checks_reject (tests.test_release_publisher.RunAdmissionTests.test_later_failed_missing_and_wrong_source_checks_reject) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0322690Z test_publish_cannot_omit_preparation_certificate (tests.test_release_publisher.RunAdmissionTests.test_publish_cannot_omit_preparation_certificate) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0325625Z test_successful_run_from_another_commit_is_rejected (tests.test_release_publisher.RunAdmissionTests.test_successful_run_from_another_commit_is_rejected) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0337162Z test_complete_original_controls_required_in_hosted_and_local (tests.test_release_publisher.SourceHealthExecutionTests.test_complete_original_controls_required_in_hosted_and_local) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0358882Z test_missing_repeated_failed_and_skipped_controls_are_rejected (tests.test_release_publisher.SourceHealthExecutionTests.test_missing_repeated_failed_and_skipped_controls_are_rejected) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0369876Z test_auto_search_blocks_publication (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_auto_search_blocks_publication) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0379713Z test_complete_source_bound_fixture_passes (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_complete_source_bound_fixture_passes) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0389376Z test_deferred_does_not_count_as_real_execution (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_deferred_does_not_count_as_real_execution) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0398264Z test_explicit_reset_retaining_context_blocks_publication (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_explicit_reset_retaining_context_blocks_publication) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0407639Z test_hidden_position_blocks_publication (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_hidden_position_blocks_publication) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0416877Z test_lost_draft_or_custom_blocks_publication (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_lost_draft_or_custom_blocks_publication) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0426020Z test_missing_phone_is_blocked (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_missing_phone_is_blocked) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0433383Z test_missing_report_is_blocked (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_missing_report_is_blocked) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0442546Z test_obscured_label_blocks_publication (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_obscured_label_blocks_publication) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0452758Z test_stale_league_hint_blocks_publication (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_stale_league_hint_blocks_publication) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0462340Z test_stale_manual_override_lost_blocks_publication (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_stale_manual_override_lost_blocks_publication) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0471759Z test_type_change_losing_reason_blocks_publication (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_type_change_losing_reason_blocks_publication) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0480246Z test_wrong_candidate_is_blocked (tests.test_release_publisher.TeamNeedHandoffGuardTests.test_wrong_candidate_is_blocked) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0534228Z test_exact_source_and_complete_real_work_are_required (tests.test_release_publisher.TradeResourceIntegrityTests.test_exact_source_and_complete_real_work_are_required) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0559957Z test_feature_source_phone_and_package_boundaries (tests.test_release_publisher.TradeTimeMarketPublisherTests.test_feature_source_phone_and_package_boundaries) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0568156Z test_manual_scoped_publisher_is_present_with_the_verified_plan (tests.test_release_publisher.WorkflowPublisherWiringTests.test_manual_scoped_publisher_is_present_with_the_verified_plan) ... ok
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0568747Z 
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0568895Z ----------------------------------------------------------------------
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0569325Z Ran 182 tests in 2.220s
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0569453Z 
+guarded-release-publisher	Publisher guard regression and compilation	2026-11-26T06:54:39.0569582Z OK
+guarded-release-publisher	Verify pinned evidence and execute the authorized release phase	﻿2026-11-26T06:54:39.3393805Z ##[group]Run arguments=()
+guarded-release-publisher	Verify pinned evidence and execute the authorized release phase	2026-11-26T06:54:39.3394136Z [36;1marguments=()[0m
+guarded-release-publisher	Verify pinned evidence and execute the authorized release phase	2026-11-26T06:54:39.3394395Z [36;1mif [ "$RELEASE_OPERATION" = publish ]; then[0m
+guarded-release-publisher	Verify pinned evidence and execute the authorized release phase	2026-11-26T06:54:39.3394700Z [36;1m  test -n "$PREPARATION_RUN_ID"[0m
+guarded-release-publisher	Verify pinned evidence and execute the authorized release phase	2026-11-26T06:54:39.3395052Z [36;1m  arguments+=(--prepared-run "$PREPARATION_RUN_ID")[0m
+guarded-release-publisher	Verify pinned evidence and execute the authorized release phase	2026-11-26T06:54:39.3395358Z [36;1mfi[0m
+guarded-release-publisher	Verify pinned evidence and execute the authorized release phase	2026-11-26T06:54:39.3395803Z [36;1mpython -m tools.release.publish --plan .github/release-plans/2282.json --operation "$RELEASE_OPERATION" "${arguments[@]}"[0m
+guarded-release-publisher	Verify pinned evidence and execute the authorized release phase	2026-11-26T06:54:39.3423622Z shell: /usr/bin/bash -e {0}
+guarded-release-publisher	Verify pinned evidence and execute the authorized release phase	2026-11-26T06:54:39.3423946Z env:
+guarded-release-publisher	Verify pinned evidence and execute the authorized release phase	2026-11-26T06:54:39.3424244Z   NODE_OPTIONS: --max-old-space-size=256
+guarded-release-publisher	Verify pinned evidence and execute the authorized release phase	2026-11-26T06:54:39.3424593Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+guarded-release-publisher	Verify pinned evidence and execute the authorized release phase	2026-11-26T06:54:39.3424993Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+guarded-release-publisher	Verify pinned evidence and execute the authorized release phase	2026-11-26T06:54:39.3425379Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+guarded-release-publisher	Verify pinned evidence and execute the authorized release phase	2026-11-26T06:54:39.3425739Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+guarded-release-publisher	Verify pinned evidence and execute the authorized release phase	2026-11-26T06:54:39.3426225Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+guarded-release-publisher	Verify pinned evidence and execute the authorized release phase	2026-11-26T06:54:39.3426585Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+guarded-release-publisher	Verify pinned evidence and execute the authorized release phase	2026-11-26T06:54:39.3428729Z   GH_TOKEN: ***
+guarded-release-publisher	Verify pinned evidence and execute the authorized release phase	2026-11-26T06:54:39.3428980Z   RELEASE_OPERATION: prepare
+guarded-release-publisher	Verify pinned evidence and execute the authorized release phase	2026-11-26T06:54:39.3429284Z   PREPARATION_RUN_ID: 
+guarded-release-publisher	Verify pinned evidence and execute the authorized release phase	2026-11-26T06:54:39.3429513Z ##[endgroup]
+guarded-release-publisher	Verify pinned evidence and execute the authorized release phase	2026-11-26T06:54:42.9679232Z From https://github.com/Richarddavis47/dtos
+guarded-release-publisher	Verify pinned evidence and execute the authorized release phase	2026-11-26T06:54:42.9680045Z  * branch              refs/pull/371/head -> FETCH_HEAD
+guarded-release-publisher	Verify pinned evidence and execute the authorized release phase	2026-11-26T06:54:42.9680470Z  * branch              main       -> FETCH_HEAD
+guarded-release-publisher	Verify pinned evidence and execute the authorized release phase	2026-11-26T06:54:47.1561884Z From https://github.com/Richarddavis47/dtos
+guarded-release-publisher	Verify pinned evidence and execute the authorized release phase	2026-11-26T06:54:47.1562377Z  * branch              refs/pull/370/head -> FETCH_HEAD
+guarded-release-publisher	Verify pinned evidence and execute the authorized release phase	2026-11-26T06:56:42.8502272Z Verified guarded release prepare completed.
+guarded-release-publisher	Preserve release admission and outcome	﻿2026-11-26T06:56:42.8690574Z ##[group]Run actions/upload-artifact@v4
+guarded-release-publisher	Preserve release admission and outcome	2026-11-26T06:56:42.8691116Z with:
+guarded-release-publisher	Preserve release admission and outcome	2026-11-26T06:56:42.8691418Z   name: guarded-release-2282-prepare-45771125574
+guarded-release-publisher	Preserve release admission and outcome	2026-11-26T06:56:42.8692629Z   path: .validation/guarded-release/outcome.json
+guarded-release-publisher	Preserve release admission and outcome	.validation/guarded-release/publication.json
+guarded-release-publisher	Preserve release admission and outcome	.validation/guarded-release/readiness.json
+guarded-release-publisher	Preserve release admission and outcome	.validation/guarded-release/production-smoke.json
+guarded-release-publisher	Preserve release admission and outcome	.validation/guarded-release/assets/VALIDATION.json
+guarded-release-publisher	Preserve release admission and outcome	.validation/guarded-release/assets/evidence-manifest.json
+guarded-release-publisher	Preserve release admission and outcome	.validation/guarded-release/assets/SHA256SUMS
+guarded-release-publisher	Preserve release admission and outcome	.validation/guarded-release/assets/prior-attempts.json
+guarded-release-publisher	Preserve release admission and outcome	
+guarded-release-publisher	Preserve release admission and outcome	2026-11-26T06:56:42.8693786Z   if-no-files-found: error
+guarded-release-publisher	Preserve release admission and outcome	2026-11-26T06:56:42.8694057Z   retention-days: 14
+guarded-release-publisher	Preserve release admission and outcome	2026-11-26T06:56:42.8694285Z   compression-level: 6
+guarded-release-publisher	Preserve release admission and outcome	2026-11-26T06:56:42.8694495Z   overwrite: false
+guarded-release-publisher	Preserve release admission and outcome	2026-11-26T06:56:42.8694766Z   include-hidden-files: false
+guarded-release-publisher	Preserve release admission and outcome	2026-11-26T06:56:42.8695019Z env:
+guarded-release-publisher	Preserve release admission and outcome	2026-11-26T06:56:42.8695252Z   NODE_OPTIONS: --max-old-space-size=256
+guarded-release-publisher	Preserve release admission and outcome	2026-11-26T06:56:42.8695640Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.16/x64
+guarded-release-publisher	Preserve release admission and outcome	2026-11-26T06:56:42.8696089Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib/pkgconfig
+guarded-release-publisher	Preserve release admission and outcome	2026-11-26T06:56:42.8696453Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+guarded-release-publisher	Preserve release admission and outcome	2026-11-26T06:56:42.8696797Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+guarded-release-publisher	Preserve release admission and outcome	2026-11-26T06:56:42.8697154Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.16/x64
+guarded-release-publisher	Preserve release admission and outcome	2026-11-26T06:56:42.8697489Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.16/x64/lib
+guarded-release-publisher	Preserve release admission and outcome	2026-11-26T06:56:42.8697890Z ##[endgroup]
+guarded-release-publisher	Preserve release admission and outcome	2026-11-26T06:56:42.9924842Z (node:2820) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+guarded-release-publisher	Preserve release admission and outcome	2026-11-26T06:56:42.9925880Z (Use `node --trace-deprecation ...` to show where the warning was created)
+guarded-release-publisher	Preserve release admission and outcome	2026-11-26T06:56:42.9991910Z Multiple search paths detected. Calculating the least common ancestor of all paths
+guarded-release-publisher	Preserve release admission and outcome	2026-11-26T06:56:42.9995298Z The least common ancestor is /home/runner/work/dtos/dtos/.validation/guarded-release. This will be the root directory of the artifact
+guarded-release-publisher	Preserve release admission and outcome	2026-11-26T06:56:42.9996160Z With the provided path, there will be 6 files uploaded
+guarded-release-publisher	Preserve release admission and outcome	2026-11-26T06:56:42.9996848Z Artifact name is valid!
+guarded-release-publisher	Preserve release admission and outcome	2026-11-26T06:56:42.9997179Z Root directory input is valid!
+guarded-release-publisher	Preserve release admission and outcome	2026-11-26T06:56:43.5394875Z Beginning upload of artifact content to blob storage
+guarded-release-publisher	Preserve release admission and outcome	2026-11-26T06:56:43.6119028Z (node:2820) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+guarded-release-publisher	Preserve release admission and outcome	2026-11-26T06:56:44.1085652Z Uploaded bytes 19877
+guarded-release-publisher	Preserve release admission and outcome	2026-11-26T06:56:44.2029021Z Finished uploading artifact content to blob storage!
+guarded-release-publisher	Preserve release admission and outcome	2026-11-26T06:56:44.2029594Z SHA256 digest of uploaded artifact zip is 59079f82d930472346e21d13346b4b73a92334327c37077004e54767093c9d4f
+guarded-release-publisher	Preserve release admission and outcome	2026-11-26T06:56:44.2030572Z Finalizing artifact upload
+guarded-release-publisher	Preserve release admission and outcome	2026-11-26T06:56:44.6131206Z Artifact guarded-release-2282-prepare-45771125574.zip successfully finalized. Artifact ID 15093723991
+guarded-release-publisher	Preserve release admission and outcome	2026-11-26T06:56:44.6132292Z Artifact guarded-release-2282-prepare-45771125574 has been successfully uploaded! Final size is 19877 bytes. Artifact ID is 15093723991
+guarded-release-publisher	Preserve release admission and outcome	2026-11-26T06:56:44.6136547Z Artifact download URL: https://github.com/Richarddavis47/dtos/actions/runs/45771125574/artifacts/15093723991
+guarded-release-publisher	Post Run actions/setup-python@v5	﻿2026-11-26T06:56:44.6276362Z Post job cleanup.
+guarded-release-publisher	Post Run actions/setup-python@v5	2026-11-26T06:56:44.7147054Z (node:2834) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+guarded-release-publisher	Post Run actions/setup-python@v5	2026-11-26T06:56:44.7147941Z (Use `node --trace-deprecation ...` to show where the warning was created)
+guarded-release-publisher	Post Run actions/checkout@v4	﻿2026-11-26T06:56:44.7283436Z Post job cleanup.
+guarded-release-publisher	Post Run actions/checkout@v4	2026-11-26T06:56:44.7944157Z [command]/usr/bin/git version
+guarded-release-publisher	Post Run actions/checkout@v4	2026-11-26T06:56:44.7970669Z git version 2.56.1
+guarded-release-publisher	Post Run actions/checkout@v4	2026-11-26T06:56:44.7994521Z Temporarily overriding HOME='/home/runner/work/_temp/21ef258d-8209-4691-8a5a-998ca1c3307b' before making global git config changes
+guarded-release-publisher	Post Run actions/checkout@v4	2026-11-26T06:56:44.7995545Z Adding repository directory to the temporary git global config as a safe directory
+guarded-release-publisher	Post Run actions/checkout@v4	2026-11-26T06:56:44.7997236Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/dtos/dtos
+guarded-release-publisher	Post Run actions/checkout@v4	2026-11-26T06:56:44.8025869Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+guarded-release-publisher	Post Run actions/checkout@v4	2026-11-26T06:56:44.8048385Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+guarded-release-publisher	Post Run actions/checkout@v4	2026-11-26T06:56:44.8212381Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+guarded-release-publisher	Post Run actions/checkout@v4	2026-11-26T06:56:44.8259274Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+guarded-release-publisher	Post Run actions/checkout@v4	2026-11-26T06:56:44.8431340Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+guarded-release-publisher	Post Run actions/checkout@v4	2026-11-26T06:56:44.8472271Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+guarded-release-publisher	Complete job	﻿2026-11-26T06:56:44.8790236Z Cleaning up orphan processes
+guarded-release-publisher	Complete job	2026-11-26T06:56:44.9067851Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

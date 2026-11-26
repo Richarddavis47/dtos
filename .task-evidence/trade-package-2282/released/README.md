@@ -1,0 +1,9 @@
+# Trade package correction · v1.22.67 / build 2282
+
+[PR #371](https://github.com/Richarddavis47/dtos/pull/371) was squash-merged at b85342dcc719b7dbac58753662cea06cb2f4260c, tree 036fb9dc0083466d0d972d94440a08a51c7d59d6. Production readiness, public smoke routes and deployed Trade workspace JavaScript matched the release. The [immutable release](https://github.com/Richarddavis47/dtos/releases/tag/v1.22.67) has 23 verified attachments.
+
+Full local and hosted canonical each ran 4,689 tests with all ten gates, applied the same 2 GiB cap, and recorded zero OOM events. All 13 required hosted jobs and 182 publisher controls passed. The same-source hosted retry cleared all 16 Rebuild Generate requests and produced eight captures across four widths. The [first hosted attempt](https://github.com/Richarddavis47/dtos/actions/runs/45751057743/attempts/1) remains a documented capacity failure. [Paired focused diagnostics](https://github.com/Richarddavis47/dtos/tree/bc1682b/.task-evidence/trade-package-2282/memory-comparison) established no reproducible retained-memory increase from the candidate. The full-run memory difference remains unattributed.
+
+Use SCOUT_BURROW_CASE.md for independent acceptance. Search the exact package and verify the near miss with the bilateral reason code after completing manual Evaluate. The supplied owner screenshots are historical observations. The corrected recommendation was verified in prepared fixtures and responsive Chromium. Authenticated production Trade For and physical iPhone Safari were not checked.
+
+[Hosted canonical pass](https://github.com/Richarddavis47/dtos/actions/runs/45751057743/attempts/2) · [Guarded prepare](https://github.com/Richarddavis47/dtos/actions/runs/45771125574) · [Guarded publish](https://github.com/Richarddavis47/dtos/actions/runs/45771857476)
