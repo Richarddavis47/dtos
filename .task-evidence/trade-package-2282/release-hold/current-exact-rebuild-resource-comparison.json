@@ -1,0 +1,1024 @@
+{
+  "source": {
+    "candidate": "168ed86d3328444ecef286f0d28bb9fa954cab10",
+    "tree": "036fb9dc0083466d0d972d94440a08a51c7d59d6",
+    "baseline": "4a58ab3e83fb49de6e81518298691c99fdb8ff7d",
+    "baseline_tree": "353feba0c022a750229e748a04ebdab43eac71da",
+    "branch": "feat/trade-package-2282",
+    "version": "1.22.67",
+    "build": 2282,
+    "expected_test_count": 4689,
+    "pr": 371
+  },
+  "hosted_run": 45751057743,
+  "hosted_job": 139678664229,
+  "hosted_artifact": {
+    "id": 15088173791,
+    "sha256": "eb3d539636e186afe3ea4a255eada07d669431a9d2c209bc4e08fa021c3b43d5",
+    "bytes": 93552350
+  },
+  "hosted_canonical_result": {
+    "head": "168ed86d3328444ecef286f0d28bb9fa954cab10",
+    "tree": "036fb9dc0083466d0d972d94440a08a51c7d59d6",
+    "python": "3.14.3 (main, Apr  7 2026, 02:23:36) [GCC 12.2.0]",
+    "started_at": 1795665016.2236278,
+    "finished_at": 1795668702.2890635,
+    "elapsed_seconds": 3686.0654361248016,
+    "exit_code": 1,
+    "passed": false,
+    "error": null,
+    "process_cleanup": {
+      "timeout_triggered": false,
+      "validator_pid": 16,
+      "validator_reaped": true
+    },
+    "cgroup_limit": 2147483648,
+    "cpus": 2,
+    "network": "none",
+    "final_memory": {
+      "rss_bytes": 47382528,
+      "vms_bytes": 137170944,
+      "system_available_bytes": 14649577472,
+      "memory_accounting_scope": "cgroup",
+      "cgroup_current_bytes": 244293632,
+      "cgroup_limit_bytes": 2147483648,
+      "cgroup_inactive_file_bytes": 192958464,
+      "cgroup_anonymous_bytes": 33751040,
+      "cgroup_memory_events": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    "kernel_peak": 2095828992,
+    "fixture": "250 asset prepared sanitized foundation; disposable authenticated test transports"
+  },
+  "hosted": {
+    "test_events": [
+      {
+        "event": "start",
+        "test": "test_rebuild_roster_space_browser.RebuildRosterSpaceBrowserTests.test_full_rosters_unseeded_strategies_and_qualified_zero_states_at_four_sizes",
+        "time": 1795667513.2085493,
+        "pid": 32,
+        "rss": 1056018432,
+        "cgroup": 1274900480
+      },
+      {
+        "event": "error",
+        "test": "test_rebuild_roster_space_browser.RebuildRosterSpaceBrowserTests.test_full_rosters_unseeded_strategies_and_qualified_zero_states_at_four_sizes",
+        "time": 1795667531.290628,
+        "pid": 32,
+        "rss": 973053952,
+        "cgroup": 1194795008,
+        "error_type": "TimeoutError",
+        "error_text": "Page.wait_for_function: Timeout 10000ms exceeded."
+      },
+      {
+        "event": "stop",
+        "test": "test_rebuild_roster_space_browser.RebuildRosterSpaceBrowserTests.test_full_rosters_unseeded_strategies_and_qualified_zero_states_at_four_sizes",
+        "time": 1795667531.2931628,
+        "pid": 32,
+        "rss": 952127488,
+        "cgroup": 1173647360
+      }
+    ],
+    "admissions": [
+      {
+        "timestamp": "2026-11-26T04:31:53.791005+00:00",
+        "diagnostic": {
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1275330560,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 872153088,
+            "clean_inactive_file_bytes": 149094400,
+            "conditional_file_credit_bytes": 74547200,
+            "admission_headroom_bytes": 946700288,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        "message": "trade_admission"
+      },
+      {
+        "timestamp": "2026-11-26T04:31:55.290608+00:00",
+        "diagnostic": {
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1559396352,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 588087296,
+            "clean_inactive_file_bytes": 149639168,
+            "conditional_file_credit_bytes": 74819584,
+            "admission_headroom_bytes": 662906880,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        "message": "trade_admission"
+      },
+      {
+        "timestamp": "2026-11-26T04:31:56.844977+00:00",
+        "diagnostic": {
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1718956032,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 428527616,
+            "clean_inactive_file_bytes": 150523904,
+            "conditional_file_credit_bytes": 75261952,
+            "admission_headroom_bytes": 503789568,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        "message": "trade_admission"
+      },
+      {
+        "timestamp": "2026-11-26T04:31:58.577298+00:00",
+        "diagnostic": {
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1727389696,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 420093952,
+            "clean_inactive_file_bytes": 150548480,
+            "conditional_file_credit_bytes": 75274240,
+            "admission_headroom_bytes": 495368192,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": {
+            "expired_entries": 0,
+            "idle_worker_retired": false,
+            "allocator_trimmed": true
+          }
+        },
+        "message": "trade_admission"
+      },
+      {
+        "timestamp": "2026-11-26T04:32:01.214787+00:00",
+        "diagnostic": {
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": false,
+            "reason": "capacity",
+            "current_bytes": 1871302656,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 276180992,
+            "clean_inactive_file_bytes": 150544384,
+            "conditional_file_credit_bytes": 75272192,
+            "admission_headroom_bytes": 351453184,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": {
+            "expired_entries": 0,
+            "idle_worker_retired": false,
+            "allocator_trimmed": true
+          }
+        },
+        "message": "trade_admission"
+      }
+    ],
+    "http_requests": [
+      {
+        "timestamp": "2026-11-26T04:31:56.227880+00:00",
+        "diagnostic": null,
+        "message": "HTTP Request: POST http://testserver/api/trades/generate \"HTTP/1.1 200 OK\""
+      },
+      {
+        "timestamp": "2026-11-26T04:31:57.872122+00:00",
+        "diagnostic": null,
+        "message": "HTTP Request: POST http://testserver/api/trades/generate \"HTTP/1.1 200 OK\""
+      },
+      {
+        "timestamp": "2026-11-26T04:31:59.892478+00:00",
+        "diagnostic": null,
+        "message": "HTTP Request: POST http://testserver/api/trades/generate \"HTTP/1.1 200 OK\""
+      },
+      {
+        "timestamp": "2026-11-26T04:32:01.215416+00:00",
+        "diagnostic": null,
+        "message": "HTTP Request: POST http://testserver/api/trades/generate \"HTTP/1.1 503 Service Unavailable\""
+      }
+    ],
+    "tightest_observation": {
+      "timestamp": "2026-11-26T04:32:01.214787+00:00",
+      "diagnostic": {
+        "schema": "trade-resource-v1",
+        "observation": {
+          "admitted": false,
+          "reason": "capacity",
+          "current_bytes": 1871302656,
+          "limit_bytes": 2147483648,
+          "raw_headroom_bytes": 276180992,
+          "clean_inactive_file_bytes": 150544384,
+          "conditional_file_credit_bytes": 75272192,
+          "admission_headroom_bytes": 351453184,
+          "working_bytes": 268435456,
+          "safety_bytes": 134217728,
+          "events": {
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "recovery": {
+          "expired_entries": 0,
+          "idle_worker_retired": false,
+          "allocator_trimmed": true
+        }
+      },
+      "message": "trade_admission"
+    },
+    "nearest_memory_samples": [
+      {
+        "timestamp": 1795667521.467263,
+        "accounting": {
+          "rss_bytes": 47247360,
+          "vms_bytes": 137187328,
+          "system_available_bytes": 13497266176,
+          "memory_accounting_scope": "cgroup",
+          "cgroup_current_bytes": 1871302656,
+          "cgroup_limit_bytes": 2147483648,
+          "cgroup_inactive_file_bytes": 158314496,
+          "cgroup_anonymous_bytes": 1664585728,
+          "cgroup_memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0,
+            "sock_throttled": 0
+          }
+        },
+        "approximate_process_pss_bytes": {
+          "python": 1047321600,
+          "MainThread": 420885504,
+          "chromium": 554232832
+        },
+        "cgroup_stat": {
+          "anon": 1664585728,
+          "file": 171524096,
+          "shmem": 13205504,
+          "active_file": 4096,
+          "inactive_file": 158314496,
+          "kernel": 34516992
+        }
+      },
+      {
+        "timestamp": 1795667520.9373581,
+        "accounting": {
+          "rss_bytes": 47247360,
+          "vms_bytes": 137187328,
+          "system_available_bytes": 13464920064,
+          "memory_accounting_scope": "cgroup",
+          "cgroup_current_bytes": 1932136448,
+          "cgroup_limit_bytes": 2147483648,
+          "cgroup_inactive_file_bytes": 158310400,
+          "cgroup_anonymous_bytes": 1729490944,
+          "cgroup_memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0,
+            "sock_throttled": 0
+          }
+        },
+        "approximate_process_pss_bytes": {
+          "python": 1118317568,
+          "MainThread": 418821120,
+          "chromium": 546041856
+        },
+        "cgroup_stat": {
+          "anon": 1729490944,
+          "file": 167571456,
+          "shmem": 9256960,
+          "active_file": 4096,
+          "inactive_file": 158310400,
+          "kernel": 34586624
+        }
+      },
+      {
+        "timestamp": 1795667521.9949532,
+        "accounting": {
+          "rss_bytes": 47247360,
+          "vms_bytes": 137187328,
+          "system_available_bytes": 13497266176,
+          "memory_accounting_scope": "cgroup",
+          "cgroup_current_bytes": 1870962688,
+          "cgroup_limit_bytes": 2147483648,
+          "cgroup_inactive_file_bytes": 158314496,
+          "cgroup_anonymous_bytes": 1664262144,
+          "cgroup_memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0,
+            "sock_throttled": 0
+          }
+        },
+        "approximate_process_pss_bytes": {
+          "python": 1047321600,
+          "MainThread": 420885504,
+          "chromium": 553577472
+        },
+        "cgroup_stat": {
+          "anon": 1664262144,
+          "file": 171528192,
+          "shmem": 13205504,
+          "active_file": 4096,
+          "inactive_file": 158314496,
+          "kernel": 34512896
+        }
+      }
+    ]
+  },
+  "local": {
+    "test_events": [
+      {
+        "event": "start",
+        "test": "test_rebuild_roster_space_browser.RebuildRosterSpaceBrowserTests.test_full_rosters_unseeded_strategies_and_qualified_zero_states_at_four_sizes",
+        "time": 1795668563.8785725,
+        "pid": 32,
+        "rss": 995823616,
+        "cgroup": 1241083904
+      },
+      {
+        "event": "stop",
+        "test": "test_rebuild_roster_space_browser.RebuildRosterSpaceBrowserTests.test_full_rosters_unseeded_strategies_and_qualified_zero_states_at_four_sizes",
+        "time": 1795668609.6840804,
+        "pid": 32,
+        "rss": 1001545728,
+        "cgroup": 1256173568
+      }
+    ],
+    "admissions": [
+      {
+        "timestamp": "2026-11-26T04:49:24.801399+00:00",
+        "diagnostic": {
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1241403392,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 906080256,
+            "clean_inactive_file_bytes": 100044800,
+            "conditional_file_credit_bytes": 50022400,
+            "admission_headroom_bytes": 956102656,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        "message": "trade_admission"
+      },
+      {
+        "timestamp": "2026-11-26T04:49:27.460573+00:00",
+        "diagnostic": {
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1534566400,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 612917248,
+            "clean_inactive_file_bytes": 105623552,
+            "conditional_file_credit_bytes": 52811776,
+            "admission_headroom_bytes": 665729024,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        "message": "trade_admission"
+      },
+      {
+        "timestamp": "2026-11-26T04:49:29.628132+00:00",
+        "diagnostic": {
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1627914240,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 519569408,
+            "clean_inactive_file_bytes": 105013248,
+            "conditional_file_credit_bytes": 52506624,
+            "admission_headroom_bytes": 572076032,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        "message": "trade_admission"
+      },
+      {
+        "timestamp": "2026-11-26T04:49:31.858189+00:00",
+        "diagnostic": {
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1668235264,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 479248384,
+            "clean_inactive_file_bytes": 105013248,
+            "conditional_file_credit_bytes": 52506624,
+            "admission_headroom_bytes": 531755008,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        "message": "trade_admission"
+      },
+      {
+        "timestamp": "2026-11-26T04:49:36.520345+00:00",
+        "diagnostic": {
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1786380288,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 361103360,
+            "clean_inactive_file_bytes": 105037824,
+            "conditional_file_credit_bytes": 52518912,
+            "admission_headroom_bytes": 413622272,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": {
+            "expired_entries": 0,
+            "idle_worker_retired": false,
+            "allocator_trimmed": true
+          }
+        },
+        "message": "trade_admission"
+      },
+      {
+        "timestamp": "2026-11-26T04:49:38.493383+00:00",
+        "diagnostic": {
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1675177984,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 472305664,
+            "clean_inactive_file_bytes": 104919040,
+            "conditional_file_credit_bytes": 52459520,
+            "admission_headroom_bytes": 524765184,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        "message": "trade_admission"
+      },
+      {
+        "timestamp": "2026-11-26T04:49:41.111546+00:00",
+        "diagnostic": {
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1652039680,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 495443968,
+            "clean_inactive_file_bytes": 105000960,
+            "conditional_file_credit_bytes": 52500480,
+            "admission_headroom_bytes": 547944448,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        "message": "trade_admission"
+      },
+      {
+        "timestamp": "2026-11-26T04:49:43.376540+00:00",
+        "diagnostic": {
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1729740800,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 417742848,
+            "clean_inactive_file_bytes": 105000960,
+            "conditional_file_credit_bytes": 52500480,
+            "admission_headroom_bytes": 470243328,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        "message": "trade_admission"
+      },
+      {
+        "timestamp": "2026-11-26T04:49:47.249535+00:00",
+        "diagnostic": {
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1776615424,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 370868224,
+            "clean_inactive_file_bytes": 105381888,
+            "conditional_file_credit_bytes": 52690944,
+            "admission_headroom_bytes": 423559168,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        "message": "trade_admission"
+      },
+      {
+        "timestamp": "2026-11-26T04:49:49.279443+00:00",
+        "diagnostic": {
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1656025088,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 491458560,
+            "clean_inactive_file_bytes": 105193472,
+            "conditional_file_credit_bytes": 52596736,
+            "admission_headroom_bytes": 544055296,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        "message": "trade_admission"
+      },
+      {
+        "timestamp": "2026-11-26T04:49:51.583516+00:00",
+        "diagnostic": {
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1732227072,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 415256576,
+            "clean_inactive_file_bytes": 105275392,
+            "conditional_file_credit_bytes": 52637696,
+            "admission_headroom_bytes": 467894272,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        "message": "trade_admission"
+      },
+      {
+        "timestamp": "2026-11-26T04:49:54.048750+00:00",
+        "diagnostic": {
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1712087040,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 435396608,
+            "clean_inactive_file_bytes": 105279488,
+            "conditional_file_credit_bytes": 52639744,
+            "admission_headroom_bytes": 488036352,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        "message": "trade_admission"
+      },
+      {
+        "timestamp": "2026-11-26T04:49:58.303339+00:00",
+        "diagnostic": {
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1753182208,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 394301440,
+            "clean_inactive_file_bytes": 105308160,
+            "conditional_file_credit_bytes": 52654080,
+            "admission_headroom_bytes": 446955520,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": {
+            "expired_entries": 136,
+            "idle_worker_retired": false,
+            "allocator_trimmed": true
+          }
+        },
+        "message": "trade_admission"
+      },
+      {
+        "timestamp": "2026-11-26T04:49:59.976567+00:00",
+        "diagnostic": {
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1651015680,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 496467968,
+            "clean_inactive_file_bytes": 105168896,
+            "conditional_file_credit_bytes": 52584448,
+            "admission_headroom_bytes": 549052416,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        "message": "trade_admission"
+      },
+      {
+        "timestamp": "2026-11-26T04:50:02.927678+00:00",
+        "diagnostic": {
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1705009152,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 442474496,
+            "clean_inactive_file_bytes": 105259008,
+            "conditional_file_credit_bytes": 52629504,
+            "admission_headroom_bytes": 495104000,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        "message": "trade_admission"
+      },
+      {
+        "timestamp": "2026-11-26T04:50:05.481863+00:00",
+        "diagnostic": {
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1750118400,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 397365248,
+            "clean_inactive_file_bytes": 105263104,
+            "conditional_file_credit_bytes": 52631552,
+            "admission_headroom_bytes": 449996800,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        "message": "trade_admission"
+      },
+      {
+        "timestamp": "2026-11-26T04:50:09.391665+00:00",
+        "diagnostic": {
+          "schema": "trade-resource-v1",
+          "observation": {
+            "admitted": true,
+            "reason": "ready",
+            "current_bytes": 1787260928,
+            "limit_bytes": 2147483648,
+            "raw_headroom_bytes": 360222720,
+            "clean_inactive_file_bytes": 105287680,
+            "conditional_file_credit_bytes": 52643840,
+            "admission_headroom_bytes": 412866560,
+            "working_bytes": 268435456,
+            "safety_bytes": 134217728,
+            "events": {
+              "oom": 0,
+              "oom_kill": 0
+            }
+          },
+          "recovery": null
+        },
+        "message": "trade_admission"
+      }
+    ],
+    "http_requests": [
+      {
+        "timestamp": "2026-11-26T04:49:28.540218+00:00",
+        "diagnostic": null,
+        "message": "HTTP Request: POST http://testserver/api/trades/generate \"HTTP/1.1 200 OK\""
+      },
+      {
+        "timestamp": "2026-11-26T04:49:30.929971+00:00",
+        "diagnostic": null,
+        "message": "HTTP Request: POST http://testserver/api/trades/generate \"HTTP/1.1 200 OK\""
+      },
+      {
+        "timestamp": "2026-11-26T04:49:33.935405+00:00",
+        "diagnostic": null,
+        "message": "HTTP Request: POST http://testserver/api/trades/generate \"HTTP/1.1 200 OK\""
+      },
+      {
+        "timestamp": "2026-11-26T04:49:36.549995+00:00",
+        "diagnostic": null,
+        "message": "HTTP Request: POST http://testserver/api/trades/generate \"HTTP/1.1 200 OK\""
+      },
+      {
+        "timestamp": "2026-11-26T04:49:39.990834+00:00",
+        "diagnostic": null,
+        "message": "HTTP Request: POST http://testserver/api/trades/generate \"HTTP/1.1 200 OK\""
+      },
+      {
+        "timestamp": "2026-11-26T04:49:42.552876+00:00",
+        "diagnostic": null,
+        "message": "HTTP Request: POST http://testserver/api/trades/generate \"HTTP/1.1 200 OK\""
+      },
+      {
+        "timestamp": "2026-11-26T04:49:45.249748+00:00",
+        "diagnostic": null,
+        "message": "HTTP Request: POST http://testserver/api/trades/generate \"HTTP/1.1 200 OK\""
+      },
+      {
+        "timestamp": "2026-11-26T04:49:47.276383+00:00",
+        "diagnostic": null,
+        "message": "HTTP Request: POST http://testserver/api/trades/generate \"HTTP/1.1 200 OK\""
+      },
+      {
+        "timestamp": "2026-11-26T04:49:50.624827+00:00",
+        "diagnostic": null,
+        "message": "HTTP Request: POST http://testserver/api/trades/generate \"HTTP/1.1 200 OK\""
+      },
+      {
+        "timestamp": "2026-11-26T04:49:53.110300+00:00",
+        "diagnostic": null,
+        "message": "HTTP Request: POST http://testserver/api/trades/generate \"HTTP/1.1 200 OK\""
+      },
+      {
+        "timestamp": "2026-11-26T04:49:56.345953+00:00",
+        "diagnostic": null,
+        "message": "HTTP Request: POST http://testserver/api/trades/generate \"HTTP/1.1 200 OK\""
+      },
+      {
+        "timestamp": "2026-11-26T04:49:58.329197+00:00",
+        "diagnostic": null,
+        "message": "HTTP Request: POST http://testserver/api/trades/generate \"HTTP/1.1 200 OK\""
+      },
+      {
+        "timestamp": "2026-11-26T04:50:01.602608+00:00",
+        "diagnostic": null,
+        "message": "HTTP Request: POST http://testserver/api/trades/generate \"HTTP/1.1 200 OK\""
+      },
+      {
+        "timestamp": "2026-11-26T04:50:04.310362+00:00",
+        "diagnostic": null,
+        "message": "HTTP Request: POST http://testserver/api/trades/generate \"HTTP/1.1 200 OK\""
+      },
+      {
+        "timestamp": "2026-11-26T04:50:07.419528+00:00",
+        "diagnostic": null,
+        "message": "HTTP Request: POST http://testserver/api/trades/generate \"HTTP/1.1 200 OK\""
+      },
+      {
+        "timestamp": "2026-11-26T04:50:09.424636+00:00",
+        "diagnostic": null,
+        "message": "HTTP Request: POST http://testserver/api/trades/generate \"HTTP/1.1 200 OK\""
+      }
+    ],
+    "tightest_observation": {
+      "timestamp": "2026-11-26T04:50:09.391665+00:00",
+      "diagnostic": {
+        "schema": "trade-resource-v1",
+        "observation": {
+          "admitted": true,
+          "reason": "ready",
+          "current_bytes": 1787260928,
+          "limit_bytes": 2147483648,
+          "raw_headroom_bytes": 360222720,
+          "clean_inactive_file_bytes": 105287680,
+          "conditional_file_credit_bytes": 52643840,
+          "admission_headroom_bytes": 412866560,
+          "working_bytes": 268435456,
+          "safety_bytes": 134217728,
+          "events": {
+            "oom": 0,
+            "oom_kill": 0
+          }
+        },
+        "recovery": null
+      },
+      "message": "trade_admission"
+    },
+    "nearest_memory_samples": [
+      {
+        "timestamp": 1795668609.4297767,
+        "accounting": {
+          "rss_bytes": 44638208,
+          "vms_bytes": 127299584,
+          "system_available_bytes": 6330195968,
+          "memory_accounting_scope": "cgroup",
+          "cgroup_current_bytes": 1787092992,
+          "cgroup_limit_bytes": 2147483648,
+          "cgroup_inactive_file_bytes": 124592128,
+          "cgroup_anonymous_bytes": 1545158656,
+          "cgroup_memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          }
+        },
+        "approximate_process_pss_bytes": {
+          "python": 1075866624,
+          "MainThread": 247151616,
+          "chromium": 579352576
+        },
+        "cgroup_stat": {
+          "anon": 1545158656,
+          "file": 210317312,
+          "shmem": 31887360,
+          "active_file": 53837824,
+          "inactive_file": 124592128,
+          "kernel": 30531584
+        }
+      },
+      {
+        "timestamp": 1795668608.889825,
+        "accounting": {
+          "rss_bytes": 44638208,
+          "vms_bytes": 127299584,
+          "system_available_bytes": 6331133952,
+          "memory_accounting_scope": "cgroup",
+          "cgroup_current_bytes": 1775775744,
+          "cgroup_limit_bytes": 2147483648,
+          "cgroup_inactive_file_bytes": 124588032,
+          "cgroup_anonymous_bytes": 1540427776,
+          "cgroup_memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          }
+        },
+        "approximate_process_pss_bytes": {
+          "python": 1075850240,
+          "MainThread": 247020544,
+          "chromium": 561900544
+        },
+        "cgroup_stat": {
+          "anon": 1540427776,
+          "file": 204128256,
+          "shmem": 25702400,
+          "active_file": 53837824,
+          "inactive_file": 124588032,
+          "kernel": 30367744
+        }
+      },
+      {
+        "timestamp": 1795668609.968103,
+        "accounting": {
+          "rss_bytes": 44638208,
+          "vms_bytes": 127299584,
+          "system_available_bytes": 6753652736,
+          "memory_accounting_scope": "cgroup",
+          "cgroup_current_bytes": 1255411712,
+          "cgroup_limit_bytes": 2147483648,
+          "cgroup_inactive_file_bytes": 122155008,
+          "cgroup_anonymous_bytes": 1060827136,
+          "cgroup_memory_events": {
+            "low": 0,
+            "high": 0,
+            "max": 0,
+            "oom": 0,
+            "oom_kill": 0,
+            "oom_group_kill": 0
+          }
+        },
+        "approximate_process_pss_bytes": {
+          "python": 1081133056
+        },
+        "cgroup_stat": {
+          "anon": 1060827136,
+          "file": 179245056,
+          "shmem": 3661824,
+          "active_file": 53448704,
+          "inactive_file": 122155008,
+          "kernel": 14643200
+        }
+      }
+    ]
+  },
+  "scope": "Exact-source original observations. Process PSS samples align around admission, not to the same kernel instant. The failed admission cause is established. The source of the browser/driver and accounting footprint differences is not established."
+}
