@@ -1,0 +1,11 @@
+# Exact-source local validation recovery
+
+The v1.22.68 / build 2283 candidate is `9ec02a65d3da1093d59149ba8c0e09c82f447339`, tree `220c4d28484e225776699c4b750926752f1a63c7`. Production remains v1.22.67 / build 2282 while the local gate is pending.
+
+The first full local attempt on this tree completed 4,690 tests with two failures and three errors. Protected Trade requests were deferred for capacity in the phone/desktop Actionability and Analysis Goal journeys. The unchanged admission floor was 402,653,184 bytes. Actual admission headroom was 401,387,520, 360,579,072, 398,481,408, 393,248,768 and 372,436,992 bytes. The kernel reported no OOM. The complete original failed attempt and manifest remain separate under `prior-attempts/9ec02a6-local-bound-root-capacity` and are queued for the immutable prior-attempts attachment. A local admission retry cannot change the previous outcome.
+
+At those requests the local cgroup reported roughly 101–102 MiB active file pages. Matched hosted request observations reported zero active file for the same Chromium 156.0.8078.108 and the same application tree, with all 4,690 tests and ten canonical gates passing. Python RSS was lower on the deferred local requests. The measurements establish a real headroom difference; the specific ownership of the extra file pages was not proven. The first attempt used a locally bound toolchain because the host did not meet the full-image scratch preflight. Some other isolated validation work overlapped that attempt.
+
+Scratch was recovered from byte-identical task-generated temporary copies and verified, unused build-cache layers. The older image's OCI bytes and tags were backed up and verified first. The unmodified full-image topology met the original scratch preflight. The full retry uses the original pinned image, canonical runner and observer, two CPUs, no network, 2 GiB hard limit, and no swap or concurrent local workloads. The same source and all assertions and reserves are intact.
+
+The run and evidence controllers remain durable. `canonical-exit-original.txt` is the local gate receipt, and `follow-local-original.log` records manifest and custody verification. A zero code from a focused run, a clean observer counter or success on hosted CI cannot substitute for that receipt.
