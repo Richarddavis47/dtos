@@ -134,14 +134,14 @@ def render_season_week(view: dict, *, matchup_id: str | None = None) -> str:
                           and (matchup_id is None or identity == matchup_id))
     if recheck and not own_reviews and matchup_id is None:
         own_reviews = lineup_recheck_panel(recheck, None)
-    body = nav + own_reviews + f'<section class="card matchup-heading"><h2>{escape(heading)}</h2><p>{escape(description)}</p></section>'
+    body = nav + (own_reviews if matchup_id is None else '') + f'<section class="card matchup-heading"><h2>{escape(heading)}</h2><p>{escape(description)}</p></section>'
     if own_reviews:
         body += '<script src="/static/lineup-review.js" defer></script>'
     if not view['opponents_locked']:
-        return body + '<section class="card"><h3>Playoff opponents not established</h3><p>Projected seeding is not a locked matchup. Playoff-window strength remains opponent-independent.</p><a href="/teams">View team strength</a></section>'
+        return body + (own_reviews if matchup_id is not None else '') + '<section class="card"><h3>Playoff opponents not established</h3><p>Projected seeding is not a locked matchup. Playoff-window strength remains opponent-independent.</p><a href="/teams">View team strength</a></section>'
     byes = ''.join(f'<section class="card"><h3><a href="/teams/{side["roster_id"]}">{escape(side["team"])}</a></h3><p>First-round bye · qualified for the playoffs. No opponent or game score is assigned.</p></section>' for side in view.get('byes') or [])
     if view['availability'] != 'available':
-        return body + byes + '<section class="card"><h3>This week is not ready</h3><p>Choose a week with available results, or retry the normal league refresh when it is available.</p></section>'
+        return body + (own_reviews if matchup_id is not None else '') + byes + '<section class="card"><h3>This week is not ready</h3><p>Choose a week with available results, or retry the normal league refresh when it is available.</p></section>'
     cards = []
     ordered = sorted(view['groups'].items(), key=lambda item: (not any(s.get('is_viewer') for s in item[1]), item[0]))
     for identity, sides in ordered:
@@ -186,7 +186,7 @@ def render_season_week(view: dict, *, matchup_id: str | None = None) -> str:
             label = 'Open Week ' + str(week) + ' matchup: ' + ' versus '.join(s['team'] for s in sides)
             content = f'<a class="matchup-card-link" aria-label="{escape(label)}" href="/matchups/{escape(identity)}?week={week}">{content}</a>'
         else:
-            content = f'<a class="back" href="/matchups?week={week}">All Week {week} matchups</a>' + content + _aligned_roster(sides, week, identity, state)
+            content = content + own_reviews + f'<p><a class="ds-action" href="/matchups?week={week}">All Week {week} matchups</a></p>' + _aligned_roster(sides, week, identity, state)
         technical = '<details class="matchup-evidence"><summary>Lineup and projection evidence</summary><p>' + escape(coverage) + '</p>'
         if view['period'] != 'historical':
             for side in sides:

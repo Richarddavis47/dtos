@@ -50,13 +50,13 @@
     if (first === 'teams' && !['/teams',team].includes(u.pathname)) return 'Team details';
     if (u.hash === '#positional-depth') return 'Depth';
     if (u.hash === '#draft-capital') return 'Capital';
-    return ({'':'Home', teams:'My Team', market:'Market', players:'Player details', trades:'Trade workspace', league:'League', matchups:'Matchups', picks:'Draft Capital', history:'History', fois:'FOIS', 'front-offices':'Franchise details', account:'Account', reports:'Weekly Report', settings:'Settings'})[first] || 'previous page';
+    return ({'':'Home', teams:'My Team', market:'Market', players:'Player details', trades:'Trade workspace', league:'League', matchups:'Matchups', picks:'Draft Capital', transactions:'Transactions', history:'History', fois:'FOIS', 'front-offices':'Franchise details', account:'Account', reports:'Weekly Report', settings:'Settings'})[first] || 'previous page';
   }
   function parent() {
     const p = location.pathname;
     const linked = document.querySelector('a.back[href]');
     const supplied = linked && safeUrl(linked.href);
-    if (supplied && /^\/(market\?|teams\/|matchups\/|trades\/history\/|players\/)/.test(supplied) && identity(supplied) !== identity(safeUrl(location.href) || '/')) return supplied;
+    if (supplied && identity(supplied) !== identity(safeUrl(location.href) || '/')) return supplied;
     if (p.startsWith('/players/') || p.startsWith('/picks/')) return p.startsWith('/players/') ? '/market' : '/picks';
     if (p.startsWith('/teams') && teamHash(location.hash)) return team;
     if (p.startsWith('/trades/')) return '/trades';
@@ -124,6 +124,9 @@
     back.hidden = identity(target) === identity(entry?.url || safeUrl(location.href) || '/');
     back.href = target; back.setAttribute('aria-label','Go back to ' + label(target));
     back.title = 'Back to ' + label(target);
+    // Legacy server links still serve direct visits without JS. This control
+    // becomes the sole return link once the scoped navigation is ready.
+    for (const link of document.querySelectorAll('a.back')) link.hidden = !back.hidden;
   }
   function initialize() {
     ledger = load(); const url = safeUrl(location.href); if (!url) {back.hidden=true;return;}

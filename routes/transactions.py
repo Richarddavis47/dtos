@@ -38,6 +38,10 @@ PageRenderer = Callable[[str, str], HTMLResponse]
 
 TRANSACTIONS_CSS = """
 <style>
+.tx-active-filters{display:flex;flex-wrap:wrap;gap:6px;padding:0;list-style:none}
+.tx-active-filters li{padding:4px 9px;border:1px solid var(--line);border-radius:12px;overflow-wrap:anywhere}
+.tx-disclosure{margin-top:12px}.tx-disclosure summary{min-height:44px;align-content:center;cursor:pointer;font-weight:700}
+.tx-disclosure form{margin-top:8px}.tx-stat{min-width:0;overflow-wrap:anywhere}
 .tx-hero{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap}
 .tx-hero h2{margin:0 0 5px}.tx-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.tx-actions form{margin:0}
 .tx-refresh{border:0;border-radius:10px;padding:11px 15px;background:var(--accent);color:#062018;font-weight:850;cursor:pointer}
@@ -58,6 +62,12 @@ TRANSACTIONS_CSS = """
 .player-hero{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center}.player-monogram{width:58px;height:58px;border-radius:16px;background:#182a40;border:1px solid var(--line);display:grid;place-items:center;font-size:20px;font-weight:950;color:var(--accent)}
 @media(max-width:1000px){.tx-stats{grid-template-columns:repeat(3,1fr)}.tx-filters{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:600px){.tx-stats{grid-template-columns:repeat(2,1fr)}.tx-filters{grid-template-columns:1fr}.tx-refresh-meta{text-align:left}.tx-hero{display:block}.tx-actions{margin-top:10px}.tx-stat b{font-size:19px}
+.tx-archive-table{min-width:0}
+.tx-archive-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.tx-archive-table tbody,.tx-archive-table tr,.tx-archive-table td{display:block}
+.tx-archive-table tr{padding:12px;border-bottom:1px solid var(--line)}
+.tx-archive-table td{padding:4px 0;border:0;overflow-wrap:anywhere}
+.tx-archive-table td p{margin:2px 0}
 .tx-table{min-width:0;display:block}.tx-table thead{display:block}.tx-table thead tr{display:flex;flex-wrap:wrap}.tx-table thead th{border:0;padding:10px;font-size:12px}
 .tx-table tbody{display:grid;gap:12px;padding:12px}.tx-table tbody tr{display:grid;grid-template-columns:minmax(0,1fr) auto;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:12px}
 .tx-table tbody td{display:block;border:0;padding:4px 0;min-width:0}.tx-table tbody td:nth-child(n+3){grid-column:1/-1;padding-top:12px}.tx-time{white-space:normal;font-size:12px}.tx-asset{padding:8px;border-left:2px solid var(--line);background:var(--surface-elevated);border-radius:6px}.tx-table-wrap{background:transparent;border:0}}
@@ -340,20 +350,26 @@ def create_transactions_router(
         archive_table_body = archive_rows or '<tr><td colspan="6">No archived transactions match these filters.</td></tr>'
         from src.ui.trade_timeline import render_source_coverage
         coverage = canonical_history_store.source_coverage(selected_league) if scope != 'current_activity' and hasattr(canonical_history_store, 'source_coverage') else {}
-        archive_panel = (f'<section class="card"><h2>Historical Archive</h2><p>{archive["total_filtered"]} archived transactions match this scope. Source: retained Sleeper observations.</p><p>{escape(archive["qualification"])}</p><p>Archive page {archive["page"]} of {archive["page_count"]} · {len(archive["rows"])} shown · {archive["per_page"]} per page. Only acquired source periods are included.</p><div class="ds-table-wrap" tabindex="0" role="region" aria-label="Historical transactions"><table><thead><tr><th>Season</th><th>Timestamp</th><th>Type</th><th>Status</th><th>Consideration</th><th>Details</th></tr></thead><tbody>{archive_table_body}</tbody></table></div>{_pagination({**archive, "transactions": archive["rows"]}, filters)}{render_source_coverage(coverage)}</section>') if scope != 'current_activity' else ''
+        archive_panel = (f'<section class="card"><h2>Historical Archive</h2><p>{archive["total_filtered"]} archived transactions match this scope. Source: retained Sleeper observations.</p><p>{escape(archive["qualification"])}</p><p>Archive page {archive["page"]} of {archive["page_count"]} · {len(archive["rows"])} shown · {archive["per_page"]} per page. Only acquired source periods are included.</p><div class="ds-table-wrap" tabindex="0" role="region" aria-label="Historical transactions"><table class="tx-archive-table"><thead><tr><th>Season</th><th>Timestamp</th><th>Type</th><th>Status</th><th>Consideration</th><th>Details</th></tr></thead><tbody>{archive_table_body}</tbody></table></div>{_pagination({**archive, "transactions": archive["rows"]}, filters)}{render_source_coverage(coverage)}</section>') if scope != 'current_activity' else ''
         activity = _transactions_table(view, filters) + _pagination(view, filters) if scope == 'current_activity' else ''
+        scopes = {"all_history": "All league history", "current_season": "Current season",
+                  "current_activity": "Current-week activity"}
+        selected_team_name = next((row["team_name"] for row in view["teams"]
+                                   if str(row["roster_id"]) == str(team)), team)
+        active_filters = [scopes.get(scope, scope)]
+        for label, value in (("Type", transaction_type.replace("_", " ").title()), ("Status", "Completed" if status == "complete" else status),
+                             ("Team", selected_team_name), ("Manager", owner), ("Player", player),
+                             ("Draft pick", draft_pick), ("From", date_from), ("To", date_to),
+                             ("Search", search), ("Season", season), ("Week", week)):
+            if value not in (None, ""):
+                active_filters.append(f"{label}: {value}")
+        summary_html = "".join(f"<li>{escape(item)}</li>" for item in active_filters)
         body = f"""
 {TRANSACTIONS_CSS}
-<section class="tx-hero">
-  <div><h2>Transactions Center</h2><p>Activity counters below describe the current cached activity window. Historical Archive results have their own scope and counts.</p><p class="muted">Track every roster move, asset exchange, and front-office decision from the current league week.</p></div>
-  <div class="tx-actions">
-    <form method="post" action="/transactions/refresh{f'?{escape(refresh_query)}' if refresh_query else ''}"><button class="tx-refresh" type="submit">Refresh Transactions</button></form>
-    <div class="tx-refresh-meta">Last successful refresh<br><b>{escape(_format_refresh_time(state.get('transactions_last_sync')))}</b></div>
-  </div>
-</section>
 {refresh_alert}
-<section class="tx-stats">{stats}</section>
-<form class="card" method="get" action="/transactions">
+<ul class="tx-active-filters" aria-label="Active transaction filters">{summary_html}</ul>
+<details class="card tx-disclosure"><summary>Search and filters</summary>
+<form method="get" action="/transactions">
   <div class="tx-filters">
     <div class="tx-field"><label for="team">Team</label><select id="team" name="team">{team_options}</select></div>
     <div class="tx-field"><label for="owner">Owner</label><select id="owner" name="owner">{owner_options}</select></div>
@@ -371,9 +387,16 @@ def create_transactions_router(
     <input type="hidden" name="sort" value="{escape(sort)}"><input type="hidden" name="direction" value="{escape(direction)}">
     <div class="tx-filter-actions"><button type="submit">Apply filters</button><a class="tx-reset" href="/transactions">Reset</a></div>
   </div>
-</form>
+</form></details>
 {activity}
 {archive_panel}
+<details class="card tx-disclosure"><summary>Current-week activity counts</summary>
+<p>Counts from the current cached activity window. Historical results above have their own scope and counts.</p>
+<section class="tx-stats">{stats}</section>
+<div class="tx-actions">
+  <form method="post" action="/transactions/refresh{f'?{escape(refresh_query)}' if refresh_query else ''}"><button class="tx-refresh" type="submit">Refresh Transactions</button></form>
+  <div class="tx-refresh-meta">Last successful refresh<br><b>{escape(_format_refresh_time(state.get('transactions_last_sync')))}</b></div>
+</div></details>
 """
         return page("Transactions Center", body)
 
@@ -526,7 +549,7 @@ def create_transactions_router(
             + escape(str(current_observation.get('current_observed_owner_name') or 'Unavailable')) + ' · as of '
             + escape(str(current_observation.get('as_of') or 'date unavailable'))
             + ' · DTOS Sleeper retrieval/sync observation, not acquisition or ownership-change time. Missing intervals do not establish uninterrupted ownership.</p>')
-        historical_panel = f'''<details class="card cx-evidence"><summary>{history_league_name} Career History</summary><h2>Recorded seasons and ownership</h2><p><b>League origin:</b> {escape(human_status(origin.get("event_type")))}</p><p><a href="/history/player/{escape(player_id)}{origin_query}">Open observed historical performance</a></p>{historical_details}<p>Unknown lineup roles remain separate from bench. Missing weekly scoring remains unavailable.</p>
+        historical_panel = f'''<details class="card cx-evidence" id="player-career-history"><summary>{history_league_name} Career History</summary><h2>Recorded seasons and ownership</h2><p><b>League origin:</b> {escape(human_status(origin.get("event_type")))}</p><p><a href="/history/player/{escape(player_id)}{origin_query}">Open observed historical performance</a></p>{historical_details}<p>Unknown lineup roles remain separate from bench. Missing weekly scoring remains unavailable.</p>
 <h3>Annual League History</h3><div class="ds-table-wrap" tabindex="0" role="region" aria-label="Observed season production"><table><thead><tr><th>Season</th><th>Status</th><th>Scored observations</th><th>Known starts</th><th>Explicit bench</th><th>Unknown role</th><th>Observed points</th><th>Sample overall rank</th><th>Sample position rank</th><th>Scored-week coverage</th></tr></thead><tbody>{season_history}</tbody></table></div>
 <h3>Ownership Timeline</h3>{current_observation_html}<ul>{ownership_history}</ul><p class="muted">Failed transactions remain behavioral evidence and never modify ownership. Missing weeks are not converted to zero. Current values are never backdated.</p></details>'''
         trade_return = f'<a class="back" href="/trades/history/{quote(original["transaction_id"], safe="")}">← Back to original trade timeline</a>' if original else ''
@@ -539,14 +562,21 @@ def create_transactions_router(
         from services.market_navigation import market_return
         market_origin = market_return(from_market, market_league, (data.get("league") or {}).get("league_id"))
         market_back = f'<a class="back" href="{escape(market_origin)}">← Back to Market results</a>' if market_origin else ''
+        sections = [("Projections", "#player-weekly-projections")]
+        if canonical_panel:
+            sections.append(("Results", "#player-results"))
+        if workload_html:
+            sections.append(("Workload", "#recent-workload-title"))
+        sections.extend((("History", "#player-career-history"), ("Evidence", "#player-value-evidence")))
+        shortcuts = '<nav class="ds-actions player-section-links" aria-label="Player sections">' + ''.join(
+            f'<a class="ds-action" href="{href}">{label}</a>' for label, href in sections) + '</nav>'
         body = f"""
 {TRANSACTIONS_CSS}
-{'' if market_back else trade_return}
-{matchup_return}
-{market_back or team_return or '<a class="back" href="/transactions">← Back to Transactions Center</a>'}
+{market_back or team_return or matchup_return or trade_return or '<a class="back" href="/transactions">← Back to Transactions Center</a>'}
 {player_dossier(report, selected_team, teams, weekly_projection_html=weekly_panel, ownership=ownership)}
 <p class="player-reported-status">Sleeper reported status: {escape(str(player.get("injury_status") or player.get("status") or "Unavailable"))}</p>
-{canonical_panel}
+{shortcuts}
+{f'<div id="player-results">{canonical_panel}</div>' if canonical_panel else ''}
 {workload_html}
 <details class="cx-evidence"><summary>Player assessment explanation</summary>{profile_explanation}</details>
 {live_panel}

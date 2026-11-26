@@ -40,7 +40,7 @@ def result_row(*, asset_id, name, metadata, price, has_price, rank, query, selec
         change = f"{amount:+,.2f}".rstrip("0").rstrip(".") if amount else "0"
         movement = f'<b class="market-change-{("up" if amount > 0 else "down" if amount < 0 else "flat")}">{change}</b><small>{escape(_window(trend))}</small>'
     else:
-        movement = '<small>No change data</small>'
+        movement = '<small class="market-visually-hidden">No change data</small><b aria-hidden="true">—</b>'
     href = f'/market?{escape(query)}' + ("#market-open-row" if not active else "#market-results")
     focus = ' id="market-open-row"' if active else ''
     active_evidence = (

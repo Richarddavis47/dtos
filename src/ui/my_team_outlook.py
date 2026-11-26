@@ -10,7 +10,6 @@ def roster_shortcuts():
 <a class="thq-action" href="#full-roster" aria-label="View full roster">Players</a>
 <a class="thq-action" href="#my-team-outlook" aria-label="Roster outlook and next step">Outlook</a>
 <a class="thq-action" href="#positional-depth">Depth</a>
-<a class="thq-action" href="#draft-capital" aria-label="Draft capital">Picks</a>
 </nav>'''
 
 
@@ -25,7 +24,7 @@ def outlook_panel(outlook, *, editable, roster_id):
         action += (f'<p>{escape(need["reason"])}</p><a id="my-team-trade-need" class="thq-action" '
                    f'href="{escape(need["href"], quote=True)}">Explore {escape(need["position"])} trades</a>')
     trade = (f'<a class="thq-action" href="/trades/calculator?front_office={roster_id}">Evaluate a trade</a>'
-             f'<a class="thq-action" href="/trades?front_office={roster_id}">Recommended Trades</a>') if editable else ''
+             f'<a class="thq-action" href="/trades/recommended?front_office={roster_id}">Recommended Trades</a>') if editable else ''
     choices = escape(json.dumps(goal_options(roster_id), separators=(',', ':')), quote=True) if editable else '{}'
     heading = '<h2 id="my-team-outlook-title">Your roster at a glance</h2>'
     lead = (f'<p id="my-team-outlook-lead">Comparison pending: lineup and depth. {escape(outlook["future_summary"])}</p>'

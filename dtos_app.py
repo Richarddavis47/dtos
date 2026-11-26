@@ -939,10 +939,14 @@ def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLRespon
         if account.membership and str(account.membership.league_id) == selected_league_id:
             navigation_roster_id = account.membership.roster_id
         csrf_html = f'<input type="hidden" name="csrf_token" value="{escape(account.csrf_token)}">'
+        memberships = sorted(account_store.memberships(account.account_id),
+                             key=lambda item: str(item.league_id) != selected_league_id)
         switches = "".join(
-            f'<form method="post" action="/account/leagues/{escape(item.league_id)}/activate"><input type="hidden" name="csrf_token" value="{escape(account.csrf_token)}"><button class="ds-action" type="submit">{escape(item.league_name or item.league_id)}</button></form>'
-            for item in account_store.memberships(account.account_id)
-            if item.status == "active" and item.roster_id is not None
+            f'<form method="post" action="/account/leagues/{escape(item.league_id)}/activate">{csrf_html}'
+            f'<button class="ds-action" type="submit"'
+            f'{" aria-current=true" if str(item.league_id) == selected_league_id else ""}>'
+            f'{escape(item.league_name or item.league_id)}</button></form>'
+            for item in memberships if item.status == "active" and item.roster_id is not None
         )
         franchise = account.membership.franchise_name if account.membership else "Choose a league"
         switch_label = f'{escape(franchise or "Team name not recorded")} · Switch league'
@@ -959,20 +963,21 @@ def page(title: str, body: str, commissioner_chrome: bool = False) -> HTMLRespon
     sync_control = f'<form method="post" action="/sync">{csrf_html}<button class="btn" type="submit">Sync League</button></form>'
     tools = secondary_navigation()
     brand_mark = f'<a class="brand-mark" href="/" aria-label="DTOS Home">{APPLICATION_NAME}</a>'
+    compact_variant = " market-top" if market_screen else ""
+    compact_top = f'<header class="top compact-top{compact_variant}"><div class="brand">{brand_mark}</div>{account_html}</header>'
     if home_switch:
         body = body.replace("<!--home-league-switch-->", "", 1)
         body = body.replace("<!--home-secondary-chrome-->", sync_control + tools, 1)
-        top = f'<header class="top home-top"><div class="brand">{brand_mark}</div>{account_html}</header>'
+        top = compact_top
         account_html = ""
         header = back
     elif league_screen:
-        top = f'<header class="top home-top league-top"><div class="brand">{brand_mark}</div>{account_html}</header>'
+        top = compact_top
         body = with_back(body.replace("<!--league-secondary-chrome-->", sync_control + tools, 1), back)
         account_html = ""
         header = ""
-    elif market_screen:
-        top = (f'<header class="top home-top market-top"><div class="brand">{brand_mark}</div>{account_html}</header>'
-               f'<div class="market-chrome-tools">{sync_control}{tools}</div>')
+    elif account is not None or market_screen:
+        top = compact_top + f'<div class="compact-tools">{tools}{sync_control}</div>'
         account_html = ""
     else:
         top = f'<header class="top"><div class="brand">{brand_mark}<p>{escape(league_name)} Front Office</p></div>{sync_control}{tools}</header>'

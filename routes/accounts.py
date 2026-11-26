@@ -209,7 +209,7 @@ def create_accounts_router(*, service: AccountService, runtime_manager: Any) -> 
     @router.get("/account/sign-in")
     async def sign_in_page(error: str = "") -> HTMLResponse:
         message = '<p class="error">Sign-in failed. Check your details and try again.</p>' if error else ""
-        return _shell("Sign in", f'<section class="card"><h2>Sign in to DTOS</h2>{message}<form class="grid" method="post" action="/account/sign-in"><label>Username<input name="username" autocomplete="username" required></label><label>Password<input type="password" name="password" autocomplete="current-password" required></label><button class="btn ds-action primary" data-dtos-action="primary" data-action-id="sign-in" type="submit">Sign in</button></form><p><a href="/account/recover">Recover your account</a></p><p class="muted">New to DTOS? <a href="/account/create">Create an account</a>.</p></section>', purpose="Use your DTOS credentials to return to your saved leagues.")
+        return _shell("Sign in", f'<section class="card" aria-label="DTOS sign-in">{message}<form class="grid" method="post" action="/account/sign-in"><label>Username<input name="username" autocomplete="username" required></label><label>Password<input type="password" name="password" autocomplete="current-password" required></label><button class="btn ds-action primary" data-dtos-action="primary" data-action-id="sign-in" type="submit">Sign in</button></form><p><a href="/account/recover">Recover your account</a></p><p class="muted">New to DTOS? <a href="/account/create">Create an account</a>.</p></section>', purpose="Use your DTOS credentials to return to your saved leagues.")
 
     @router.post("/account/sign-in")
     async def sign_in(request: Request) -> Response:
@@ -347,18 +347,26 @@ def create_accounts_router(*, service: AccountService, runtime_manager: Any) -> 
                 if not discovered:
                     return _source_unavailable()
                 saved_notice = '<p role="status">Saved connected leagues · Sleeper discovery is unavailable. You can retry discovery or select an existing connection; preparation is still checked.</p><p><a href="/account/leagues">Retry league discovery</a></p>'
+        active_id = str(context.membership.league_id) if context.membership else ""
+        def picker_order(league):
+            league_id = str(league.get("league_id"))
+            member = memberships.get(league_id)
+            return 0 if league_id == active_id else 1 if member and member.status == "active" else 2
+
         cards = []
-        for league in discovered:
+        for league in sorted(discovered, key=picker_order):
             league_id = str(league.get("league_id"))
             membership = memberships.get(league_id)
             connected = bool(membership and membership.status == "active")
-            state = "Switch front office" if connected else "Add to DTOS"
+            is_active = league_id == active_id
+            state = "Open active league" if is_active else "Switch front office" if connected else "Add to DTOS"
+            active_label = '<p><b>Active league</b></p>' if is_active else ""
             action = f"/account/leagues/{league_id}/activate" if connected else f"/account/leagues/{league_id}"
             history = league.get("historical_seasons") or []
             years = ", ".join(str(row.get("season")) for row in history if row.get("season"))
             coverage = "Saved connection · discovery not refreshed" if league.get("saved_connection") else f"Current season: {escape(str(league.get('season') or 'Unknown'))} · {int(league.get('total_rosters') or 0)} teams"
-            cards.append(f'<article class="card"><h2>{escape(str(league.get("name") or "Sleeper league"))}</h2><p>{coverage}</p>{f"<p>History: {escape(years)}</p>" if years else ""}<p>{"Your team: <b>" + escape(membership.franchise_name or "Team found on Sleeper") + "</b>" if membership else "DTOS will look for the team linked to your Sleeper account."}</p><form method="post" action="{escape(action)}"><input type="hidden" name="csrf_token" value="{escape(context.csrf_token)}"><button class="btn" type="submit">{state}</button></form></article>')
-        return _shell("Your leagues", f'{saved_notice}<p class="muted">Current NFL dynasty leagues are shown first.</p>{"".join(cards) or "<section class=\"card\"><h2>No eligible leagues found</h2><p>Check the linked Sleeper username or try again later.</p></section>"}<section class="card"><h2>Add another league</h2><p>Enter a Sleeper league ID. DTOS can add the league only when your Sleeper account matches exactly one team.</p><form class="grid" method="post" action="/account/leagues/import"><input type="hidden" name="csrf_token" value="{escape(context.csrf_token)}"><label>Sleeper league ID<input name="league_id" inputmode="numeric" required></label><button class="btn ds-action primary" data-dtos-action="primary" data-action-id="import-league" type="submit">Add to DTOS</button></form></section>', purpose="Choose a connected league or add another league you belong to.")
+            cards.append(f'<article class="card"><h2>{escape(str(league.get("name") or "Sleeper league"))}</h2>{active_label}<p>{coverage}</p>{f"<p>History: {escape(years)}</p>" if years else ""}<p>{"Your team: <b>" + escape(membership.franchise_name or "Team found on Sleeper") + "</b>" if membership else "DTOS will look for the team linked to your Sleeper account."}</p><form method="post" action="{escape(action)}"><input type="hidden" name="csrf_token" value="{escape(context.csrf_token)}"><button class="btn" type="submit">{state}</button></form></article>')
+        return _shell("Your leagues", f'{saved_notice}<p class="muted">Your active league is first, followed by other connected leagues.</p>{"".join(cards) or "<section class=\"card\"><h2>No eligible leagues found</h2><p>Check the linked Sleeper username or try again later.</p></section>"}<section class="card"><h2>Add another league</h2><p>Enter a Sleeper league ID. DTOS can add the league only when your Sleeper account matches exactly one team.</p><form class="grid" method="post" action="/account/leagues/import"><input type="hidden" name="csrf_token" value="{escape(context.csrf_token)}"><label>Sleeper league ID<input name="league_id" inputmode="numeric" required></label><button class="btn ds-action primary" data-dtos-action="primary" data-action-id="import-league" type="submit">Add to DTOS</button></form></section>', purpose="Choose a connected league or add another league you belong to.")
 
     @router.post("/account/leagues/import")
     async def import_league(request: Request) -> Response:

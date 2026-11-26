@@ -58,6 +58,20 @@ a.card:hover,a.team-link:hover,.ux-action:hover{border-color:var(--line-strong);
 .account-context summary b{font-size:13px}
 .account-context summary span{font-size:12px;color:var(--text-muted)}
 .account-context .ds-actions{max-height:280px;overflow-y:auto;justify-content:flex-start;padding:12px 0}
+.ds-shell .top.compact-top{grid-template-columns:minmax(0,1fr) fit-content(68%);align-items:start;gap:10px}
+.compact-top aside{min-width:0;justify-self:end}
+.ds-shell .compact-top .account-context{padding:0;border:0;margin:0}
+.ds-shell .compact-top .account-context summary{flex-wrap:nowrap;padding:3px 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface-elevated);gap:6px;min-height:44px}
+.compact-top .account-context summary b{font-size:14px;overflow-wrap:anywhere;min-width:0}
+.compact-top .account-context summary span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.compact-top .ds-actions{overflow-wrap:anywhere}
+.compact-tools{display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap}
+.compact-tools .secondary-nav{margin:0;flex:1}
+.compact-tools .btn{min-height:44px;background:transparent;color:var(--text-secondary);border:1px solid var(--border)}
+@media(max-width:760px){
+ .wrap:has(.compact-top){padding-bottom:calc(108px + env(safe-area-inset-bottom))}
+ .wrap:has(.compact-top) :is(button,input,select,a,summary){scroll-margin-bottom:75px}
+}
 .account-context button[aria-current=true]{border-color:var(--accent);color:var(--accent)}
 .manager-nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));margin:0 0 8px;gap:4px;border-bottom:1px solid var(--border)}
 .manager-nav a{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:8px;border-bottom:2px solid transparent;font-weight:650;color:var(--text-secondary)}

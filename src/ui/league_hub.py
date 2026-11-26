@@ -7,7 +7,7 @@ from src.core.player_value_projection.sleeper_actuals import actual_display
 from src.ui.design_system import DESIGN_SYSTEM_VERSION
 
 
-def league_week_heading(data, selected):
+def matchup_week_control(data, selected):
     calendar = matchup_calendar(data.get("league") or {}, data.get("week") or 1, data.get("nfl_state"))
     weeks = sorted(set(calendar.get("regular_season_weeks") or []) | {
         week for group in calendar.get("playoff_rounds") or [] for week in group
@@ -21,11 +21,15 @@ def league_week_heading(data, selected):
 
     previous = arrow("Previous matchup week", "‹", weeks[index - 1] if index else None)
     following = arrow("Next matchup week", "›", weeks[index + 1] if index + 1 < len(weeks) else None)
-    return (f'<header class="league-heading" data-dtos-component="page-header" data-design-system="{DESIGN_SYSTEM_VERSION}"><h1>League</h1>'
-            f'<nav aria-label="Matchup preview week">{previous}<strong>Week {selected}</strong>{following}</nav></header>')
+    return f'<nav class="league-week-control" aria-label="Matchup preview week">{previous}<strong>Week {selected}</strong>{following}</nav>'
 
 
-def matchup_preview(week, view, viewer):
+def league_heading():
+    return (f'<header class="league-heading" data-dtos-component="page-header" '
+            f'data-design-system="{DESIGN_SYSTEM_VERSION}"><h1>League</h1></header>')
+
+
+def matchup_preview(week, view, viewer, week_control):
     all_href = f'/matchups?week={week}'
     identity, sides = next(iter(view.get("groups", {}).items()), (None, []))
     has_matchup = identity is not None and view.get("availability") == "available"
@@ -64,4 +68,4 @@ def matchup_preview(week, view, viewer):
         content = (f'<div class="card league-matchup-preview" data-game-state="{state}">'
                    f'<div class="league-score-pair">{"".join(scores)}</div><p>{label}</p>{future}'
                    f'<a class="ux-primary-action" data-dtos-action="primary" href="{href}">View matchup</a></div>')
-    return f'<section class="league-matchup" aria-labelledby="league-matchup-title">{heading}{content}</section>'
+    return f'<section class="league-matchup" aria-labelledby="league-matchup-title">{heading}{week_control}{content}</section>'

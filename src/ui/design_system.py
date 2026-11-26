@@ -52,7 +52,7 @@ def _presentation(title: str) -> PagePresentation:
     if "draft" in normalized or "pick" in normalized:
         return PagePresentation("Understand the league's draft-capital ownership and strategic flexibility.", "Draft capital", "Open Trade Center", "/trades")
     if "transaction" in normalized:
-        return PagePresentation("See what changed across the league and which assets moved.", "League activity", "Review Transactions", "/transactions")
+        return PagePresentation("See what changed across the league and which assets moved.", "League activity", "League", "/league", variant="search")
     if "setting" in normalized:
         return PagePresentation("Review league rules, synchronization state, and application information.", "League configuration", "Review Sync Status", "/settings#sync-status")
     return PagePresentation("Choose a league page to review your team and its next move.", "League overview", "View teams", "/teams")

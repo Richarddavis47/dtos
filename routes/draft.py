@@ -33,7 +33,7 @@ def create_draft_router(
             str(team["roster_id"]): team["team_name"] for team in data["teams"]
         }
         rows = []
-        cards = []
+        cards: dict[tuple[str, str], list[str]] = {}
         historical_cards = []
         sorted_picks = sorted(
             data["traded_picks"],
@@ -81,7 +81,7 @@ def create_draft_router(
             confidence = escape(str(scoped["projected_range_confidence"]))
             exact = escape(str(scoped.get("exact_slot"))) if scoped.get("exact_slot_established") is True else "Unavailable"
             details = (
-                '<details><summary>Supporting Evidence</summary>'
+                '<details><summary>Sources</summary>'
                 f'<p>{market_text} · {provider} · {concept}</p><p>Market unit: normalized 0–1000. Format: {escape(str(quote.get("market_format") or "Unavailable"))}.</p>'
                 f'<p>Market availability: {escape(str(market.get("availability")))}. '
                 f'{escape(str(market.get("reason") or "Prepared external quote"))}</p>'
@@ -104,10 +104,13 @@ def create_draft_router(
                 f'<p class="pick-owner"><span>{"Current owner" if current_right else "Owner in recorded transfer"}</span>{franchise(owner_id)}</p>'
                 f'<p class="pick-owner"><span>Original franchise</span>{franchise(roster_id)}</p>'
                 f'<div class="pick-outlook"><b>Market price: {price_text}</b>{market_summary}</div>{market_gap}'
-                '<details><summary>Draft position and valuation details</summary>'
+                '<details><summary>Range and value</summary>'
                 f'<p class="muted">Projected range: {range_text} · Confidence: {confidence} · Exact slot: {exact}</p>{details}{shared_explanation}</details></article>'
             )
-            (cards if current_right else historical_cards).append(card)
+            if current_right:
+                cards.setdefault((year, str(pick.get("round"))), []).append(card)
+            else:
+                historical_cards.append(card)
             rows.append(
                 f'<tr><td><a href="/picks/{escape(pick_id)}">{escape(str(pick.get("season", "")))}</a></td>'
                 f'<td>{escape(str(pick.get("round", "")))}</td>'
@@ -117,10 +120,15 @@ def create_draft_router(
                 f'<td>{range_text} · {confidence}</td><td>{exact}</td></tr>'
             )
 
+        grouped_picks = "".join(
+            f'<section class="pick-round-group"><h4>{escape(season)} · Round {escape(round_number)}</h4>'
+            f'<div class="pick-asset-grid">{"".join(picks)}</div></section>'
+            for (season, round_number), picks in cards.items()
+        )
         body = (
-            '<h2>Draft Picks</h2><p>Current traded picks are separate from past transfers. Your full owned inventory is in My Team draft capital.</p><h3>Current traded picks</h3><div class="pick-asset-grid">'
-            + ("".join(cards) or '<div class="ds-empty"><b>No current traded picks are established here.</b>View My Team for supported owned picks.</div>')
-            + '</div>' + ('<details class="cx-evidence"><summary>Past or unconfirmed pick transfers · ' + str(len(historical_cards)) + '</summary><p>These recorded transfers do not establish a currently tradable pick. Open its history to check conversion and ownership.</p><div class="pick-asset-grid">' + ''.join(historical_cards) + '</div></details>' if historical_cards else '')
+            '<p>Current traded picks are separate from past transfers. Your full owned inventory is in My Team draft capital.</p><h2>Current traded picks</h2>'
+            + (grouped_picks or '<div class="ds-empty"><b>No current traded picks are established here.</b>View My Team for supported owned picks.</div>')
+            + ('<details class="cx-evidence"><summary>Past or unconfirmed pick transfers · ' + str(len(historical_cards)) + '</summary><p>These recorded transfers do not establish a currently tradable pick. Open its history to check conversion and ownership.</p><div class="pick-asset-grid">' + ''.join(historical_cards) + '</div></details>' if historical_cards else '')
             + '<details class="technical-details"><summary>Compare all pick evidence</summary><div class="card ds-table-wrap"><table><thead>'
             '<tr><th>Season</th><th>Round</th><th>Original Team</th>'
             '<th>Current Owner</th><th>Market price</th><th>Projected range / confidence</th><th>Exact slot</th></tr></thead><tbody>'

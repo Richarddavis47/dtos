@@ -208,7 +208,7 @@ def trade_center(view: dict) -> str:
     active = view["active_team"]
     unified = view.get("unified_recommendation")
     active_id = int(active.get("roster_id") or 0)
-    entry_actions = f'''<link rel="stylesheet" href="/static/css/trade_workspace.css"><nav class="tw-entry-actions" aria-label="Primary Trade purpose"><a href="/trades/recommended?front_office={active_id}"><b>Generate Trades</b><span>DTOS discovers possible offers. Choose your goal and optional search constraints.</span></a><a href="/trades/calculator?front_office={active_id}"><b>Evaluate Trade</b><span>You supply the offer. Compare values, then evaluate both teams.</span></a></nav>'''
+    entry_actions = f'''<link rel="stylesheet" href="/static/css/trade_workspace.css"><nav class="tw-entry-actions" aria-label="Primary Trade purpose"><a href="/trades/recommended?front_office={active_id}"><b>Find Recommended Trades</b><span>Choose a goal and search for offers that work for both teams.</span></a><a href="/trades/calculator?front_office={active_id}"><b>Evaluate Trade</b><span>You supply the offer. Compare values, then evaluate both teams.</span></a></nav>'''
     options = "".join(
         f'<option value="{int(team.get("roster_id") or 0)}" {"selected" if int(team.get("roster_id") or 0) == active_id else ""}>{escape(str(team.get("owner") or team.get("team_name")))}</option>'
         for team in view["teams"]
@@ -218,8 +218,7 @@ def trade_center(view: dict) -> str:
         for identifier, label, description in (
             ("create", "Build a Trade", "See live Market totals, evaluate, and preview balancing options."),
             ("trade-for", "Trade For", "Pursue an asset another franchise owns."),
-            ("shop", "Shop / Trade Away", "Search the league for legitimate markets."),
-            ("recommended", "Recommended Trades", "Offers that meet both teams’ requirements."),
+            ("shop", "Shop / Trade Away", "Search offers for an asset you own."),
         )
     )
     if view.get('search_state') == 'not_started' and not view.get('canonical_results'):
