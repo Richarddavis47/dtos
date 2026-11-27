@@ -1,6 +1,6 @@
 # Counterparty fit evidence
 
-[PR #374](https://github.com/Richarddavis47/dtos/pull/374) at candidate `69e054bd84641b685e604f93bab81d60e95f5aae` and validated candidate tree `a7abe3696947ff3239302c6f0b9f5890e36301d1`. Full release validation is still in progress at this checkpoint.
+[PR #374](https://github.com/Richarddavis47/dtos/pull/374) at candidate `3074da17031ddd25c6caeda70f9df40bcd823468` and exact candidate tree `9f0734bbf30581f048b522e6e795f2b2d3bbe919`. Full release validation is still in progress at this checkpoint.
 
 [Matched decision trace](DECISION_TRACE.md) · [Machine-readable replay](matched-burrow-package-trace.json) · [Original focused consoles](original-tests) · [Scout acceptance route](SCOUT_HANDOFF.md)
 

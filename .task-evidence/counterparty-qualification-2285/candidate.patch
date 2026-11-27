@@ -248,6 +248,47 @@ index 00d00c1..5173d6c 100644
      if (retained) card.append(node('p', 'Retained assessment · NOT REVALIDATED', 'tw-drawback'));
      const partnerName = context.identity?.counterparty || (retained ? 'Franchise #' + row.proposal.partner_roster_id + ' · recorded name unavailable' : team(row.proposal.partner_roster_id)?.team_name || 'the selected partner');
      card.append(node('h3', partnerName, 'tw-offer-partner'), node('p', finalVerdict(e), 'tw-offer-verdict'));
+diff --git a/tests/test_trade_discovery_repair.py b/tests/test_trade_discovery_repair.py
+index 0076626..a98ec3d 100644
+--- a/tests/test_trade_discovery_repair.py
++++ b/tests/test_trade_discovery_repair.py
+@@ -211,15 +211,27 @@ class DiscoveryRepairTests(unittest.TestCase):
+         workspace['competitive_windows'] = {}
+         for team in workspace['teams']:
+             team.pop('strategy', None)
+-        for payload in (self.proposal(sent=['2028-R1-21', '2028-R2-21']),
+-                        self.proposal(sent=['1q'], received=['2028-R1-22'], strategy='REBUILD')):
+-            result = evaluate_trade_request(self.data, payload, workspace=workspace,
+-                projection_reader=self.fixture.reader)['evaluation']
+-            counter = result['dimensions']['counterparty_plausibility']
+-            self.assertEqual(counter['manager_strategy']['strategy'], None)
+-            self.assertEqual(counter['assessment'], 'PLAUSIBLE')
+-            self.assertIn('COUNTERPARTY_STRATEGY_UNCONFIRMED', counter['reason_codes'])
+-            self.assertIsNone(counter['acceptance_probability'])
++        picks = ['2028-R1-21', '2028-R2-21']
++        controls = (
++            (self.proposal(sent=picks), -4, 'LOW', 'COUNTERPARTY_PACKAGE_COMPENSATION_UNESTABLISHED'),
++            (self.proposal(sent=picks, received=['2wb']), 0, 'PLAUSIBLE', 'COUNTERPARTY_SUPPORTED_CAPITAL_TRADEOFF'),
++            (self.proposal(sent=['1q'], received=['2028-R1-22'], strategy='REBUILD'), 12, 'PLAUSIBLE',
++             'COUNTERPARTY_SUPPORTED_PRODUCTION_TRADEOFF'),
++        )
++        for payload, delta, assessment, reason in controls:
++            with self.subTest(sent=payload['assets_sent'], received=payload['assets_received']):
++                result = evaluate_trade_request(self.data, payload, workspace=workspace,
++                    projection_reader=self.fixture.reader)['evaluation']
++                counter = result['dimensions']['counterparty_plausibility']
++                self.assertIsNone(counter['manager_strategy']['strategy'])
++                self.assertEqual(result['lineup_impact']['partner']['delta'], delta)
++                self.assertEqual(counter['assessment'], assessment)
++                self.assertIn(reason, counter['reason_codes'])
++                if assessment == 'PLAUSIBLE':
++                    self.assertIn('COUNTERPARTY_STRATEGY_UNCONFIRMED', counter['reason_codes'])
++                else:
++                    self.assertFalse(result['generated_trade_eligible'])
++                self.assertIsNone(counter['acceptance_probability'])
+ 
+     def test_exact_acquired_pick_fields_survive_search_and_evaluation(self):
+         result = self.search('shop', asset_id='2028-R1-21')
 diff --git a/tests/test_trade_package_adjustment.py b/tests/test_trade_package_adjustment.py
 index e852595..212671c 100644
 --- a/tests/test_trade_package_adjustment.py

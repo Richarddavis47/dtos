@@ -1,6 +1,6 @@
 # Scout acceptance for counterparty fit
 
-PR #374. Candidate 69e054bd84641b685e604f93bab81d60e95f5aae. Tree a7abe3696947ff3239302c6f0b9f5890e36301d1. Build 2284 baseline a1a7e172898fd8f8c4d308e6f4d220e65c1f42d0. Planned release v1.22.70 / build 2285.
+PR #374. Candidate 3074da17031ddd25c6caeda70f9df40bcd823468. Tree 9f0734bbf30581f048b522e6e795f2b2d3bbe919. Build 2284 baseline a1a7e172898fd8f8c4d308e6f4d220e65c1f42d0. Planned release v1.22.70 / build 2285.
 
 1. Use the prepared Dynasty Best Ball fixture with Win Now for The tankers and an unconfirmed direction for Crayon Eaters. In manual Evaluate, send Bo Nix, Bryce Young and `2028-R3-1`, The tankers’ exact third, for Joe Burrow and Cam Skattebo. Expect 1,166–1,166 Neutral Market, provisional Week 12 effects +15.10 and −20.05, and “Negotiation option · partner benefit unconfirmed” near the package explanation.
 2. Manually evaluate the prior revisions individually. Add Fixture RB A to the outgoing side, then replay the original outgoing side while leaving Cam Skattebo with Crayon Eaters. Compare 1,266–1,166 and 1,166–776 Neutral. Both retain the −17.10 Week 12 seller loss and the exact future pick. Expect the package explanation to identify the gain in Market and capital as well as the unresolved lineup cost.
