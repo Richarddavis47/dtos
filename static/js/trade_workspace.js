@@ -1212,7 +1212,9 @@
     out.dataset.assessmentFreshness = retained ? 'retained' : 'current';
     if (!previousContainer) {
       const proposal = {active_roster_id: active, partner_roster_id: partner(), assets_sent: [...selected.sent], assets_received: [...selected.received]};
-      out.append(evaluationOverview(e, proposal, context?.proposal_presentation, retained, retained ? null : betterOfferControl(e, proposal, context)));
+      const betterOffer = retained ? null : betterOfferControl(e, proposal, context);
+      if (betterOffer) out.append(node('h3', finalVerdict(e), 'tw-review-verdict'));
+      out.append(evaluationOverview(e, proposal, context?.proposal_presentation, retained, betterOffer));
     }
     if (retained && !e.explanation_html) appendRecordedLineups(out, context);
     out.append(capitalDisclosure(context?.draft_capital_record || e.draft_capital_record, retained));
@@ -1552,7 +1554,7 @@
     }
     appendCurrentLineupSummary(card, d);
     const adjustment = e.package_adjustment?.partner;
-    const reason = d.partner_summary || e.why_they_would_do_it;
+    const reason = e.dimensions?.counterparty_plausibility?.explanation || e.why_they_would_do_it;
     if (reason) card.append(node('p', 'Why it may help them: ' + customerText(reason)));
     if (row.personal_preference_matches?.avoid_received?.length) card.append(node('p', 'Includes an asset you prefer to avoid.', 'tw-risk-summary'));
     const cost = d.main_cost || e.major_drawback;
@@ -1560,6 +1562,7 @@
     card.append(node('p', valuationSummary(e), 'tw-offer-market'));
     const evidence = node('div');
     if (adjustment?.explanation) evidence.append(node('p', customerText(adjustment.explanation)));
+    if (d.partner_summary && d.partner_summary !== reason) evidence.append(node('p', customerText(d.partner_summary)));
     const ownReserve = e.dimensions?.strategic_fit?.active?.reserve_quality;
     if (ownReserve?.material_loss && typeof ownReserve.mean_weekly_delta === 'number') {
       evidence.append(node('p', 'Your eligible backup production changes by ' + displayPoints(ownReserve.mean_weekly_delta) + ' projected points per supported week.'));

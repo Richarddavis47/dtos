@@ -366,6 +366,8 @@ class TradePackageAdjustmentTests(unittest.TestCase):
                             result.screenshot(path=str(folder / f'package-review-{width}.png'))
                         button = result.get_by_role('button', name='Show me a better offer')
                         expect(button).to_be_visible()
+                        expect(result.locator('.tw-review-verdict')).to_have_text('COUNTERPARTY LIMITED')
+                        self.assertTrue(result.locator('.tw-review-verdict').evaluate("e=>e.compareDocumentPosition(e.parentElement.querySelector('.tw-valuation-gauge')) & Node.DOCUMENT_POSITION_FOLLOWING"))
                         self.assertFalse(requests)
                         if width < 600:
                             self.assertTrue(fully_reachable(button))
@@ -380,6 +382,11 @@ class TradePackageAdjustmentTests(unittest.TestCase):
                         self.assertEqual(requests[-1][0]['strategy'], 'WIN NOW')
                         revisions = result.locator('.tw-revision-grid article')
                         expect(revisions).to_have_count(2)
+                        first_box, second_box = [row.bounding_box() for row in revisions.all()]
+                        if width < 600:
+                            self.assertGreater(second_box['y'], first_box['y'] + first_box['height'])
+                        else:
+                            self.assertGreater(second_box['x'], first_box['x'] + first_box['width'])
                         expect(result.locator('.tw-revision-grid')).to_contain_text('Why it may help them')
                         expect(result.locator('.tw-revision-grid')).to_contain_text('Your cost or risk')
                         expect(result.locator('.tw-revision-grid')).to_contain_text('The tankers')
