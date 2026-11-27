@@ -9,3 +9,9 @@ PR #374. Candidate 3074da17031ddd25c6caeda70f9df40bcd823468. Tree 9f0734bbf30581
 5. Use keyboard and touch in responsive Chromium at 320 and 390 pixels. Check the full-height action sits above bottom navigation when brought into view. At desktop, confirm the same Review display and side-by-side supported previews. Inspect best-ball depth and star-for-star decisions in the focused originals.
 
 The screenshot replay uses synthetic unshown prices and prepared NFL projections. Any safely admitted, signed-in production comparison and any physical iPhone Safari check require independent evidence. Leave league settings, rankings, lineups and all real trades untouched.
+
+## Verified production
+
+[DTOS v1.22.70 / build 2285](https://github.com/Richarddavis47/dtos/releases/tag/v1.22.70) is ready at commit `db4e7ea43bc3106502132b26841ddf520fe29dae` and validated tree `9f0734bbf30581f048b522e6e795f2b2d3bbe919`. The immutable release contains 23 verified attachments with original full and hosted consoles, checksums, and prior attempts. Both full runs passed 4,694 tests and ten gates under 2 GiB with zero OOM kills. All 13 hosted checks and both guarded publisher stages passed. [Production receipts](production) · [Original test index](original-tests) · [Exact-source screenshots](exact-final-source)
+
+The provisioned read-only inspection returned HTTP 401. Signed-in owner and physical iPhone Safari remain unverified. Browser coverage here uses responsive Chromium fixtures.
