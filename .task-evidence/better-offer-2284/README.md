@@ -10,3 +10,7 @@ Open the before, after and comparisons folders for 320px, 390px and 1280px. The 
 - [Draft PR and full validation status](https://github.com/Richarddavis47/dtos/pull/373)
 
 The full-source gates and guarded publication must pass before this candidate is released.
+
+## Verified production
+
+[DTOS v1.22.69 / build 2284](https://github.com/Richarddavis47/dtos/releases/tag/v1.22.69) is live and ready. The immutable release includes 23 verified attachments, with separate originals for the complete local and hosted tests, Product Browser, prior attempts and checksums. The exact local and hosted canonical runs each passed 4,693 tests and ten gates under 2 GiB with zero OOM kills. All 13 hosted checks and both guarded publisher stages passed. Review the [production receipts](production) and [original test index](original-tests).

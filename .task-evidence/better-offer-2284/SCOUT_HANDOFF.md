@@ -10,3 +10,7 @@ Start with [the original fixture trace](burrow-decision-trace.json) and responsi
 4. Distinguish a 503 capacity deferral from missing evidence or a completed search with zero credible revisions. Check the protected-asset and incompatible-league controls. Custom pricing changes the manager's comparison independently from canonical Neutral and the partner's case.
 
 Signed-in owner Day Traders and Dynasty Best Ball access and physical iPhone Safari require their own authorized observations. Keep settings, lineups and real trades intact. The evidence in this folder is Chromium fixture evidence and source validation.
+
+## Published identity
+
+Live v1.22.69 / build 2284 at commit `a1a7e172898fd8f8c4d308e6f4d220e65c1f42d0` and validated tree `e1a284c33bef3b0b7aa9f81ca1b7ff7a9bb7ad9e`. [Immutable release and original logs](https://github.com/Richarddavis47/dtos/releases/tag/v1.22.69) and [independent production receipts](production). Public smokes and seven exact static asset bodies passed. The scoped production inspection request returned HTTP 401. Signed-in Day Traders, signed-in Dynasty Best Ball and physical iPhone Safari remain unverified.
