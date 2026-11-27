@@ -595,6 +595,9 @@
     if (adjustment?.active?.explanation || adjustment?.partner?.explanation) {
       const panel = node('section', null, 'tw-trade-essentials');
       panel.append(node('h4', 'Package adjustment'));
+      if (adjustment.partner?.counterparty_direction_unconfirmed) {
+        panel.append(node('p', 'Negotiation option · partner benefit unconfirmed', 'tw-drawback'));
+      }
       for (const [side, label] of [['active', 'Your team'], ['partner', 'Their team']]) {
         if (adjustment[side]?.explanation) panel.append(node('p', label + ': ' + customerText(adjustment[side].explanation)));
       }
@@ -1740,7 +1743,8 @@
       return review;
     }
     const card = node('article', null, preview ? 'tw-offer tw-offer-review' : 'tw-offer tw-offer-summary');
-    if (row.exploration) card.append(node('p', 'Exploratory only · not a recommendation', 'tw-drawback'));
+    if (row.exploration) card.append(node('p', e.package_adjustment?.partner?.counterparty_direction_unconfirmed
+      ? 'Negotiation option · partner benefit unconfirmed' : 'Exploratory only · not a recommendation', 'tw-drawback'));
     if (retained) card.append(node('p', 'Retained assessment · NOT REVALIDATED', 'tw-drawback'));
     const partnerName = context.identity?.counterparty || (retained ? 'Franchise #' + row.proposal.partner_roster_id + ' · recorded name unavailable' : team(row.proposal.partner_roster_id)?.team_name || 'the selected partner');
     card.append(node('h3', partnerName, 'tw-offer-partner'), node('p', finalVerdict(e), 'tw-offer-verdict'));

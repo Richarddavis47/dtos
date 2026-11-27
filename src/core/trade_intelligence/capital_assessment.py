@@ -3,7 +3,7 @@ from decimal import Decimal
 
 # Existing capital and counterparty safety policy, shared by player-only offers.
 SEVERE_MARKET_LOSS_RATIO = .50
-TRADE_EVALUATION_POLICY_VERSION = 'scoped-trade-effects-v7-package-adjustment'
+TRADE_EVALUATION_POLICY_VERSION = 'scoped-trade-effects-v8-counterparty-fit'
 
 
 def pick_identity_errors(asset):
@@ -44,6 +44,13 @@ def production_evidence(impact):
             'material_gain': average is not None and average >= threshold,
             'material_loss': average is not None and average <= -threshold,
             'meaning': 'unique supported optimal-lineup weeks; picks have no projected points'}
+
+
+def material_production_loss(strategy):
+    return strategy['production_evidence']['material_loss'] or any(
+        row.get('delta') is not None
+        and row['delta'] <= -max(1.0, (row.get('pre_total') or 0) * .03)
+        for row in strategy['horizons'].values())
 
 
 def assess_capital(strategy, package, market, *, outgoing_total, incoming_total):

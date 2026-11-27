@@ -90,8 +90,9 @@ class TradePackageAdjustmentTests(unittest.TestCase):
         # Pin only construction so the exact offer reaches the real shared gates.
         sent, received = {a.asset_id: a for a in outgoing}, {a.asset_id: a for a in incoming}
         self.assertEqual(options['required_received_asset_id'], 'burrow')
-        return (TradeProposal(active, partner, (sent['nix'], sent['young'], sent[PICK]),
-                              (received['burrow'], received['skattebo']), '3-for-2'),)
+        send, receive = getattr(self, 'pinned_offer', (('nix', 'young', PICK), ('burrow', 'skattebo')))
+        return (TradeProposal(active, partner, tuple(sent[key] for key in send),
+                              tuple(received[key] for key in receive), f'{len(send)}-for-{len(receive)}'),)
 
     def search(self):
         with patch('services.trade_intelligence._trade_projection_service', return_value=self.projections), \
@@ -114,18 +115,56 @@ class TradePackageAdjustmentTests(unittest.TestCase):
         with patch('services.trade_intelligence._trade_projection_service', return_value=self.projections):
             return assist_trade_request(self.data, self.revision_request(**changes))
 
-    def test_revisions_of_exact_burrow_offer_improve_compensated_partner_cost(self):
+    def prepare_rebuild_revision_control(self):
+        # The larger original return costs the rebuild team too much Market
+        # value. Either narrower deal can compensate their real lineup loss.
+        self.data['teams'][1]['strategy'] = 'REBUILD'
+        self.change_player('nix', value=400)
+        self.change_player('young', value=290)
+        self.publish()
+
+    def test_published_burrow_revisions_need_supported_partner_compensation(self):
         original = self.evaluate()
         self.assertEqual(original['values'], {'sent': 1166, 'received': 1166, 'ratio': 1})
         self.assertFalse(original['generated_trade_eligible'])
         self.assertEqual(self.search()['count'], 0)
+        for send, receive, sent_total, received_total in (
+            (('nix', 'young', PICK, 'active-rb'), ('burrow', 'skattebo'), 1266, 1166),
+            (('nix', 'young', PICK), ('burrow',), 1166, 776),
+        ):
+            with self.subTest(send=send, receive=receive):
+                self.pinned_offer = (send, receive)
+                evaluation = self.evaluate(send, receive)
+                self.assertEqual((evaluation['values']['sent'], evaluation['values']['received']),
+                                 (sent_total, received_total))
+                self.assertTrue(evaluation['legal'])
+                self.assertEqual(evaluation['decision_context']['final_decision']['headline'], 'COUNTERPARTY LIMITED')
+                self.assertFalse(evaluation['generated_trade_eligible'])
+                partner = evaluation['package_adjustment']['partner']
+                self.assertTrue(partner['blocks_recommendation'])
+                self.assertIn('projected lineup points', partner['explanation'])
+                self.assertIn('draft capital and a Market premium', partner['explanation'])
+                self.assertAlmostEqual(evaluation['lineup_impact']['partner']['delta'], -17.1)
+                self.assertAlmostEqual(evaluation['dimensions']['strategic_fit']['partner']['production_evidence']['mean_weekly_delta'], -11.31)
+                searched = self.search()
+                self.assertEqual(searched['search_evidence']['full_evaluations'], 1)
+                self.assertEqual(searched['count'], 0)
+                miss, = searched['near_misses']
+                self.assertEqual(miss['evaluation']['package_adjustment']['partner'], partner)
+        del self.pinned_offer
         result = self.revise()
         self.assertTrue(result['preview_only'])
         self.assertEqual(result['original_proposal']['assets_sent'], ['nix', 'young', PICK])
         self.assertEqual(result['original_proposal']['assets_received'], ['burrow', 'skattebo'])
-        self.assertEqual(result['count'], 2)
+        self.assertEqual(result['count'], 0)
+        self.assertIn('projected lineup loss', result['quiet_state'])
         evidence = result['search_evidence']
+        self.assertGreater(evidence['full_evaluations'], 0)
         self.assertLessEqual(evidence['full_evaluations'], evidence['evaluation_budget'])
+
+        self.prepare_rebuild_revision_control()
+        result = self.revise()
+        self.assertEqual(result['count'], 2)
         signatures = set()
         for row in result['results']:
             proposal, e = row['proposal'], row['evaluation']
@@ -139,7 +178,7 @@ class TradePackageAdjustmentTests(unittest.TestCase):
             self.assertEqual(row['revision_evidence']['partner_comparison_weeks'], [12, 13, 14, 15])
             self.assertGreater(row['revision_evidence']['partner_mean_after'], row['revision_evidence']['partner_mean_before'])
         self.assertEqual(len(signatures), 2)
-        self.assertEqual(self.evaluate()['values'], original['values'])
+        self.assertEqual(self.evaluate()['values']['sent'], 901)
         from services.trade_intelligence import build_trade_workspace
         prices = {a.asset_id: a.trade_value for pool in build_trade_workspace(self.data, 1)['pools'].values() for a in pool}
         custom = self.revise(_personal_context={'mode': 'custom', 'revision': 1,
@@ -157,7 +196,7 @@ class TradePackageAdjustmentTests(unittest.TestCase):
             with self.subTest(name=name):
                 self.data['league'].update(roster_positions=[*slots, 'BN', 'BN', 'BN', 'BN'])
                 self.data['league']['settings']['best_ball'] = best_ball
-                self.publish()
+                self.prepare_rebuild_revision_control()
                 result = self.revise(protected_assets=['active-rb'])
                 self.assertGreater(result['count'], 0)
                 for row in result['results']:
@@ -212,21 +251,33 @@ class TradePackageAdjustmentTests(unittest.TestCase):
         self.assertIn('direction is unconfirmed', other_split['package_adjustment']['partner']['explanation'])
         self.assertEqual(self.search()['count'], 0)
 
-    def test_premium_and_exact_capital_can_compensate_seller(self):
-        self.change_player('young', value=575)
-        self.publish()
+    def test_supported_rebuild_can_give_up_production_at_equal_market(self):
+        self.data['teams'][1]['strategy'] = 'REBUILD'
         report = self.evaluate()
         self.assertTrue(report['generated_trade_eligible'])
         self.assertEqual(report['package_adjustment']['partner']['assessment'], 'COMPENSATED')
         self.assertAlmostEqual(report['lineup_impact']['partner']['delta'], -20.05)
-        self.assertEqual(report['market_evidence']['difference'], -100)
-        self.assertIn('Market premium', report['package_adjustment']['partner']['explanation'])
+        self.assertEqual(report['market_evidence']['difference'], 0)
+        self.assertIn('supported rebuild direction', report['package_adjustment']['partner']['explanation'])
         search = self.search()
         rows = [row for row in search['results'] if set(row['proposal']['assets_sent']) == {'nix', 'young', PICK}
                 and set(row['proposal']['assets_received']) == {'burrow', 'skattebo'}]
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0]['evaluation']['package_adjustment'], report['package_adjustment'])
         self.assertEqual(rows[0]['evaluation']['dimensions']['counterparty_plausibility'], report['dimensions']['counterparty_plausibility'])
+
+    def test_supported_later_lineup_gain_can_justify_a_selected_week_loss(self):
+        self.players['burrow'] = ('Joe Burrow', 'QB', 776, 21, 5)
+        self.publish()
+        report = self.evaluate()
+        partner = report['dimensions']['strategic_fit']['partner']
+        self.assertIsNone(partner['manager_strategy']['strategy'])
+        self.assertAlmostEqual(report['lineup_impact']['partner']['delta'], -5.95)
+        self.assertEqual(partner['production_evidence']['weeks_counted_once'], [12, 13, 14, 15])
+        self.assertAlmostEqual(partner['production_evidence']['mean_weekly_delta'], 4.5125)
+        self.assertEqual(report['dimensions']['counterparty_plausibility']['assessment'], 'PLAUSIBLE')
+        self.assertIn('all compared weeks', report['package_adjustment']['partner']['explanation'])
+        self.assertFalse(report['generated_trade_eligible'], 'The user still needs a supported benefit')
 
     def test_balanced_star_for_star_has_no_package_penalty(self):
         self.change_player('nix', value=776, points=25)
@@ -304,8 +355,11 @@ class TradePackageAdjustmentTests(unittest.TestCase):
                 patch('services.trade_workspace_context.current_account', return_value=account), \
                 patch('services.contextual_navigation.navigation_context', return_value=navigation), \
                 sync_playwright() as engine:
-            for width in (320, 390, 1280):
-                with self.subTest(width=width):
+            for width, rebuild in ((320, False), (390, False), (1280, False),
+                                   (320, True), (390, True), (1280, True)):
+                with self.subTest(width=width, rebuild=rebuild):
+                    if rebuild:
+                        self.prepare_rebuild_revision_control()
                     browser = launch_chromium(engine, headless=True)
                     try:
                         page = browser.new_page(viewport={'width': width, 'height': 432 if width == 320 else 844}, has_touch=width < 600)
@@ -356,11 +410,14 @@ class TradePackageAdjustmentTests(unittest.TestCase):
                         self.assertEqual(assessments[0][0], 200, assessments[0][1])
                         self.assertIn('Package adjustment', section.inner_text())
                         self.assertIn('Gives up Joe Burrow', section.inner_text())
-                        self.assertIn('They lose projected lineup points', section.inner_text())
-                        self.assertIn('0 Market points', result.locator('.tw-valuation-gauge').inner_text())
+                        self.assertIn('projected lineup points', section.inner_text())
+                        if not rebuild:
+                            self.assertIn('Negotiation option · partner benefit unconfirmed', section.inner_text())
+                        gauge = '265 Market points' if rebuild else '0 Market points'
+                        self.assertIn(gauge, result.locator('.tw-valuation-gauge').inner_text())
                         self.assertIn('COUNTERPARTY LIMITED', result.inner_text())
                         self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
-                        if directory := os.environ.get('DTOS_PACKAGE_ADJUSTMENT_EVIDENCE'):
+                        if not rebuild and (directory := os.environ.get('DTOS_PACKAGE_ADJUSTMENT_EVIDENCE')):
                             folder = Path(directory)
                             folder.mkdir(parents=True, exist_ok=True)
                             result.screenshot(path=str(folder / f'package-review-{width}.png'))
@@ -374,25 +431,29 @@ class TradePackageAdjustmentTests(unittest.TestCase):
                         if width == 320:
                             button.tap()
                             expect(result.locator('.tw-better-offer')).to_have_attribute('data-state', 'deferred')
-                            expect(result.locator('.tw-valuation-gauge')).to_contain_text('0 Market points')
+                            expect(result.locator('.tw-valuation-gauge')).to_contain_text(gauge)
                         button.press('Enter')
-                        expect(result.locator('.tw-better-offer')).to_have_attribute('data-state', 'complete', timeout=12000)
+                        state = 'complete' if rebuild else 'MISSING_REQUIRED_EVIDENCE'
+                        expect(result.locator('.tw-better-offer')).to_have_attribute('data-state', state, timeout=12000)
                         self.assertEqual(requests[-1][0]['assets_sent'], ['nix', 'young', PICK])
                         self.assertEqual(requests[-1][0]['assets_received'], ['burrow', 'skattebo'])
                         self.assertEqual(requests[-1][0]['strategy'], 'WIN NOW')
                         revisions = result.locator('.tw-revision-grid article')
-                        expect(revisions).to_have_count(2)
-                        first_box, second_box = [row.bounding_box() for row in revisions.all()]
-                        if width < 600:
-                            self.assertGreater(second_box['y'], first_box['y'] + first_box['height'])
+                        expect(revisions).to_have_count(2 if rebuild else 0)
+                        if rebuild:
+                            first_box, second_box = [row.bounding_box() for row in revisions.all()]
+                            if width < 600:
+                                self.assertGreater(second_box['y'], first_box['y'] + first_box['height'])
+                            else:
+                                self.assertGreater(second_box['x'], first_box['x'] + first_box['width'])
+                            expect(result.locator('.tw-revision-grid')).to_contain_text('Why it may help them')
+                            expect(result.locator('.tw-revision-grid')).to_contain_text('Your cost or risk')
+                            expect(result.locator('.tw-revision-grid')).to_contain_text('The tankers')
                         else:
-                            self.assertGreater(second_box['x'], first_box['x'] + first_box['width'])
-                        expect(result.locator('.tw-revision-grid')).to_contain_text('Why it may help them')
-                        expect(result.locator('.tw-revision-grid')).to_contain_text('Your cost or risk')
-                        expect(result.locator('.tw-revision-grid')).to_contain_text('The tankers')
+                            expect(result.locator('.tw-better-offer')).to_contain_text('projected lineup loss')
                         self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
                         last = result.get_by_role('button', name='Use revision 2 in my draft')
-                        if width < 600:
+                        if rebuild and width < 600:
                             self.assertTrue(fully_reachable(last))
                         # Reviews alone only update UI. A foreign workspace ID
                         # cannot be replayed even with otherwise identical IDs.
@@ -402,9 +463,10 @@ class TradePackageAdjustmentTests(unittest.TestCase):
                         if directory := os.environ.get('DTOS_BETTER_OFFER_EVIDENCE'):
                             folder = Path(directory)
                             folder.mkdir(parents=True, exist_ok=True)
-                            result.screenshot(path=str(folder / f'revisions-{width}.png'))
+                            view = 'revisions' if rebuild else 'no-revisions'
+                            result.screenshot(path=str(folder / f'{view}-{width}.png'))
                             if width == 390:
-                                (folder/'burrow-decision-trace.json').write_text(json.dumps({
+                                (folder/f'burrow-{view}-decision-trace.json').write_text(json.dumps({
                                     'scope': 'Disposable prepared fixture, with synthetic prices where the source screenshot did not show them',
                                     'original': assessments[0][1], 'revisions': requests[-1][1],
                                 }, indent=2))
@@ -414,10 +476,11 @@ class TradePackageAdjustmentTests(unittest.TestCase):
                             expect(page.locator('#calculator-sent')).to_contain_text('Bo Nix')
                             expect(page.locator('#calculator-received')).to_contain_text('Cam Skattebo')
                             self.assertEqual(len(requests), 2)
-                        if width == 390:
-                            last.tap()
+                        if width == 390 and rebuild:
+                            revisions.filter(has=page.get_by_text('You receive: Joe Burrow', exact=True)).get_by_role(
+                                'button', name='Use revision').tap()
                             expect(page.locator('#calculator-received')).not_to_contain_text('Cam Skattebo')
-                        if width == 1280:
+                        if width == 1280 and not rebuild:
                             page.goto('https://dtos.test/players/burrow?week=12')
                             page.get_by_role('link', name='Trade For Joe Burrow').click()
                             page.wait_for_url('**/trades/trade-for?*')
@@ -435,13 +498,14 @@ class TradePackageAdjustmentTests(unittest.TestCase):
                             near.get_by_role('button', name='Review trade').click()
                             expect(result.locator('.tw-valuation-gauge')).to_contain_text('0 Market points')
                             result.get_by_role('button', name='Show me a better offer').click()
-                            expect(result.locator('.tw-better-offer')).to_have_attribute('data-state', 'complete', timeout=12000)
+                            expect(result.locator('.tw-better-offer')).to_have_attribute('data-state', 'MISSING_REQUIRED_EVIDENCE', timeout=12000)
                             self.assertEqual(requests[-1][0]['origin_workflow'], 'trade_for')
                             self.assertEqual(requests[-1][0]['origin_asset_id'], 'burrow')
                             self.assertEqual(requests[-1][0]['assets_received'], ['burrow', 'skattebo'])
                             page.locator('#dtos-back').click()
                             page.wait_for_url('**/players/burrow?week=12')
                     finally:
+                        self.data['teams'][1].pop('strategy', None)
                         browser.close()
 
     def test_adjustment_changes_order_and_keeps_roster_space_and_severe_loss_guards(self):
