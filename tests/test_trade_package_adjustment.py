@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 from src.core.trade_intelligence.models import TradeProposal
 
-from services.trade_intelligence import evaluate_trade_request, generate_trade_workflow
+from services.trade_intelligence import assist_trade_request, evaluate_trade_request, generate_trade_workflow
 from src.core.intelligence.team_strength import prepare_for_data
 from src.core.projection_intelligence.service import ProjectionService
 from src.core.valuation.config import NORMALIZATION_VERSION
@@ -86,17 +86,16 @@ class TradePackageAdjustmentTests(unittest.TestCase):
             'assets_sent': list(assets_sent), 'assets_received': list(assets_received)
         }, projection_reader=self.projections)['evaluation']
 
-    def search(self):
-        # Pin only construction to make sure the same exact candidate is actually
-        # evaluated. Search admission, classification, ranking, and DTOs are real.
-        def construction(active, partner, outgoing, incoming, **options):
-            sent, received = {a.asset_id: a for a in outgoing}, {a.asset_id: a for a in incoming}
-            self.assertEqual(options['required_received_asset_id'], 'burrow')
-            return (TradeProposal(active, partner, (sent['nix'], sent['young'], sent[PICK]),
-                                  (received['burrow'], received['skattebo']), '3-for-2'),)
+    def burrow_construction(self, active, partner, outgoing, incoming, **options):
+        # Pin only construction so the exact offer reaches the real shared gates.
+        sent, received = {a.asset_id: a for a in outgoing}, {a.asset_id: a for a in incoming}
+        self.assertEqual(options['required_received_asset_id'], 'burrow')
+        return (TradeProposal(active, partner, (sent['nix'], sent['young'], sent[PICK]),
+                              (received['burrow'], received['skattebo']), '3-for-2'),)
 
+    def search(self):
         with patch('services.trade_intelligence._trade_projection_service', return_value=self.projections), \
-                patch('services.trade_intelligence.generate_proposals', side_effect=construction):
+                patch('services.trade_intelligence.generate_proposals', side_effect=self.burrow_construction):
             return generate_trade_workflow(self.data, {
                 'workflow': 'trade_for', 'asset_id': 'burrow', 'active_roster_id': 1,
                 'strategy': 'WIN NOW'})
@@ -105,6 +104,79 @@ class TradePackageAdjustmentTests(unittest.TestCase):
         label, pos, old_value, selected_week, later = self.players[key]
         self.players[key] = (label, pos, old_value if value is None else value,
                              selected_week if points is None else points, later if points is None else points)
+
+    def revision_request(self, **changes):
+        return dict(repair_mode='BETTER_OFFER', origin_workflow='trade_for', origin_asset_id='burrow',
+                    active_roster_id=1, partner_roster_id=2, strategy='WIN NOW',
+                    assets_sent=['nix', 'young', PICK], assets_received=['burrow', 'skattebo']) | changes
+
+    def revise(self, **changes):
+        with patch('services.trade_intelligence._trade_projection_service', return_value=self.projections):
+            return assist_trade_request(self.data, self.revision_request(**changes))
+
+    def test_revisions_of_exact_burrow_offer_improve_compensated_partner_cost(self):
+        original = self.evaluate()
+        self.assertEqual(original['values'], {'sent': 1166, 'received': 1166, 'ratio': 1})
+        self.assertFalse(original['generated_trade_eligible'])
+        self.assertEqual(self.search()['count'], 0)
+        result = self.revise()
+        self.assertTrue(result['preview_only'])
+        self.assertEqual(result['original_proposal']['assets_sent'], ['nix', 'young', PICK])
+        self.assertEqual(result['original_proposal']['assets_received'], ['burrow', 'skattebo'])
+        self.assertEqual(result['count'], 2)
+        evidence = result['search_evidence']
+        self.assertLessEqual(evidence['full_evaluations'], evidence['evaluation_budget'])
+        signatures = set()
+        for row in result['results']:
+            proposal, e = row['proposal'], row['evaluation']
+            signatures.add((frozenset(proposal['assets_sent']), frozenset(proposal['assets_received'])))
+            self.assertIn('burrow', proposal['assets_received'])
+            self.assertIn(PICK, proposal['assets_sent'])
+            self.assertTrue(e['generated_trade_eligible'])
+            self.assertEqual(e['package_adjustment']['partner']['assessment'], 'COMPENSATED')
+            self.assertGreater(e['lineup_impact']['partner']['delta'], original['lineup_impact']['partner']['delta'])
+            self.assertEqual(e['dimensions']['strategic_fit']['active']['manager_strategy']['strategy'], 'WIN NOW')
+            self.assertEqual(row['revision_evidence']['partner_comparison_weeks'], [12, 13, 14, 15])
+            self.assertGreater(row['revision_evidence']['partner_mean_after'], row['revision_evidence']['partner_mean_before'])
+        self.assertEqual(len(signatures), 2)
+        self.assertEqual(self.evaluate()['values'], original['values'])
+        from services.trade_intelligence import build_trade_workspace
+        prices = {a.asset_id: a.trade_value for pool in build_trade_workspace(self.data, 1)['pools'].values() for a in pool}
+        custom = self.revise(_personal_context={'mode': 'custom', 'revision': 1,
+            'method': 'absolute_slot', 'neutral_values': prices, 'values': {**prices, 'burrow': 800},
+            'preferences': {'active-rb': {'protect': True}}})
+        self.assertGreater(custom['count'], 0)
+        for row in custom['results']:
+            e = row['evaluation']
+            self.assertNotIn('active-rb', row['proposal']['assets_sent'])
+            self.assertAlmostEqual(e['personal_value_evidence']['received']['total'] - e['market_evidence']['received']['total'], 24)
+            self.assertEqual(e['package_adjustment']['partner']['assessment'], 'COMPENSATED')
+
+    def test_positive_revision_uses_each_leagues_qb_rules(self):
+        for name, slots, best_ball in [('Superflex', ['QB', 'SUPER_FLEX', 'RB'], 0), ('1-QB', ['QB', 'RB'], 0)]:
+            with self.subTest(name=name):
+                self.data['league'].update(roster_positions=[*slots, 'BN', 'BN', 'BN', 'BN'])
+                self.data['league']['settings']['best_ball'] = best_ball
+                self.publish()
+                result = self.revise(protected_assets=['active-rb'])
+                self.assertGreater(result['count'], 0)
+                for row in result['results']:
+                    self.assertNotIn('active-rb', row['proposal']['assets_sent'])
+                    self.assertIn(PICK, row['proposal']['assets_sent'])
+                    self.assertEqual(row['evaluation']['package_adjustment']['partner']['extra_qb_slot'], name == 'Superflex')
+                    self.assertTrue(row['evaluation']['generated_trade_eligible'])
+
+    def test_revisions_preserve_target_protections_and_name_missing_market(self):
+        result = self.revise(protected_assets=[PICK, 'active-rb'])
+        self.assertFalse(result['results'])
+        self.assertIn('projected lineup loss', result['quiet_state'])
+        conflict = self.revise(excluded_assets=['burrow'])
+        self.assertEqual(conflict['state'], 'CONSTRAINT_CONFLICT')
+        self.assertEqual(conflict['search_evidence']['full_evaluations'], 0)
+        self.data['market_data']['providers']['FantasyCalc'].pop('nix')
+        missing = self.revise()
+        self.assertEqual(missing['state'], 'MISSING_REQUIRED_EVIDENCE')
+        self.assertIn('canonical Market', missing['quiet_state'])
 
     def test_burrow_package_remains_evaluable_but_cannot_rank_as_recommended(self):
         report = self.evaluate()
@@ -186,38 +258,83 @@ class TradePackageAdjustmentTests(unittest.TestCase):
 
     def test_review_keeps_equal_market_gauge_and_explains_why_the_package_is_limited(self):
         import os
+        import json
+        from contextlib import nullcontext
+        from types import SimpleNamespace
         from unittest.mock import AsyncMock
         from urllib.parse import urlsplit
         from fastapi import FastAPI
+        from fastapi.staticfiles import StaticFiles
         from fastapi.testclient import TestClient
-        from playwright.sync_api import sync_playwright
+        from playwright.sync_api import expect, sync_playwright
+        import dtos_app
         from routes.trades import create_trades_router
         from tools.validation.browser_runtime import launch_chromium
 
         app = FastAPI()
         app.include_router(create_trades_router(ensure_fresh=AsyncMock(), require_data=lambda: self.data,
-                                               page=lambda title, body: body))
+                                               page=dtos_app.page))
+        app.mount('/static', StaticFiles(directory='static'), name='static')
+        account = SimpleNamespace(account_id='fixture', session_id='research', csrf_token='fixture-only',
+            display_name='Manager', membership=SimpleNamespace(league_id='league-1', roster_id=1,
+                league_name='Dynasty Best Ball', franchise_name='The tankers'))
+        navigation = {'scope': 'b' * 64, 'team': '/teams/1'}
+
+        @app.get('/api/account/navigation-context')
+        def navigation_context():
+            return navigation
+
+        @app.get('/players/burrow')
+        def player_origin():
+            return dtos_app.page('Player details', '<a href="/trades/trade-for?asset_id=burrow&amp;front_office=1">Trade For Joe Burrow</a>')
+
+        def fully_reachable(locator):
+            locator.evaluate("e=>e.scrollIntoView({block:'center'})")
+            return locator.evaluate('''e => {
+                const r = e.getBoundingClientRect();
+                const nav = document.querySelector('.manager-nav').getBoundingClientRect();
+                return r.height >= 44 && r.top >= 0 && r.bottom <= Math.min(innerHeight, nav.top)
+                    && e.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2));
+            }''')
+
         with TestClient(app) as client, patch('src.core.projection_intelligence.projection_service', self.projections), \
+                patch('dtos_app.current_account', return_value=account), \
+                patch.object(dtos_app.account_store, 'memberships', return_value=[]), \
+                patch('routes.trades.current_account', return_value=account), \
+                patch('services.trade_workspace_context.current_account', return_value=account), \
+                patch('services.contextual_navigation.navigation_context', return_value=navigation), \
                 sync_playwright() as engine:
             for width in (320, 390, 1280):
                 with self.subTest(width=width):
                     browser = launch_chromium(engine, headless=True)
                     try:
-                        page = browser.new_page(viewport={'width': width, 'height': 844})
+                        page = browser.new_page(viewport={'width': width, 'height': 432 if width == 320 else 844}, has_touch=width < 600)
                         page.set_default_timeout(8000)
                         assessments = []
+                        requests = []
+                        generated = []
 
                         def route(intercept):
                             request = intercept.request
                             url = urlsplit(request.url)
                             if url.netloc != 'dtos.test':
                                 return intercept.abort()
-                            response = client.request(request.method, url.path + '?' + url.query,
-                                content=request.post_data, headers={k: v for k, v in request.headers.items()
-                                                                   if k == 'content-type'})
+                            if url.path == '/api/trades/assist':
+                                requests.append((json.loads(request.post_data), None))
+                                if width == 320 and len(requests) == 1:
+                                    return intercept.fulfill(status=503, json={'detail': {'code': 'trade_capacity_deferred', 'message': 'The Trade workspace is at capacity. Try again.'}})
+                            pinned = patch('services.trade_intelligence.generate_proposals', side_effect=self.burrow_construction)
+                            with pinned if url.path == '/api/trades/generate' else nullcontext():
+                                response = client.request(request.method, url.path + '?' + url.query,
+                                    content=request.post_data, headers={k: v for k, v in request.headers.items()
+                                                                       if k == 'content-type'})
                             if url.path == '/api/trades/evaluate':
                                 assessments.append((response.status_code, response.json()))
-                            intercept.fulfill(status=response.status_code, content_type=response.headers.get('content-type'),
+                            if url.path == '/api/trades/generate':
+                                generated.append(response.json())
+                            if url.path == '/api/trades/assist':
+                                requests[-1] = (requests[-1][0], response.json())
+                            intercept.fulfill(status=response.status_code, headers=dict(response.headers),
                                               body=response.content)
 
                         page.route('**/*', route)
@@ -247,6 +364,83 @@ class TradePackageAdjustmentTests(unittest.TestCase):
                             folder = Path(directory)
                             folder.mkdir(parents=True, exist_ok=True)
                             result.screenshot(path=str(folder / f'package-review-{width}.png'))
+                        button = result.get_by_role('button', name='Show me a better offer')
+                        expect(button).to_be_visible()
+                        expect(result.locator('.tw-review-verdict')).to_have_text('COUNTERPARTY LIMITED')
+                        self.assertTrue(result.locator('.tw-review-verdict').evaluate("e=>e.compareDocumentPosition(e.parentElement.querySelector('.tw-valuation-gauge')) & Node.DOCUMENT_POSITION_FOLLOWING"))
+                        self.assertFalse(requests)
+                        if width < 600:
+                            self.assertTrue(fully_reachable(button))
+                        if width == 320:
+                            button.tap()
+                            expect(result.locator('.tw-better-offer')).to_have_attribute('data-state', 'deferred')
+                            expect(result.locator('.tw-valuation-gauge')).to_contain_text('0 Market points')
+                        button.press('Enter')
+                        expect(result.locator('.tw-better-offer')).to_have_attribute('data-state', 'complete', timeout=12000)
+                        self.assertEqual(requests[-1][0]['assets_sent'], ['nix', 'young', PICK])
+                        self.assertEqual(requests[-1][0]['assets_received'], ['burrow', 'skattebo'])
+                        self.assertEqual(requests[-1][0]['strategy'], 'WIN NOW')
+                        revisions = result.locator('.tw-revision-grid article')
+                        expect(revisions).to_have_count(2)
+                        first_box, second_box = [row.bounding_box() for row in revisions.all()]
+                        if width < 600:
+                            self.assertGreater(second_box['y'], first_box['y'] + first_box['height'])
+                        else:
+                            self.assertGreater(second_box['x'], first_box['x'] + first_box['width'])
+                        expect(result.locator('.tw-revision-grid')).to_contain_text('Why it may help them')
+                        expect(result.locator('.tw-revision-grid')).to_contain_text('Your cost or risk')
+                        expect(result.locator('.tw-revision-grid')).to_contain_text('The tankers')
+                        self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
+                        last = result.get_by_role('button', name='Use revision 2 in my draft')
+                        if width < 600:
+                            self.assertTrue(fully_reachable(last))
+                        # Reviews alone only update UI. A foreign workspace ID
+                        # cannot be replayed even with otherwise identical IDs.
+                        bad = {**requests[-1][0], 'workspace_context': {**requests[-1][0]['workspace_context'], 'league_id': 'other-league'}}
+                        invalid = client.post('/api/trades/assist', json=bad)
+                        self.assertEqual(invalid.json()['detail']['code'], 'workspace_context_changed')
+                        if directory := os.environ.get('DTOS_BETTER_OFFER_EVIDENCE'):
+                            folder = Path(directory)
+                            folder.mkdir(parents=True, exist_ok=True)
+                            result.screenshot(path=str(folder / f'revisions-{width}.png'))
+                            if width == 390:
+                                (folder/'burrow-decision-trace.json').write_text(json.dumps({
+                                    'scope': 'Disposable prepared fixture, with synthetic prices where the source screenshot did not show them',
+                                    'original': assessments[0][1], 'revisions': requests[-1][1],
+                                }, indent=2))
+                        if width == 320:
+                            page.reload()
+                            expect(page.locator('#trade-sent-board')).to_be_attached()
+                            expect(page.locator('#calculator-sent')).to_contain_text('Bo Nix')
+                            expect(page.locator('#calculator-received')).to_contain_text('Cam Skattebo')
+                            self.assertEqual(len(requests), 2)
+                        if width == 390:
+                            last.tap()
+                            expect(page.locator('#calculator-received')).not_to_contain_text('Cam Skattebo')
+                        if width == 1280:
+                            page.goto('https://dtos.test/players/burrow?week=12')
+                            page.get_by_role('link', name='Trade For Joe Burrow').click()
+                            page.wait_for_url('**/trades/trade-for?*')
+                            self.assertEqual(len(requests), 1)
+                            if page.get_by_label('Trade strategy', exact=True).input_value() != 'WIN NOW':
+                                page.get_by_label('Trade strategy', exact=True).select_option('WIN NOW')
+                                page.locator('#trade-find').click()
+                            near = page.locator('.tw-near-misses')
+                            try:
+                                expect(near.locator(':scope > summary')).to_be_visible()
+                            except AssertionError as exc:
+                                self.fail(f"{exc}\nResult: {result.inner_text()[:1200]}; search count and state: "
+                                          f"{[(body.get('count'), body.get('result_state'), len(body.get('near_misses', []))) for body in generated]}")
+                            near.locator(':scope > summary').click()
+                            near.get_by_role('button', name='Review trade').click()
+                            expect(result.locator('.tw-valuation-gauge')).to_contain_text('0 Market points')
+                            result.get_by_role('button', name='Show me a better offer').click()
+                            expect(result.locator('.tw-better-offer')).to_have_attribute('data-state', 'complete', timeout=12000)
+                            self.assertEqual(requests[-1][0]['origin_workflow'], 'trade_for')
+                            self.assertEqual(requests[-1][0]['origin_asset_id'], 'burrow')
+                            self.assertEqual(requests[-1][0]['assets_received'], ['burrow', 'skattebo'])
+                            page.locator('#dtos-back').click()
+                            page.wait_for_url('**/players/burrow?week=12')
                     finally:
                         browser.close()
 

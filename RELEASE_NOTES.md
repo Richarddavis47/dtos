@@ -1,3 +1,9 @@
+## v1.22.69 / build 2284 — Better trade offers
+
+- Ask for up to two revisions from Trade Review when an evaluated offer falls short. Each preview preserves exact locks and passes the existing recommendation checks for both teams.
+- See the changes, supported lineup effects and draft-capital costs before choosing a revision. The original draft stays in place until you choose one.
+- Keep the Transactions shortcut and standings point totals intact on narrow League screens.
+
 ## v1.22.68 / build 2283 — Clearer league navigation
 
 - Use a consistent league switcher and contextual Back across the signed-in experience.

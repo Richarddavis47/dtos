@@ -21,6 +21,7 @@
 .league-standings-table thead th {font-size:.75rem;overflow-wrap:normal}
 .league-standings-table th:nth-child(2) {text-align:left}
 .league-standings-table .league-team {text-align:left;padding-block:0}
+.league-standings-table .league-pf {white-space:nowrap;overflow-wrap:normal}
 .league-team a {display:flex;align-items:center;min-height:44px;color:var(--text);overflow-wrap:anywhere}
 .league-team a:hover,.league-team a:focus-visible {text-decoration:underline}
 .league-team .ds-you,.league-team .standing-position {margin:0 0 4px}
@@ -45,10 +46,12 @@
 .league-matchup-preview .ux-primary-action {justify-content:center;min-height:44px;background:var(--accent);color:#10160d;font-weight:800}
 .league-recap {display:flex;align-items:center;justify-content:space-between;min-height:44px;font-weight:700}
 .league-destinations {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;text-align:center}
-.league-destinations a {display:grid;min-width:0;min-height:50px;place-items:center;padding:6px 3px;overflow-wrap:anywhere}
+.league-destinations a {display:grid;min-width:0;min-height:50px;place-items:center;padding:6px 3px;overflow-wrap:normal}
 @media (max-width:360px) {
   .league-col-record {width:18%}
+  .league-col-pf {width:25%}
   .league-col-streak {width:17%}
+  .league-destinations {grid-template-columns:minmax(min-content,1.25fr) repeat(2,minmax(0,1fr))}
   .league-hub .league-section-heading a {font-size:.875rem}
   .league-cutoff small {display:inline;margin-left:4px}
 }

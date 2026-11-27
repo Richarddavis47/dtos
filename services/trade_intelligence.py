@@ -24,6 +24,7 @@ class RepairMode(StrEnum):
     MAKE_THIS_TRADE_WORK = "MAKE_THIS_TRADE_WORK"
     ALTERNATIVE_CONSTRUCTION = "ALTERNATIVE_CONSTRUCTION"
     ALTERNATIVE_TARGET = "ALTERNATIVE_TARGET"
+    BETTER_OFFER = "BETTER_OFFER"
 
 
 _REPAIR_MODE_ALIASES = {
@@ -33,6 +34,7 @@ _REPAIR_MODE_ALIASES = {
     "alternative_construction": RepairMode.ALTERNATIVE_CONSTRUCTION,
     "alternative target": RepairMode.ALTERNATIVE_TARGET,
     "alternative_target": RepairMode.ALTERNATIVE_TARGET,
+    "better_offer": RepairMode.BETTER_OFFER,
 }
 
 
@@ -111,22 +113,24 @@ def generated_personal_payload(payload):
     return {**payload, 'protected_assets': sorted(set(payload.get('protected_assets') or ()) | locks)}
 
 
+def personal_preference_key(row, preferences):
+    if not preferences:
+        return ()
+    proposal = row.get('proposal') or {}
+    incoming, outgoing = proposal.get('assets_received') or (), proposal.get('assets_sent') or ()
+    matched = [i for i in incoming if (preferences.get(i) or {}).get('target')]
+    avoided = [i for i in incoming if (preferences.get(i) or {}).get('avoid')]
+    spent = [i for i in outgoing if (preferences.get(i) or {}).get('target')]
+    row['personal_preference_matches'] = {'targets_received': matched, 'avoid_received': avoided,
+                                           'targets_sent': spent, 'meaning': 'Your explicit intent, not trade eligibility or an opponent preference.'}
+    return ({'SMASH ACCEPT': 0, 'WORTH PURSUING': 1}.get(row.get('evaluation', {}).get('recommendation'), 2),
+            bool(avoided), not bool(matched), bool(spent))
+
+
 def personal_order(rows, context):
     """Stable preference order within existing verdict groups; never promotion."""
-    preferences = context.get('preferences') or {}
-    if not preferences:
-        return rows
-    def key(row):
-        proposal = row.get('proposal') or {}
-        incoming, outgoing = proposal.get('assets_received') or (), proposal.get('assets_sent') or ()
-        matched = [i for i in incoming if (preferences.get(i) or {}).get('target')]
-        avoided = [i for i in incoming if (preferences.get(i) or {}).get('avoid')]
-        spent = [i for i in outgoing if (preferences.get(i) or {}).get('target')]
-        row['personal_preference_matches'] = {'targets_received': matched, 'avoid_received': avoided,
-                                               'targets_sent': spent, 'meaning': 'Your explicit intent, not trade eligibility or an opponent preference.'}
-        return ({'SMASH ACCEPT': 0, 'WORTH PURSUING': 1}.get(row.get('evaluation', {}).get('recommendation'), 2),
-                bool(avoided), not bool(matched), bool(spent))
-    return sorted(rows, key=key)
+    preferences = context.get('preferences')
+    return sorted(rows, key=lambda row: personal_preference_key(row, preferences)) if preferences else rows
 
 
 def personal_workspace(workspace, payload):
@@ -615,6 +619,8 @@ def _bounded_adjustment_candidates(
         raise ValueError("Trade assistance cannot use unknown assets.")
     protected = {str(item) for item in payload.get("protected_assets") or ()}
     excluded = {str(item) for item in payload.get("excluded_assets") or ()}
+    revising = payload.get('repair_mode') == RepairMode.BETTER_OFFER
+    required_incoming = set(payload.get('required_incoming_assets') or ())
     sent = tuple(by_id[item] for item in sent_ids if item not in protected | excluded)
     received = tuple(by_id[item] for item in received_ids)
     _require_acquisition_prices(sent + received)
@@ -627,9 +633,13 @@ def _bounded_adjustment_candidates(
     allowed_partner = tuple(a for a in pools[partner_id] if a.asset_id not in excluded)
     candidates = []
     cheap_count = 0
-    targets = allowed_partner if allow_target_change else tuple(a for a in allowed_partner if a.asset_id in received_ids)
+    if revising:
+        targets = tuple(a for a in allowed_partner if a.asset_id in (required_incoming or set(received_ids)))
+    else:
+        targets = allowed_partner if allow_target_change else tuple(a for a in allowed_partner if a.asset_id in received_ids)
     for target in targets[:12]:
         for phase in range(2):
+            trade_checkpoint()
             diagnostics = {}
             candidates.extend(generate_proposals(active_id, partner_id, allowed_active, allowed_partner,
                 required_received_asset_id=target.asset_id, construction_only=True, search_phase=phase, search_diagnostics=diagnostics))
@@ -665,14 +675,15 @@ def _bounded_adjustment_candidates(
         if len(received) > 1:
             candidates.extend(TradeProposal(active_id, partner_id, sent, received[:index] + received[index + 1:], "Assisted Reduction") for index in range(len(received)))
     unique: dict[tuple[tuple[str, ...], tuple[str, ...]], TradeProposal] = {}
-    required_targets = set(received_ids)
+    required_targets = required_incoming if revising else set(received_ids)
     for proposal in candidates:
         sent_key = tuple(sorted(asset.asset_id for asset in proposal.assets_sent))
         received_key = tuple(sorted(asset.asset_id for asset in proposal.assets_received))
         if (not sent_key or not received_key or protected.intersection(sent_key)
                 or excluded.intersection((*sent_key, *received_key))
                 or not set(payload.get('required_outgoing_assets') or ()).issubset(sent_key)
-                or (not allow_target_change and not required_targets.issubset(received_key))):
+                or (revising and (not required_targets.issubset(received_key) or not set(received_ids).intersection(received_key)))
+                or (not revising and not allow_target_change and not required_targets.issubset(received_key))):
             continue
         unique.setdefault((sent_key, received_key), proposal)
     if search_diagnostics is not None:
@@ -680,9 +691,135 @@ def _bounded_adjustment_candidates(
             constructed_candidates=min(len(unique), 160), constraint_filtered=len(candidates) - len(unique),
             unique_package_budget=160, target_asset_ids=sorted(required_targets))
     return tuple(sorted(unique.values(), key=lambda p: (
+        (len({a.asset_id for a in p.assets_sent}.symmetric_difference(sent_ids))
+         + len({a.asset_id for a in p.assets_received}.symmetric_difference(received_ids))) if revising else 0,
         abs(sum(a.trade_value for a in p.assets_sent) - sum(a.trade_value for a in p.assets_received)),
         sum(a.trade_value for a in p.assets_sent),
-        tuple(a.asset_id for a in p.assets_sent), tuple(a.asset_id for a in p.assets_received))))[:160]
+        tuple(a.asset_id for a in p.assets_sent), tuple(a.asset_id for a in p.assets_received))))[:REPAIR_EVALUATION_BUDGET]
+
+
+def _better_offer_revisions(data, payload, workspace, evidence, reader, boundary):
+    """Compare the exact starting package with small revisions to one negotiation."""
+    from collections import Counter
+    from services.trade_search_policy import classify, rank_key
+
+    keys = ('active_roster_id', 'partner_roster_id', 'assets_sent', 'assets_received')
+    original = {key: payload[key] for key in keys}
+    sent, received = set(original['assets_sent']), set(original['assets_received'])
+    protected = set(payload.get('protected_assets') or ())
+    excluded = set(payload.get('excluded_assets') or ())
+    origin = payload.get('origin_workflow')
+    anchor = payload.get('origin_asset_id')
+    if origin in ('shop', 'trade_for') and (not isinstance(anchor, str) or not anchor):
+        raise TradeInputError('invalid_proposal', 'Choose an exact locked target from the original package.')
+    required_sent = {anchor} if origin == 'shop' else set()
+    required_received = {anchor} if origin == 'trade_for' else set()
+    if required_sent - sent or required_received - received:
+        raise TradeInputError('invalid_proposal', 'The original package must include its exact locked target.')
+    neutral = workspace.get('neutral_pools', workspace['pools'])
+    assets = {asset.asset_id: asset for pool in neutral.values() for asset in pool}
+    counts = Counter()
+    evaluated = 0
+    options = []
+
+    def finish(state, message=None):
+        trade_checkpoint()
+        if _trade_search_boundary(data) != boundary:
+            raise TradeInputError('canonical_evidence_changed', 'The league evidence changed during the revision search. Try again.')
+        return _with_lineup_details(data, {
+            'requested_mode': RepairMode.BETTER_OFFER.value, 'state': state, 'quiet_state': message,
+            'original_proposal': original, 'results': options, 'count': len(options), 'preview_only': True,
+            'search_evidence': {'full_evaluations': evaluated, 'evaluation_budget': REPAIR_EVALUATION_BUDGET,
+                                'rejection_reason_counts': dict(counts), 'bounded': True},
+        }, reader)
+
+    if required_sent & (protected | excluded) or required_received & excluded:
+        return finish('CONSTRAINT_CONFLICT', 'The exact target conflicts with a protection or exclusion. Your locks are still in place.')
+    try:
+        _require_acquisition_prices(tuple(assets[item] for item in (*original['assets_sent'], *original['assets_received'])))
+        evaluated += 1
+        baseline = evaluate_trade_request(data, {**original, 'workflow': 'adjust', 'strategy': payload.get('strategy')},
+            workspace=workspace, evidence_context=evidence, projection_reader=reader)['evaluation']
+    except TradeInputError as exc:
+        if exc.code not in {'market_evidence_unavailable', 'personal_evidence_unavailable'}:
+            raise
+        message = ('This offer is missing a canonical Market price. Review prices before comparing revisions.'
+                   if exc.code == 'market_evidence_unavailable' else str(exc))
+        return finish('MISSING_REQUIRED_EVIDENCE', message)
+    if baseline.get('generated_trade_eligible') and not package_blocks_recommendation(baseline) and not (sent & protected or (sent | received) & excluded):
+        return finish('ALREADY_SUPPORTED', 'This package now clears the recommendation checks on the prepared evidence.')
+    candidates = _bounded_adjustment_candidates({**workspace, 'pools': neutral}, {**payload,
+        'required_outgoing_assets': required_sent, 'required_incoming_assets': required_received},
+        allow_target_change=True)
+
+    def partner_production(evaluation):
+        fit = evaluation['dimensions']['strategic_fit']['partner']
+        return fit['production_evidence'], fit['horizons']['current_week']
+
+    prior, prior_week = partner_production(baseline)
+    prior_selected = prior_week.get('delta')
+    week_threshold = max(1, (prior_week.get('pre_total') or 0) * .03)
+    prior_week_loss = prior_selected is not None and prior_selected <= -week_threshold
+    partner_loss = prior['material_loss'] or prior_week_loss
+    preferences = personal_context(payload).get('preferences')
+    retained = {}
+    for proposal in candidates:
+        trade_checkpoint()
+        revised = _proposal_payload(proposal, 'adjust')
+        outgoing, incoming = set(revised['assets_sent']), set(revised['assets_received'])
+        if (outgoing, incoming) == (sent, received):
+            continue
+        if evaluated >= REPAIR_EVALUATION_BUDGET:
+            break
+        evaluated += 1
+        try:
+            row = evaluate_trade_request(data, {**revised, 'strategy': payload.get('strategy'),
+                'protected_assets': sorted(protected), 'excluded_assets': sorted(excluded)},
+                workspace=workspace, evidence_context=evidence, projection_reader=reader)
+        except TradeInputError as exc:
+            if exc.code == 'canonical_evidence_changed':
+                raise
+            counts['MISSING REQUIRED EVIDENCE' if exc.code in {'market_evidence_unavailable', 'personal_evidence_unavailable'} else 'HARD INVALID'] += 1
+            continue
+        current = row['evaluation']
+        classification = classify(current)
+        if classification != 'CREDIBLE RECOMMENDATION' or not _trade_for_eligible(current):
+            counts[classification] += 1
+            continue
+        production, week = partner_production(current)
+        comparable = bool(prior['weeks_counted_once'] and prior['weeks_counted_once'] == production['weeks_counted_once']
+                          and prior['mean_weekly_delta'] is not None and production['mean_weekly_delta'] is not None)
+        weekly_comparable = prior_selected is not None and week.get('delta') is not None
+        if partner_loss and (not comparable
+                             or production['mean_weekly_delta'] - prior['mean_weekly_delta'] < prior['material_weekly_threshold']
+                             or (prior_week_loss and (not weekly_comparable or week['delta'] - prior_selected < week_threshold))):
+            counts['PARTNER_LINEUP_LOSS_UNRESOLVED'] += 1
+            continue
+        row['revision_evidence'] = {'partner_mean_before': prior['mean_weekly_delta'],
+            'partner_mean_after': production['mean_weekly_delta'], 'partner_comparison_weeks': prior['weeks_counted_once']} if comparable else {}
+        difference = len(sent ^ outgoing) + len(received ^ incoming)
+        key = (difference, personal_preference_key(row, preferences), rank_key(row))
+        family = repair_family(revised, assets)
+        if family not in retained or key < retained[family][0]:
+            retained[family] = (key, row)
+            if len(retained) > 2:
+                del retained[max(retained, key=lambda item: retained[item][0])]
+    options = [row for _, row in sorted(retained.values(), key=lambda item: item[0])]
+    if options:
+        return finish('ADJUSTMENT_AVAILABLE')
+    reasons = []
+    if counts['MISSING REQUIRED EVIDENCE']:
+        reasons.append('Some packages lack the prices or lineup evidence needed for both teams.')
+    if partner_loss:
+        reasons.append('No checked package improved the other team’s projected lineup loss while also passing the recommendation checks for your goal.')
+    elif counts['COUNTERPARTY LIMITED']:
+        reasons.append('The checked packages did not establish enough benefit for the other team.')
+    if counts['ANALYSIS GOAL REQUIRED']:
+        reasons.append('Some draft-capital trade-offs need a temporary analysis goal.')
+    if not reasons:
+        reasons.append('None of the checked packages fit both teams under your goal and exact locks.')
+    state = 'MISSING_REQUIRED_EVIDENCE' if counts['MISSING REQUIRED EVIDENCE'] else 'NO_CREDIBLE_ADJUSTMENT'
+    return finish(state, 'No credible revision found in this search. ' + ' '.join(reasons))
 
 
 def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[str, Any]:
@@ -705,6 +842,8 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
     instruction = str(payload.get("instruction") or payload.get("action") or "make this trade work").strip()
     lowered = instruction.casefold()
     requested_mode = _repair_mode(payload, instruction)
+    if requested_mode is RepairMode.BETTER_OFFER:
+        return _better_offer_revisions(data, payload, workspace, evidence_context, reader, boundary)
     cheaper = 'cheaper' in lowered
     younger_target_change = 'younger' in lowered and payload.get('origin_workflow') not in ('shop', 'trade_for')
     target_preservation_required = cheaper or payload.get('origin_workflow') == 'trade_for' or (requested_mode is not RepairMode.ALTERNATIVE_TARGET and not younger_target_change)

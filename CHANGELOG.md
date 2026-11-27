@@ -1,3 +1,9 @@
+## v1.22.69 / build 2284 — Better trade offers
+
+- Request up to two bilateral revisions for an evaluated offer that falls short, preserving the exact trade target and locks.
+- Review package changes, projected effects and supporting evidence before adopting a revision into your draft.
+- Keep the Transactions shortcut and standings point totals readable at 320 pixels.
+
 ## v1.22.68 / build 2283 — Clearer league navigation
 
 - Use a consistent league switcher and contextual Back across the signed-in experience.

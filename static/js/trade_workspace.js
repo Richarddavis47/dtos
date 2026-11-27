@@ -125,6 +125,7 @@
   function cancelBalance() {
     if (!activeRequest) return;
     activeRequest.abort(); activeRequest = null; balanceRequest = null; revision++; runSequence++; busy = false;
+    betterSearch?.cancelled(); betterSearch = null;
     balanceStatus('Search cancelled. Your current offer is retained.');
   }
   // One account/session/league-bound state. Controls are views of these exact IDs.
@@ -137,6 +138,7 @@
   let valuationMode = 'neutral', personalRevisionStale = false, checkingPersonal = false;
   let paintValuationHelp = () => {};
   let interruptedNavigation = false;
+  let betterSearch = null;
   const latestEvidence = {};
   const sourceKeys = ['market_generation', 'projection_generation', 'historical_generation'];
   const selected = session.currentProposal, filters = {sent: {q: '', pos: 'ALL'}, received: {q: '', pos: 'ALL'}};
@@ -484,6 +486,7 @@
     if (el('shop-position')) el('shop-position').disabled = busy || el('shop-preference').value !== 'position_need';
     el('trade-run').disabled = busy || !selected.sent.length || !selected.received.length;
     root.querySelectorAll('[data-reevaluate]').forEach(button => { button.disabled = el('trade-run').disabled; });
+    root.querySelectorAll('[data-better-offer-action]').forEach(button => { button.disabled = busy; });
     el('trade-find').disabled = busy || entryBlocked;
     el('trade-find').setAttribute('aria-busy', String(busy && activeRequest !== null));
     el('trade-cancel').hidden = !busy;
@@ -577,7 +580,7 @@
     return valuationGauge({mode, sent: amount('sent'), received: amount('received'),
       comparison: valid ? {difference: totals[1] - totals[0], totals, scale} : null, retained});
   }
-  function evaluationOverview(e, proposal, presentation, retained) {
+  function evaluationOverview(e, proposal, presentation, retained, betterOffer = null) {
     const header = node('section', null, 'tw-evaluation-overview');
     const packages = node('div', null, 'tw-review-packages');
     for (const [title, ids, facts] of [['You send', proposal.assets_sent, presentation?.send],
@@ -610,6 +613,7 @@
       }
       header.append(summary);
     }
+    if (betterOffer) header.append(betterOffer);
     const table = node('table', null, 'tw-projected-table');
     const caption = node('caption', retained ? 'Projected points at the recorded assessment' : 'Compared with keeping each current roster');
     const heads = node('thead'), heading = node('tr');
@@ -1207,7 +1211,10 @@
     const retained = Boolean(previousContainer || contextQualification(context));
     out.dataset.assessmentFreshness = retained ? 'retained' : 'current';
     if (!previousContainer) {
-      out.append(evaluationOverview(e, {assets_sent: selected.sent, assets_received: selected.received}, context?.proposal_presentation, retained));
+      const proposal = {active_roster_id: active, partner_roster_id: partner(), assets_sent: [...selected.sent], assets_received: [...selected.received]};
+      const betterOffer = retained ? null : betterOfferControl(e, proposal, context);
+      if (betterOffer) out.append(node('h3', finalVerdict(e), 'tw-review-verdict'));
+      out.append(evaluationOverview(e, proposal, context?.proposal_presentation, retained, betterOffer));
     }
     if (retained && !e.explanation_html) appendRecordedLineups(out, context);
     out.append(capitalDisclosure(context?.draft_capital_record || e.draft_capital_record, retained));
@@ -1473,6 +1480,102 @@
     const context = {...assessmentContext(row), stale_reason: 'Package adopted for editing; its assessment has not been revalidated'};
     changed(); session.currentAssessment = context; persist(); review(); showEvaluation(row.evaluation || context.evaluation || {}, row.opportunity || context.opportunity, context); focusResult();
   }
+  function betterOfferControl(evaluation, original, context) {
+    if (evaluation.legal !== true || evaluation.generated_trade_eligible !== false
+        || !(evaluation.recommendation || evaluation.decision_context?.blocker)) return null;
+    const panel = node('section', null, 'tw-trade-essentials tw-better-offer');
+    const search = node('button', 'Show me a better offer', 'ds-action'); search.type = 'button';
+    search.dataset.betterOfferAction = 'true'; search.disabled = busy;
+    const status = node('p'); status.setAttribute('role', 'status'); status.hidden = true;
+    const results = node('div', null, 'tw-revision-grid'); results.hidden = true;
+    panel.append(search, status, results);
+    const report = (text, state) => { status.hidden = false; status.textContent = text; panel.dataset.state = state; };
+    search.onclick = async () => {
+      if (busy || personalRevisionStale || contextQualification(context, original)) {
+        if (!busy) report('Reevaluate this exact package before checking revisions.', 'stale');
+        return;
+      }
+      const requestPayload = {...payload(), ...original, repair_mode: 'BETTER_OFFER',
+        origin_workflow: session.requiredIncomingAsset ? 'trade_for' : session.requiredOutgoingAsset ? 'shop' : 'create',
+        origin_asset_id: session.requiredIncomingAsset || session.requiredOutgoingAsset || null};
+      const started = revision, controller = new AbortController();
+      activeRequest = controller; busy = true;
+      betterSearch = {cancelled: () => report('Search cancelled. Your draft is intact.', 'cancelled')};
+      let timedOut = false;
+      const timeout = setTimeout(() => { timedOut = true; controller.abort(); }, 120000);
+      results.replaceChildren(); results.hidden = true;
+      report('Checking revisions for both teams. Your draft is intact.', 'loading'); paint();
+      try {
+        const body = await post('assist', requestPayload, controller.signal);
+        if (activeRequest !== controller || started !== revision || !panel.isConnected) return;
+        if (body.requested_mode !== 'BETTER_OFFER' || body.preview_only !== true || !body.original_proposal
+            || packageIdentity(body.original_proposal) !== packageIdentity(original) || !Array.isArray(body.results)
+            || body.results.length > 2 || body.results.some(row => !qualifiedOffer(row) || offerConflict(row)
+              || row.proposal.active_roster_id !== active || row.proposal.partner_roster_id !== original.partner_roster_id)) {
+          throw new Error('The revision result could not be verified. Your draft is intact.');
+        }
+        observeEvidence(body);
+        if (!body.results.length) return report(body.quiet_state || 'No credible revision found in this search.', body.state);
+        for (const [index, row] of body.results.entries()) {
+          const card = revisionCard(row, original, index + 1);
+          const use = node('button', 'Use revision ' + (index + 1) + ' in my draft', 'ds-action primary'); use.type = 'button';
+          use.dataset.betterOfferAction = 'true';
+          use.onclick = () => {
+            if (busy) return;
+            if (revision !== started || personalRevisionStale || contextQualification(context, original))
+              return report('The draft or its evidence changed. Check this exact offer again before choosing a revision.', 'stale');
+            openOffer(row);
+          };
+          card.append(use); results.append(card);
+        }
+        results.hidden = false;
+        report(`${body.results.length === 1 ? 'One revision' : 'Two revisions'} passed checks for both teams. Your draft is intact.`, 'complete');
+      } catch (error) {
+        if (activeRequest !== controller || started !== revision) return;
+        report(timedOut ? 'The revision search timed out. Try again when ready. Your draft is intact.' : error.message,
+          error.code === 'trade_capacity_deferred' ? 'deferred' : 'error');
+      } finally {
+        clearTimeout(timeout);
+        if (activeRequest === controller) { activeRequest = null; betterSearch = null; busy = false; paint(); }
+      }
+    };
+    return panel;
+  }
+  function revisionCard(row, original, number) {
+    const e = row.evaluation, d = decisionPresentation(e), card = node('article', null, 'tw-offer');
+    card.append(node('h4', 'Revision ' + number), node('p', finalVerdict(e), 'tw-offer-verdict'));
+    for (const [title, key, facts] of [['You send', 'assets_sent', row.proposal_presentation?.send], ['You receive', 'assets_received', row.proposal_presentation?.receive]]) {
+      const previous = original[key], current = row.proposal[key];
+      const added = current.filter(id => !previous.includes(id)), removed = previous.filter(id => !current.includes(id));
+      const text = [[added, 'Add'], [removed, 'Remove']].filter(([ids]) => ids.length)
+        .map(([ids, verb]) => verb + ' ' + packageText(ids, facts, false)).join(' · ');
+      card.append(node('p', title + ': ' + packageText(current, facts, false), 'tw-offer-package'));
+      if (text) card.append(node('p', 'Change: ' + text));
+    }
+    appendCurrentLineupSummary(card, d);
+    const adjustment = e.package_adjustment?.partner;
+    const reason = e.dimensions?.counterparty_plausibility?.explanation || e.why_they_would_do_it;
+    if (reason) card.append(node('p', 'Why it may help them: ' + customerText(reason)));
+    if (row.personal_preference_matches?.avoid_received?.length) card.append(node('p', 'Includes an asset you prefer to avoid.', 'tw-risk-summary'));
+    const cost = d.main_cost || e.major_drawback;
+    if (cost) card.append(node('p', 'Your cost or risk: ' + customerText(cost), 'tw-drawback'));
+    card.append(node('p', valuationSummary(e), 'tw-offer-market'));
+    const evidence = node('div');
+    if (adjustment?.explanation) evidence.append(node('p', customerText(adjustment.explanation)));
+    if (d.partner_summary && d.partner_summary !== reason) evidence.append(node('p', customerText(d.partner_summary)));
+    const ownReserve = e.dimensions?.strategic_fit?.active?.reserve_quality;
+    if (ownReserve?.material_loss && typeof ownReserve.mean_weekly_delta === 'number') {
+      evidence.append(node('p', 'Your eligible backup production changes by ' + displayPoints(ownReserve.mean_weekly_delta) + ' projected points per supported week.'));
+    }
+    const change = row.revision_evidence || {};
+    if (Array.isArray(change.partner_comparison_weeks)) {
+      evidence.append(node('p', `Their projected change per week versus keeping their roster: ${displayPoints(change.partner_mean_before)} with your original offer and ${displayPoints(change.partner_mean_after)} with this revision. Compared weeks ${change.partner_comparison_weeks.join(', ')}.`));
+    }
+    evidence.append(assessedGauge(e, false), capitalDisclosure(e.draft_capital_record, false));
+    evidence.append(node('small', 'A supported fit does not establish that the other manager will accept.'));
+    card.append(disclosure('Revision evidence', evidence));
+    return card;
+  }
   function rememberPreview(row, context) {
     session.originalProposal = {sent: [...selected.sent], received: [...selected.received], partner: partner()};
     session.previewProposal = {...row.proposal, preview_presentation: recordedPresentation(row), preview_context: context, preview_balance_adjustment: row.balance_adjustment || row.proposal.preview_balance_adjustment, preview_origin_workflow: row.workflow || row.proposal.preview_origin_workflow || session.originWorkflow};
@@ -1641,7 +1744,8 @@
     if (retained) card.append(node('p', 'Retained assessment · NOT REVALIDATED', 'tw-drawback'));
     const partnerName = context.identity?.counterparty || (retained ? 'Franchise #' + row.proposal.partner_roster_id + ' · recorded name unavailable' : team(row.proposal.partner_roster_id)?.team_name || 'the selected partner');
     card.append(node('h3', partnerName, 'tw-offer-partner'), node('p', finalVerdict(e), 'tw-offer-verdict'));
-    if (preview) card.append(evaluationOverview(e, row.proposal, row.proposal_presentation || row.proposal.preview_presentation, retained));
+    if (preview) card.append(evaluationOverview(e, row.proposal, row.proposal_presentation || row.proposal.preview_presentation, retained,
+      retained || session.originWorkflow !== 'trade_for' ? null : betterOfferControl(e, row.proposal, context)));
     if (!preview) card.append(node('p', 'You send: ' + packageText(row.proposal.assets_sent, (row.proposal_presentation || row.proposal.preview_presentation)?.send, retained), 'tw-offer-package'),
       node('p', 'You receive: ' + packageText(row.proposal.assets_received, (row.proposal_presentation || row.proposal.preview_presentation)?.receive, retained), 'tw-offer-package'));
     if (decision.qualification) card.append(node('p', customerText(decision.qualification), 'tw-verdict-qualification'));
@@ -1764,6 +1868,10 @@
         detail.append(node('p', 'Other franchise: ' + (team(p.partner_roster_id)?.team_name || 'selected counterparty')));
         const diagnosed = decisionPresentation(row.evaluation);
         for (const key of ['their_side_summary', 'decision_conditions', 'evidence_next_action']) if (diagnosed[key]) detail.append(node('p', diagnosed[key]));
+        if (flow === 'trade_for' && row.evaluation.legal === true) {
+          const review = node('button', 'Review trade'); review.type = 'button';
+          review.onclick = () => previewOffer(row); detail.append(review);
+        }
         if (row.evaluation.explanation_html) {
           const parsed = parsedExplanation(row.evaluation);
           for (const evidence of parsed.querySelectorAll('.dtos-explanation > .tw-lineup-warning, .dtos-explanation > .tw-lineup-details')) detail.append(evidence);
@@ -1998,7 +2106,9 @@
   el('trade-run').onclick = () => run('evaluate'); el('trade-find').onclick = () => run('generate');
   el('trade-cancel').onclick = () => {
     if (!activeRequest) return;
+    const revising = Boolean(betterSearch);
     cancelBalance();
+    if (revising) { paint(); root.querySelector('.tw-better-offer > button')?.focus(); return; }
     operationStatus('Cancelled. Your exact offer is unchanged; choose Generate or Evaluate to try again.', 'cancelled');
     message('Operation cancelled. Your selected assets, target and protections are unchanged.');
     paint(); (['recommended', 'shop', 'trade_for'].includes(flow) ? el('trade-find') : el('trade-run')).focus();
