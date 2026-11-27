@@ -1,3 +1,8 @@
+## v1.22.70 / build 2285 — Better counterparty fit
+
+- Trade For and better-offer revisions look for a concrete reason a team would give up significant projected lineup points. Price and picks alone cannot establish that fit when the team's direction is unknown.
+- Review still shows the exact package prices and projected effects. A legal offer with an unconfirmed benefit for the other team can still be evaluated as a negotiation option.
+
 ## v1.22.69 / build 2284 — Better trade offers
 
 - Ask for up to two revisions from Trade Review when an evaluated offer falls short. Each preview preserves exact locks and passes the existing recommendation checks for both teams.

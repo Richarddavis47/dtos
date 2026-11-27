@@ -1,3 +1,8 @@
+## v1.22.70 / build 2285 — Better counterparty fit
+
+- Require a supported benefit for the other team when a trade costs that team significant projected lineup points and its direction is unknown.
+- Apply the same rule to Trade For and better-offer revisions. Keep legal offers available for manual evaluation and explain why the other team's benefit is unconfirmed.
+
 ## v1.22.69 / build 2284 — Better trade offers
 
 - Request up to two bilateral revisions for an evaluated offer that falls short, preserving the exact trade target and locks.

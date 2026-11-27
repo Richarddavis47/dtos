@@ -1,7 +1,7 @@
 """Bilateral observable strategic effects; no blended utility score."""
 from .capital_assessment import (
     SEVERE_MARKET_LOSS_RATIO, TRADE_EVALUATION_POLICY_VERSION,
-    assess_capital, production_evidence, resolve_strategy,
+    assess_capital, material_production_loss, production_evidence, resolve_strategy,
 )
 
 
@@ -52,7 +52,7 @@ def strategic_profile(incoming, outgoing, impact, package):
             'meaning': 'supported team-specific effects, not Market fairness or a strategy score'}
 
 
-def plausibility(strategy, package, market_return, historical):
+def plausibility(strategy, package, market_return, historical, adjustment):
     deltas = [row['delta'] for row in strategy['horizons'].values() if row.get('delta') is not None]
     gains, losses = any(d > 0 for d in deltas), any(d < 0 for d in deltas)
     reasons = []
@@ -63,6 +63,9 @@ def plausibility(strategy, package, market_return, historical):
     ratio = strategy.get('market_return_ratio')
     if ratio is not None and ratio < SEVERE_MARKET_LOSS_RATIO:
         state, reasons = 'LOW', ['COUNTERPARTY_SEVERE_MARKET_LOSS']
+    elif adjustment.get('supported_counterparty_production'):
+        state, reasons = 'PLAUSIBLE', ['COUNTERPARTY_SUPPORTED_PRODUCTION_TRADEOFF',
+                                      'COUNTERPARTY_STRATEGY_UNCONFIRMED']
     elif capital_fit:
         recommendation = capital_fit['recommendation']
         state = ('PLAUSIBLE' if recommendation in ('SMASH ACCEPT', 'WORTH PURSUING', 'FAIR / OPTIONAL')
@@ -81,6 +84,7 @@ def plausibility(strategy, package, market_return, historical):
         elif (recommendation is None and capital.get('availability') == 'supported'
                 and strategy['projection_coverage_complete'] and strategy['manager_strategy']['strategy'] is None
                 and package['assessment'] != 'POOR' and capital.get('meaningful_gain')
+                and not material_production_loss(strategy)
                 and ratio is not None and ratio >= .85):
             state, reasons = 'PLAUSIBLE', ['COUNTERPARTY_SUPPORTED_CAPITAL_TRADEOFF',
                                           'COUNTERPARTY_STRATEGY_UNCONFIRMED']
@@ -105,7 +109,9 @@ def plausibility(strategy, package, market_return, historical):
         state = 'INSUFFICIENT EVIDENCE'
         reasons.append('COUNTERPARTY_CAPACITY_UNRESOLVED')
     explanation = capital_fit['explanation'] if capital_fit else 'Supported counterparty effects; not a prediction of manager behavior.'
-    if 'COUNTERPARTY_SUPPORTED_PRODUCTION_TRADEOFF' in reasons:
+    if adjustment.get('supported_counterparty_production') and state == 'PLAUSIBLE':
+        explanation = adjustment['explanation']
+    elif 'COUNTERPARTY_SUPPORTED_PRODUCTION_TRADEOFF' in reasons:
         explanation = 'Material legal-lineup production is gained at bounded Market cost; capital spent remains a cost and manager strategy is unconfirmed.'
     elif 'COUNTERPARTY_SUPPORTED_CAPITAL_TRADEOFF' in reasons:
         explanation = 'Meaningful priced future capital is gained at broadly balanced Market terms; current production and reserve costs remain disclosed, and manager strategy is unconfirmed.'
@@ -187,10 +193,10 @@ def reconcile_result(result, proposal, impact, historical=None, *, league=None,
                                                             outgoing_total=outgoing, incoming_total=incoming)
         result['package_adjustment'][side] = package_adjustment(
             received, sent, sides.get(side), packages[side], strategy, league or {},
-            incoming_total=incoming, outgoing_total=outgoing)
-    plausible = plausibility(strategies['partner'], packages['partner'],
-                              -difference if difference is not None else None, historical)
+            incoming_total=incoming, outgoing_total=outgoing, counterparty=side == 'partner')
     partner_adjustment = result['package_adjustment']['partner']
+    plausible = plausibility(strategies['partner'], packages['partner'],
+                              -difference if difference is not None else None, historical, partner_adjustment)
     if (partner_adjustment['blocks_recommendation'] and not partner_adjustment['spots_to_resolve']
             and 'COUNTERPARTY_SEVERE_MARKET_LOSS' not in plausible['reason_codes']):
         # Keep observed capital as evidence and remove its automatic promotion.

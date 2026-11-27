@@ -4,6 +4,7 @@ from math import isfinite
 
 from src.core.projection_intelligence.sleeper_provider import freshness_state
 
+from .capital_assessment import material_production_loss
 from .market_balance import package_market
 
 
@@ -169,7 +170,7 @@ def package_profile(incoming, outgoing, impact):
 
 
 def package_adjustment(incoming, outgoing, impact, package, strategy, league, *,
-                       incoming_total, outgoing_total):
+                       incoming_total, outgoing_total, counterparty=False):
     """Qualify top-player tradeoffs without pricing NFL points or useful depth."""
     from src.core.valuation.config import DEFAULT_CONFIG
 
@@ -213,10 +214,7 @@ def package_adjustment(incoming, outgoing, impact, package, strategy, league, *,
             assigned += post['reserve_capacity'].get('entries') or []
         distinct_roles = max(distinct_roles, len(incoming_ids.intersection(entry['asset_id'] for entry in assigned)))
     complete = strategy['projection_coverage_complete']
-    loss = production['material_loss'] or any(
-        row.get('delta') is not None
-        and row['delta'] <= -max(1.0, (row.get('pre_total') or 0) * .03)
-        for row in strategy['horizons'].values())
+    loss = material_production_loss(strategy)
     depth = (distinct_roles >= 2 and quality['material_gain'] and not loss
              and quality['conclusion_state'] == 'current')
     production_compensation = complete and not loss and (production['material_gain'] or depth)
@@ -227,12 +225,32 @@ def package_adjustment(incoming, outgoing, impact, package, strategy, league, *,
         f' Adds {extra_players} to the active roster. No drop value is assumed.'
         if extra_players else '')
     result.update(distinct_incoming_roles=distinct_roles, major_top_player_gap=gap)
-    # Preserve the established non-elite capital-only tradeoff. Here the
-    # concern is a mixed package using picks to make up for lost production
-    # from its player substitutions without an independently supported premium.
+    rebuild_compensation = (
+        counterparty and complete
+        and (strategy.get('capital_strategy_fit') or {}).get('reason_code') == 'REBUILD_CAPITAL_FIT'
+    )
+    unknown_direction = strategy['manager_strategy']['strategy'] is None
+    if counterparty and loss and unknown_direction:
+        lead = f'Gives up {top.label}. ' if gap else ''
+        # A short-term loss can coexist with a concrete lineup benefit over
+        # the complete, deduplicated sample. Price and capital alone cannot.
+        if (complete and production['material_gain'] and package['assessment'] != 'POOR'
+                and strategy['market_return_ratio'] is not None and strategy['market_return_ratio'] >= .80):
+            result.update(assessment='COMPENSATED', supported_counterparty_production=True, explanation=(
+                lead + 'Gives up projected lineup points in some weeks, but gains projected lineup points '
+                'on average across all compared weeks.' + capacity_note))
+        else:
+            received = ('The return adds draft capital and a Market premium. ' if premium and capital.get('meaningful_gain') else
+                        'The return adds draft capital. ' if capital.get('meaningful_gain') else '')
+            result.update(assessment='LIMITED', blocks_recommendation=True, counterparty_direction_unconfirmed=True, explanation=(
+                lead + 'Gives up projected lineup points. ' + received
+                + 'There is no supported benefit that makes up for the loss, and this team’s direction is unconfirmed.'
+                + capacity_note))
+        return result
+    # Preserve the active manager's existing mixed-package decision rule.
     mixed_capital_with_loss = (
         incoming_ids and complete and loss and capital.get('meaningful_gain')
-        and not premium_compensation and strategy['manager_strategy']['strategy'] is None
+        and not premium_compensation and unknown_direction
     )
     if not gap and mixed_capital_with_loss:
         result.update(assessment='LIMITED', blocks_recommendation=True, explanation=(
@@ -248,14 +266,16 @@ def package_adjustment(incoming, outgoing, impact, package, strategy, league, *,
         if production_compensation:
             support = ('The incoming players fill distinct useful roles and improve supported backup coverage.'
                        if depth else 'The return improves supported optimal-lineup production.')
-        elif premium_compensation:
+        elif rebuild_compensation:
+            support = 'Gains meaningful priced draft capital that fits the team’s supported rebuild direction. Any projected lineup loss still matters.'
+        elif premium_compensation and not (counterparty and loss):
             support = 'Receives a separate Market premium and meaningful priced draft capital. Any projected lineup loss still matters.'
         else:
             fit = ('They lose projected lineup points. ' if loss else
                    'A complete lineup benefit is unconfirmed. ' if not complete else '')
             support = fit + ('The pick adds flexibility, but the return does not establish enough compensation.'
                              if capital.get('meaningful_gain') else 'The return does not establish enough lineup, depth or priced-capital compensation.')
-        accepted = bool(production_compensation or premium_compensation)
+        accepted = bool(production_compensation or rebuild_compensation or (premium_compensation and not (counterparty and loss)))
         result.update(assessment='COMPENSATED' if accepted else 'LIMITED',
                       blocks_recommendation=not accepted, explanation=lead + support + capacity_note)
     return result
