@@ -142,11 +142,31 @@ class LeagueHubBrowserTests(unittest.TestCase):
                         overflows = table.locator("td, th").evaluate_all(
                             "cells=>cells.filter(e=>e.scrollWidth>e.clientWidth+1).map(e=>e.textContent)")
                         self.assertEqual(overflows, [])
+                        shortcut = page.locator('.league-destinations').get_by_role('link', name='Transactions')
+                        self.assertEqual(shortcut.inner_text(), 'Transactions')
+                        def is_one_line(element):
+                            return element.evaluate('''e => {
+                                const range = document.createRange(); range.selectNodeContents(e);
+                                const lines = [...range.getClientRects()]; const box = e.getBoundingClientRect();
+                                return lines.length === 1 && lines[0].left >= box.left && lines[0].right <= box.right;
+                            }''')
+                        self.assertTrue(is_one_line(shortcut))
+                        for total in table.locator('.league-pf').all():
+                            self.assertTrue(is_one_line(total), total.inner_text())
+                        if width < 600:
+                            final_link = page.locator('.league-destinations a').last
+                            final_link.evaluate("e=>e.scrollIntoView({block:'center'})")
+                            self.assertTrue(final_link.evaluate('''e => {
+                                const box = e.getBoundingClientRect();
+                                const nav = document.querySelector('.manager-nav').getBoundingClientRect();
+                                return box.bottom <= nav.top && e.contains(document.elementFromPoint(box.x + box.width/2, box.y + box.height/2));
+                            }'''))
                         self.assertIn("Projected points", page.locator(".league-matchup-preview").inner_text())
                         self.assertIn("0.00", page.locator(".league-matchup-preview").inner_text())
                         self.assertIn("57.25", page.locator(".league-matchup-preview").inner_text())
                         self.assertEqual(page.get_by_role("link", name="All matchups").get_attribute("href"), "/matchups?week=3")
                         if path:
+                            page.evaluate('window.scrollTo(0,0)')
                             page.screenshot(path=str(Path(path, f"league-{width}.png")), full_page=True)
                         previous = page.get_by_role("link", name="Previous matchup week, Week 2")
                         previous.focus()
