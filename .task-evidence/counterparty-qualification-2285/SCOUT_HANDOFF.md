@@ -1,0 +1,11 @@
+# Scout acceptance for counterparty fit
+
+PR #374. Candidate 69e054bd84641b685e604f93bab81d60e95f5aae. Tree a7abe3696947ff3239302c6f0b9f5890e36301d1. Build 2284 baseline a1a7e172898fd8f8c4d308e6f4d220e65c1f42d0. Planned release v1.22.70 / build 2285.
+
+1. Use the prepared Dynasty Best Ball fixture with Win Now for The tankers and an unconfirmed direction for Crayon Eaters. In manual Evaluate, send Bo Nix, Bryce Young and `2028-R3-1`, The tankers’ exact third, for Joe Burrow and Cam Skattebo. Expect 1,166–1,166 Neutral Market, provisional Week 12 effects +15.10 and −20.05, and “Negotiation option · partner benefit unconfirmed” near the package explanation.
+2. Manually evaluate the prior revisions individually. Add Fixture RB A to the outgoing side, then replay the original outgoing side while leaving Cam Skattebo with Crayon Eaters. Compare 1,266–1,166 and 1,166–776 Neutral. Both retain the −17.10 Week 12 seller loss and the exact future pick. Expect the package explanation to identify the gain in Market and capital as well as the unresolved lineup cost.
+3. Inspect the matched Trade For trace. Each exact candidate was actually evaluated once and excluded for the shared package reason. An empty search alone is insufficient evidence. Open Show me a better offer explicitly on the original. The prepared fixture returns zero credible revisions; the legal draft stays intact, including on reload and Back.
+4. Use the separate rebuild control to verify two credible previews. View the named benefit, seller’s residual loss, exact pick and adoption button. The control supplies a supported rebuild direction and a different initial price. Open the secondary evidence on the preview, and adopt only inside the disposable fixture. Compare Neutral and Custom independently.
+5. Use keyboard and touch in responsive Chromium at 320 and 390 pixels. Check the full-height action sits above bottom navigation when brought into view. At desktop, confirm the same Review display and side-by-side supported previews. Inspect best-ball depth and star-for-star decisions in the focused originals.
+
+The screenshot replay uses synthetic unshown prices and prepared NFL projections. Any safely admitted, signed-in production comparison and any physical iPhone Safari check require independent evidence. Leave league settings, rankings, lineups and all real trades untouched.

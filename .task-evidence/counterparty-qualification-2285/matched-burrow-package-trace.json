@@ -1,0 +1,814 @@
+{
+  "source": {
+    "candidate": "69e054bd84641b685e604f93bab81d60e95f5aae",
+    "tree": "a7abe3696947ff3239302c6f0b9f5890e36301d1",
+    "baseline": "a1a7e172898fd8f8c4d308e6f4d220e65c1f42d0",
+    "baseline_tree": "e1a284c33bef3b0b7aa9f81ca1b7ff7a9bb7ad9e",
+    "branch": "feat/counterparty-qualification-2285",
+    "version": "1.22.70",
+    "build": 2285,
+    "expected_test_count": 4694,
+    "pr": 374
+  },
+  "observed_at": "2026-11-27T18:44:44.918374+00:00",
+  "scope": "Disposable prepared fixture. The QB price split and unnamed player observations are synthetic. No authenticated production records used.",
+  "cases": {
+    "original": {
+      "send": [
+        "nix",
+        "young",
+        "2028-R3-1"
+      ],
+      "receive": [
+        "burrow",
+        "skattebo"
+      ],
+      "build_2284": {
+        "legal": true,
+        "canonical_neutral_market": {
+          "sent": 1166.0,
+          "received": 1166.0,
+          "ratio": 1.0
+        },
+        "selected_week_owner_delta": 15.1,
+        "selected_week_partner_delta": -20.05,
+        "partner_production": {
+          "weeks_counted_once": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "mean_weekly_delta": -14.259999999999996,
+          "pre_mean_weekly_points": 58.309999999999995,
+          "material_weekly_threshold": 1.7492999999999999,
+          "material_gain": false,
+          "material_loss": true,
+          "meaning": "unique supported optimal-lineup weeks; picks have no projected points"
+        },
+        "partner_reserves": {
+          "mean_weekly_delta": 7.95,
+          "pre_mean_weekly_points": 7.05,
+          "material_weekly_threshold": 1.0,
+          "material_gain": true,
+          "material_loss": false,
+          "gain_weeks": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "loss_weeks": [],
+          "complete": true,
+          "supported_weeks": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "weeks_counted_once": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "conclusion_state": "provisional",
+          "projection_freshness": [
+            "Unavailable"
+          ],
+          "availability": "supported",
+          "meaning": "unique supported weeks of disjoint legal reserve production; not an injury forecast or a second starting lineup"
+        },
+        "partner_strategy": {
+          "strategy": null,
+          "source": "unavailable"
+        },
+        "partner_net_priced_capital": 211.0,
+        "partner_package": {
+          "assessment": "LIMITED",
+          "blocks_recommendation": true,
+          "explanation": "Gives up Joe Burrow without receiving a comparable quarterback for this league\u2019s QB-eligible slots. They lose projected lineup points. The pick adds flexibility, but the return does not establish enough compensation.",
+          "best_ball": true,
+          "extra_qb_slot": true,
+          "extra_active_players": 0,
+          "spots_to_resolve": 0,
+          "distinct_incoming_roles": 1,
+          "major_top_player_gap": true
+        },
+        "partner_reasons": [
+          "COUNTERPARTY_PACKAGE_COMPENSATION_UNESTABLISHED"
+        ],
+        "decision": {
+          "headline": "COUNTERPARTY LIMITED",
+          "classification": "COUNTERPARTY LIMITED",
+          "qualified": false,
+          "side_assessment": "WORTH PURSUING",
+          "qualification": "Not a qualified bilateral recommendation. Your side has supported upside, but the other team's benefit or compensation is not established. This does not predict acceptance."
+        },
+        "generated_trade_eligible": false
+      },
+      "build_2285": {
+        "legal": true,
+        "canonical_neutral_market": {
+          "sent": 1166.0,
+          "received": 1166.0,
+          "ratio": 1.0
+        },
+        "selected_week_owner_delta": 15.1,
+        "selected_week_partner_delta": -20.05,
+        "partner_production": {
+          "weeks_counted_once": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "mean_weekly_delta": -14.259999999999996,
+          "pre_mean_weekly_points": 58.309999999999995,
+          "material_weekly_threshold": 1.7492999999999999,
+          "material_gain": false,
+          "material_loss": true,
+          "meaning": "unique supported optimal-lineup weeks; picks have no projected points"
+        },
+        "partner_reserves": {
+          "mean_weekly_delta": 7.95,
+          "pre_mean_weekly_points": 7.05,
+          "material_weekly_threshold": 1.0,
+          "material_gain": true,
+          "material_loss": false,
+          "gain_weeks": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "loss_weeks": [],
+          "complete": true,
+          "supported_weeks": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "weeks_counted_once": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "conclusion_state": "provisional",
+          "projection_freshness": [
+            "Unavailable"
+          ],
+          "availability": "supported",
+          "meaning": "unique supported weeks of disjoint legal reserve production; not an injury forecast or a second starting lineup"
+        },
+        "partner_strategy": {
+          "strategy": null,
+          "source": "unavailable"
+        },
+        "partner_net_priced_capital": 211.0,
+        "partner_package": {
+          "assessment": "LIMITED",
+          "blocks_recommendation": true,
+          "explanation": "Gives up Joe Burrow. Gives up projected lineup points. The return adds draft capital. There is no supported benefit that makes up for the loss, and this team\u2019s direction is unconfirmed.",
+          "best_ball": true,
+          "extra_qb_slot": true,
+          "extra_active_players": 0,
+          "spots_to_resolve": 0,
+          "distinct_incoming_roles": 1,
+          "major_top_player_gap": true,
+          "counterparty_direction_unconfirmed": true
+        },
+        "partner_reasons": [
+          "COUNTERPARTY_PACKAGE_COMPENSATION_UNESTABLISHED"
+        ],
+        "decision": {
+          "headline": "COUNTERPARTY LIMITED",
+          "classification": "COUNTERPARTY LIMITED",
+          "qualified": false,
+          "side_assessment": "WORTH PURSUING",
+          "qualification": "Not a qualified bilateral recommendation. Your side has supported upside, but the other team's benefit or compensation is not established. This does not predict acceptance."
+        },
+        "generated_trade_eligible": false
+      },
+      "pinned_trade_for": {
+        "full_evaluations": 1,
+        "recommendations": 0,
+        "blockers": [
+          "WIN_NOW_PRODUCTION_FIT",
+          "COUNTERPARTY_PACKAGE_COMPENSATION_UNESTABLISHED"
+        ]
+      }
+    },
+    "add_fixture_rb_a": {
+      "send": [
+        "nix",
+        "young",
+        "2028-R3-1",
+        "active-rb"
+      ],
+      "receive": [
+        "burrow",
+        "skattebo"
+      ],
+      "build_2284": {
+        "legal": true,
+        "canonical_neutral_market": {
+          "sent": 1266.0,
+          "received": 1166.0,
+          "ratio": 0.921
+        },
+        "selected_week_owner_delta": 15.1,
+        "selected_week_partner_delta": -17.1,
+        "partner_production": {
+          "weeks_counted_once": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "mean_weekly_delta": -11.309999999999997,
+          "pre_mean_weekly_points": 58.309999999999995,
+          "material_weekly_threshold": 1.7492999999999999,
+          "material_gain": false,
+          "material_loss": true,
+          "meaning": "unique supported optimal-lineup weeks; picks have no projected points"
+        },
+        "partner_reserves": {
+          "mean_weekly_delta": 15.0,
+          "pre_mean_weekly_points": 7.05,
+          "material_weekly_threshold": 1.0,
+          "material_gain": true,
+          "material_loss": false,
+          "gain_weeks": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "loss_weeks": [],
+          "complete": true,
+          "supported_weeks": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "weeks_counted_once": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "conclusion_state": "provisional",
+          "projection_freshness": [
+            "Unavailable"
+          ],
+          "availability": "supported",
+          "meaning": "unique supported weeks of disjoint legal reserve production; not an injury forecast or a second starting lineup"
+        },
+        "partner_strategy": {
+          "strategy": null,
+          "source": "unavailable"
+        },
+        "partner_net_priced_capital": 211.0,
+        "partner_package": {
+          "assessment": "COMPENSATED",
+          "blocks_recommendation": false,
+          "explanation": "Gives up Joe Burrow without receiving a comparable quarterback for this league\u2019s QB-eligible slots. Receives a separate Market premium and meaningful priced draft capital. Any projected lineup loss still matters. Adds 1 to the active roster. No drop value is assumed.",
+          "best_ball": true,
+          "extra_qb_slot": true,
+          "extra_active_players": 1,
+          "spots_to_resolve": 0,
+          "distinct_incoming_roles": 2,
+          "major_top_player_gap": true
+        },
+        "partner_reasons": [
+          "COUNTERPARTY_SUPPORTED_CAPITAL_TRADEOFF",
+          "COUNTERPARTY_STRATEGY_UNCONFIRMED"
+        ],
+        "decision": {
+          "headline": "WORTH PURSUING",
+          "classification": "CREDIBLE RECOMMENDATION",
+          "qualified": true,
+          "side_assessment": "WORTH PURSUING",
+          "qualification": null
+        },
+        "generated_trade_eligible": true
+      },
+      "build_2285": {
+        "legal": true,
+        "canonical_neutral_market": {
+          "sent": 1266.0,
+          "received": 1166.0,
+          "ratio": 0.921
+        },
+        "selected_week_owner_delta": 15.1,
+        "selected_week_partner_delta": -17.1,
+        "partner_production": {
+          "weeks_counted_once": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "mean_weekly_delta": -11.309999999999997,
+          "pre_mean_weekly_points": 58.309999999999995,
+          "material_weekly_threshold": 1.7492999999999999,
+          "material_gain": false,
+          "material_loss": true,
+          "meaning": "unique supported optimal-lineup weeks; picks have no projected points"
+        },
+        "partner_reserves": {
+          "mean_weekly_delta": 15.0,
+          "pre_mean_weekly_points": 7.05,
+          "material_weekly_threshold": 1.0,
+          "material_gain": true,
+          "material_loss": false,
+          "gain_weeks": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "loss_weeks": [],
+          "complete": true,
+          "supported_weeks": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "weeks_counted_once": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "conclusion_state": "provisional",
+          "projection_freshness": [
+            "Unavailable"
+          ],
+          "availability": "supported",
+          "meaning": "unique supported weeks of disjoint legal reserve production; not an injury forecast or a second starting lineup"
+        },
+        "partner_strategy": {
+          "strategy": null,
+          "source": "unavailable"
+        },
+        "partner_net_priced_capital": 211.0,
+        "partner_package": {
+          "assessment": "LIMITED",
+          "blocks_recommendation": true,
+          "explanation": "Gives up Joe Burrow. Gives up projected lineup points. The return adds draft capital and a Market premium. There is no supported benefit that makes up for the loss, and this team\u2019s direction is unconfirmed. Adds 1 to the active roster. No drop value is assumed.",
+          "best_ball": true,
+          "extra_qb_slot": true,
+          "extra_active_players": 1,
+          "spots_to_resolve": 0,
+          "distinct_incoming_roles": 2,
+          "major_top_player_gap": true,
+          "counterparty_direction_unconfirmed": true
+        },
+        "partner_reasons": [
+          "COUNTERPARTY_PACKAGE_COMPENSATION_UNESTABLISHED"
+        ],
+        "decision": {
+          "headline": "COUNTERPARTY LIMITED",
+          "classification": "COUNTERPARTY LIMITED",
+          "qualified": false,
+          "side_assessment": "WORTH PURSUING",
+          "qualification": "Not a qualified bilateral recommendation. Your side has supported upside, but the other team's benefit or compensation is not established. This does not predict acceptance."
+        },
+        "generated_trade_eligible": false
+      },
+      "pinned_trade_for": {
+        "full_evaluations": 1,
+        "recommendations": 0,
+        "blockers": [
+          "WIN_NOW_PRODUCTION_FIT",
+          "COUNTERPARTY_PACKAGE_COMPENSATION_UNESTABLISHED"
+        ]
+      }
+    },
+    "leave_skattebo_with_crayon_eaters": {
+      "send": [
+        "nix",
+        "young",
+        "2028-R3-1"
+      ],
+      "receive": [
+        "burrow"
+      ],
+      "build_2284": {
+        "legal": true,
+        "canonical_neutral_market": {
+          "sent": 1166.0,
+          "received": 776.0,
+          "ratio": 0.666
+        },
+        "selected_week_owner_delta": 15.1,
+        "selected_week_partner_delta": -17.1,
+        "partner_production": {
+          "weeks_counted_once": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "mean_weekly_delta": -11.309999999999997,
+          "pre_mean_weekly_points": 58.309999999999995,
+          "material_weekly_threshold": 1.7492999999999999,
+          "material_gain": false,
+          "material_loss": true,
+          "meaning": "unique supported optimal-lineup weeks; picks have no projected points"
+        },
+        "partner_reserves": {
+          "mean_weekly_delta": 15.0,
+          "pre_mean_weekly_points": 7.05,
+          "material_weekly_threshold": 1.0,
+          "material_gain": true,
+          "material_loss": false,
+          "gain_weeks": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "loss_weeks": [],
+          "complete": true,
+          "supported_weeks": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "weeks_counted_once": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "conclusion_state": "provisional",
+          "projection_freshness": [
+            "Unavailable"
+          ],
+          "availability": "supported",
+          "meaning": "unique supported weeks of disjoint legal reserve production; not an injury forecast or a second starting lineup"
+        },
+        "partner_strategy": {
+          "strategy": null,
+          "source": "unavailable"
+        },
+        "partner_net_priced_capital": 211.0,
+        "partner_package": {
+          "assessment": "COMPENSATED",
+          "blocks_recommendation": false,
+          "explanation": "Gives up Joe Burrow without receiving a comparable quarterback for this league\u2019s QB-eligible slots. Receives a separate Market premium and meaningful priced draft capital. Any projected lineup loss still matters. Adds 1 to the active roster. No drop value is assumed.",
+          "best_ball": true,
+          "extra_qb_slot": true,
+          "extra_active_players": 1,
+          "spots_to_resolve": 0,
+          "distinct_incoming_roles": 1,
+          "major_top_player_gap": true
+        },
+        "partner_reasons": [
+          "COUNTERPARTY_SUPPORTED_CAPITAL_TRADEOFF",
+          "COUNTERPARTY_STRATEGY_UNCONFIRMED"
+        ],
+        "decision": {
+          "headline": "WORTH PURSUING",
+          "classification": "CREDIBLE RECOMMENDATION",
+          "qualified": true,
+          "side_assessment": "WORTH PURSUING",
+          "qualification": null
+        },
+        "generated_trade_eligible": true
+      },
+      "build_2285": {
+        "legal": true,
+        "canonical_neutral_market": {
+          "sent": 1166.0,
+          "received": 776.0,
+          "ratio": 0.666
+        },
+        "selected_week_owner_delta": 15.1,
+        "selected_week_partner_delta": -17.1,
+        "partner_production": {
+          "weeks_counted_once": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "mean_weekly_delta": -11.309999999999997,
+          "pre_mean_weekly_points": 58.309999999999995,
+          "material_weekly_threshold": 1.7492999999999999,
+          "material_gain": false,
+          "material_loss": true,
+          "meaning": "unique supported optimal-lineup weeks; picks have no projected points"
+        },
+        "partner_reserves": {
+          "mean_weekly_delta": 15.0,
+          "pre_mean_weekly_points": 7.05,
+          "material_weekly_threshold": 1.0,
+          "material_gain": true,
+          "material_loss": false,
+          "gain_weeks": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "loss_weeks": [],
+          "complete": true,
+          "supported_weeks": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "weeks_counted_once": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "conclusion_state": "provisional",
+          "projection_freshness": [
+            "Unavailable"
+          ],
+          "availability": "supported",
+          "meaning": "unique supported weeks of disjoint legal reserve production; not an injury forecast or a second starting lineup"
+        },
+        "partner_strategy": {
+          "strategy": null,
+          "source": "unavailable"
+        },
+        "partner_net_priced_capital": 211.0,
+        "partner_package": {
+          "assessment": "LIMITED",
+          "blocks_recommendation": true,
+          "explanation": "Gives up Joe Burrow. Gives up projected lineup points. The return adds draft capital and a Market premium. There is no supported benefit that makes up for the loss, and this team\u2019s direction is unconfirmed. Adds 1 to the active roster. No drop value is assumed.",
+          "best_ball": true,
+          "extra_qb_slot": true,
+          "extra_active_players": 1,
+          "spots_to_resolve": 0,
+          "distinct_incoming_roles": 1,
+          "major_top_player_gap": true,
+          "counterparty_direction_unconfirmed": true
+        },
+        "partner_reasons": [
+          "COUNTERPARTY_PACKAGE_COMPENSATION_UNESTABLISHED"
+        ],
+        "decision": {
+          "headline": "COUNTERPARTY LIMITED",
+          "classification": "COUNTERPARTY LIMITED",
+          "qualified": false,
+          "side_assessment": "WORTH PURSUING",
+          "qualification": "Not a qualified bilateral recommendation. Your side has supported upside, but the other team's benefit or compensation is not established. This does not predict acceptance."
+        },
+        "generated_trade_eligible": false
+      },
+      "pinned_trade_for": {
+        "full_evaluations": 1,
+        "recommendations": 0,
+        "blockers": [
+          "WIN_NOW_PRODUCTION_FIT",
+          "COUNTERPARTY_PACKAGE_COMPENSATION_UNESTABLISHED"
+        ]
+      }
+    }
+  },
+  "better_offer": {
+    "state": "MISSING_REQUIRED_EVIDENCE",
+    "quiet_state": "No credible revision found in this search. Some packages lack the prices or lineup evidence needed for both teams. No checked package improved the other team\u2019s projected lineup loss while also passing the recommendation checks for your goal.",
+    "count": 0,
+    "search_evidence": {
+      "full_evaluations": 42,
+      "evaluation_budget": 160,
+      "rejection_reason_counts": {
+        "COUNTERPARTY LIMITED": 37,
+        "MISSING REQUIRED EVIDENCE": 4
+      },
+      "bounded": true
+    },
+    "original_proposal": {
+      "active_roster_id": 1,
+      "partner_roster_id": 2,
+      "assets_sent": [
+        "nix",
+        "young",
+        "2028-R3-1"
+      ],
+      "assets_received": [
+        "burrow",
+        "skattebo"
+      ]
+    }
+  },
+  "supported_rebuild_control": {
+    "count": 2,
+    "exact_pick": "2028-R3-1",
+    "outcomes": [
+      {
+        "proposal": {
+          "active_roster_id": 1,
+          "partner_roster_id": 2,
+          "assets_sent": [
+            "nix",
+            "young",
+            "2028-R3-1"
+          ],
+          "assets_received": [
+            "burrow"
+          ]
+        },
+        "trace": {
+          "legal": true,
+          "canonical_neutral_market": {
+            "sent": 901.0,
+            "received": 776.0,
+            "ratio": 0.861
+          },
+          "selected_week_owner_delta": 15.1,
+          "selected_week_partner_delta": -17.1,
+          "partner_production": {
+            "weeks_counted_once": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "mean_weekly_delta": -11.309999999999997,
+            "pre_mean_weekly_points": 58.309999999999995,
+            "material_weekly_threshold": 1.7492999999999999,
+            "material_gain": false,
+            "material_loss": true,
+            "meaning": "unique supported optimal-lineup weeks; picks have no projected points"
+          },
+          "partner_reserves": {
+            "mean_weekly_delta": 15.0,
+            "pre_mean_weekly_points": 7.05,
+            "material_weekly_threshold": 1.0,
+            "material_gain": true,
+            "material_loss": false,
+            "gain_weeks": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "loss_weeks": [],
+            "complete": true,
+            "supported_weeks": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "weeks_counted_once": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "conclusion_state": "provisional",
+            "projection_freshness": [
+              "Unavailable"
+            ],
+            "availability": "supported",
+            "meaning": "unique supported weeks of disjoint legal reserve production; not an injury forecast or a second starting lineup"
+          },
+          "partner_strategy": {
+            "strategy": "REBUILD",
+            "source": "explicit_manager"
+          },
+          "partner_net_priced_capital": 211.0,
+          "partner_package": {
+            "assessment": "COMPENSATED",
+            "blocks_recommendation": false,
+            "explanation": "Gives up Joe Burrow without receiving a comparable quarterback for this league\u2019s QB-eligible slots. Gains meaningful priced draft capital that fits the team\u2019s supported rebuild direction. Any projected lineup loss still matters. Adds 1 to the active roster. No drop value is assumed.",
+            "best_ball": true,
+            "extra_qb_slot": true,
+            "extra_active_players": 1,
+            "spots_to_resolve": 0,
+            "distinct_incoming_roles": 1,
+            "major_top_player_gap": true
+          },
+          "partner_reasons": [
+            "REBUILD_CAPITAL_FIT"
+          ],
+          "decision": {
+            "headline": "WORTH PURSUING",
+            "classification": "CREDIBLE RECOMMENDATION",
+            "qualified": true,
+            "side_assessment": "WORTH PURSUING",
+            "qualification": null
+          },
+          "generated_trade_eligible": true
+        }
+      },
+      {
+        "proposal": {
+          "active_roster_id": 1,
+          "partner_roster_id": 2,
+          "assets_sent": [
+            "nix",
+            "young",
+            "2028-R3-1",
+            "active-rb"
+          ],
+          "assets_received": [
+            "burrow",
+            "skattebo"
+          ]
+        },
+        "trace": {
+          "legal": true,
+          "canonical_neutral_market": {
+            "sent": 1001.0,
+            "received": 1166.0,
+            "ratio": 1.165
+          },
+          "selected_week_owner_delta": 15.1,
+          "selected_week_partner_delta": -17.1,
+          "partner_production": {
+            "weeks_counted_once": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "mean_weekly_delta": -11.309999999999997,
+            "pre_mean_weekly_points": 58.309999999999995,
+            "material_weekly_threshold": 1.7492999999999999,
+            "material_gain": false,
+            "material_loss": true,
+            "meaning": "unique supported optimal-lineup weeks; picks have no projected points"
+          },
+          "partner_reserves": {
+            "mean_weekly_delta": 15.0,
+            "pre_mean_weekly_points": 7.05,
+            "material_weekly_threshold": 1.0,
+            "material_gain": true,
+            "material_loss": false,
+            "gain_weeks": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "loss_weeks": [],
+            "complete": true,
+            "supported_weeks": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "weeks_counted_once": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "conclusion_state": "provisional",
+            "projection_freshness": [
+              "Unavailable"
+            ],
+            "availability": "supported",
+            "meaning": "unique supported weeks of disjoint legal reserve production; not an injury forecast or a second starting lineup"
+          },
+          "partner_strategy": {
+            "strategy": "REBUILD",
+            "source": "explicit_manager"
+          },
+          "partner_net_priced_capital": 211.0,
+          "partner_package": {
+            "assessment": "COMPENSATED",
+            "blocks_recommendation": false,
+            "explanation": "Gives up Joe Burrow without receiving a comparable quarterback for this league\u2019s QB-eligible slots. Gains meaningful priced draft capital that fits the team\u2019s supported rebuild direction. Any projected lineup loss still matters. Adds 1 to the active roster. No drop value is assumed.",
+            "best_ball": true,
+            "extra_qb_slot": true,
+            "extra_active_players": 1,
+            "spots_to_resolve": 0,
+            "distinct_incoming_roles": 2,
+            "major_top_player_gap": true
+          },
+          "partner_reasons": [
+            "REBUILD_CAPITAL_FIT"
+          ],
+          "decision": {
+            "headline": "WORTH PURSUING",
+            "classification": "CREDIBLE RECOMMENDATION",
+            "qualified": true,
+            "side_assessment": "WORTH PURSUING",
+            "qualification": null
+          },
+          "generated_trade_eligible": true
+        }
+      }
+    ]
+  }
+}
