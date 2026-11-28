@@ -1,3 +1,8 @@
+## v1.22.71 / build 2286 — Trade For walk-away price
+
+- Ask “What can I afford to add?” in Trade For Review. Compare up to two single-asset additions to the current package, including what they cost and how they affect projected lineup points and depth.
+- The preview shows a walk-away point only when a smaller tested addition passes the checks for both teams and a larger tested addition no longer fits your side. Neutral Market and Custom costs appear separately. Your draft stays intact.
+
 ## v1.22.70 / build 2285 — Better counterparty fit
 
 - Trade For and better-offer revisions look for a concrete reason a team would give up significant projected lineup points. Price and picks alone cannot establish that fit when the team's direction is unknown.
