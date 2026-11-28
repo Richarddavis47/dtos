@@ -1,0 +1,872 @@
+{
+  "source": {
+    "candidate": "3f3a19689b70beb01b1b5e9eb8e885917a83a094",
+    "tree": "9f5d965fe9b0e513e1d200de0e7e0bb1fcb2cceb",
+    "baseline": "db4e7ea43bc3106502132b26841ddf520fe29dae",
+    "baseline_tree": "9f0734bbf30581f048b522e6e795f2b2d3bbe919",
+    "branch": "feat/trade-for-walk-away-2286",
+    "version": "1.22.71",
+    "build": 2286,
+    "expected_test_count": 4699,
+    "pr": 375
+  },
+  "scope": "Disposable prepared fixtures. Synthetic quotes and projections. No live owner or physical device check.",
+  "win_now": {
+    "requested_mode": "WALK_AWAY",
+    "preview_only": true,
+    "original_proposal": {
+      "active_roster_id": 1,
+      "partner_roster_id": 2,
+      "assets_sent": [
+        "nix",
+        "young",
+        "2028-R3-1"
+      ],
+      "assets_received": [
+        "burrow",
+        "skattebo"
+      ]
+    },
+    "results": [
+      {
+        "proposal": {
+          "workflow": "adjust",
+          "active_roster_id": 1,
+          "partner_roster_id": 2,
+          "assets_sent": [
+            "nix",
+            "young",
+            "2028-R3-1",
+            "2028-R3-2"
+          ],
+          "assets_received": [
+            "burrow",
+            "skattebo"
+          ],
+          "package_type": "Assisted Addition"
+        },
+        "asset": {
+          "asset_id": "2028-R3-2",
+          "label": "2028 Round 3 (Unknown)",
+          "kind": "pick",
+          "year": 2028,
+          "round": 3,
+          "original_franchise": 2,
+          "exact_slot": null
+        },
+        "market_cost": 211,
+        "custom_cost": null,
+        "custom_method": null,
+        "impact": {
+          "week": 12,
+          "lineup": {
+            "delta": 0.0,
+            "provisional": true
+          },
+          "reserves": {
+            "delta": 0.0,
+            "provisional": true
+          }
+        },
+        "verdict": "WORTH PURSUING",
+        "classification": "CREDIBLE RECOMMENDATION",
+        "owner_assessment": "WORTH PURSUING",
+        "credible": true,
+        "reason": "Win-now fit: this costs future flexibility, and materially improves the optimal legal lineup. Any reserve loss remains a disclosed cost. Addresses supported QB, RB lineup/depth context; package effects remain separate. Provisional: check dates and player availability.",
+        "partner_limit": null
+      },
+      {
+        "proposal": {
+          "workflow": "adjust",
+          "active_roster_id": 1,
+          "partner_roster_id": 2,
+          "assets_sent": [
+            "nix",
+            "young",
+            "2028-R3-1",
+            "active-qb"
+          ],
+          "assets_received": [
+            "burrow",
+            "skattebo"
+          ],
+          "package_type": "Assisted Addition"
+        },
+        "asset": {
+          "asset_id": "active-qb",
+          "label": "Fixture QB A",
+          "kind": "player",
+          "year": null,
+          "round": null,
+          "original_franchise": null,
+          "exact_slot": null
+        },
+        "market_cost": 800,
+        "custom_cost": null,
+        "custom_method": null,
+        "impact": {
+          "week": 12,
+          "lineup": {
+            "delta": -3.0,
+            "provisional": true
+          },
+          "reserves": {
+            "delta": -10.0,
+            "provisional": true
+          }
+        },
+        "verdict": "NOT WORTH IT",
+        "classification": "STRATEGICALLY POOR",
+        "owner_assessment": "NOT WORTH IT",
+        "credible": false,
+        "reason": "Win Now fit is weak: the supported benefit does not justify the production, capital or Market cost under this strategy. Addresses supported QB, RB lineup/depth context; package effects remain separate. Provisional: check dates and player availability.",
+        "partner_limit": null
+      }
+    ],
+    "cutoff_asset_id": "active-qb",
+    "quiet_state": "By Neutral Market cost, the smaller addition still fits. The larger tested addition goes past your walk-away point.",
+    "evaluation": {
+      "provenance": {
+        "inputs": {
+          "league_id": "league-1",
+          "active_roster_id": 1,
+          "partner_roster_id": 2,
+          "assets_sent": [
+            "2028-R3-1",
+            "nix",
+            "young"
+          ],
+          "assets_received": [
+            "burrow",
+            "skattebo"
+          ],
+          "market_generation": "current",
+          "projection_generation": "9023e79f9f14701c57a24303b58b1cbe27ad77c4354015d0ccc89a6547372ab3",
+          "projection_evidence": {
+            "generation": "9023e79f9f14701c57a24303b58b1cbe27ad77c4354015d0ccc89a6547372ab3",
+            "availability": "published",
+            "league_id": "league-1",
+            "season": 2026,
+            "week": 12,
+            "scoring_profile_id": "ea70ddee4bfa71df6cf409a516416eca62c90896c5008563b5d7134bc3e98afa",
+            "canonical_provider": "Sleeper",
+            "projection_snapshot_id": "9023e79f9f14701c57a24303b58b1cbe27ad77c4354015d0ccc89a6547372ab3",
+            "horizon_generation": "9023e79f9f14701c57a24303b58b1cbe27ad77c4354015d0ccc89a6547372ab3",
+            "horizon_snapshot_ids": {
+              "12": "8f0751a6e63fdeb6fea68798abe67454a1b3c71a4c4f91b1e64b38586cbdea17",
+              "13": "15ba23efc0da0f7c35d321f64551f41c0592c215b388864c649fc1a4a876cdf0",
+              "14": "dfea709a9c616c2ba511ae1979607e161fad2de8c024d8711ac8dff88c027da7",
+              "15": "74323adb8abeb1da49870637abbad6cdbe0c7cb1d569c66d0d10760812e7e89e"
+            },
+            "sleeper_evidence_snapshot_id": "4dd81d2b66aca9525be9767ee7db792feda56642eb90a55debefd7ba5a84d7ac",
+            "schema_version": "2.0",
+            "model_version": "sleeper-canonical-weekly-1",
+            "contract_version": "2",
+            "semantic_policy_version": "7"
+          },
+          "historical_generation": "current",
+          "result_digest": "9f1c7469992c973387b318e65de71c2f1c6b580d16f7d7582d61206886321394",
+          "evaluator": "bilateral_trade_v3"
+        }
+      }
+    },
+    "current_verdict": "WORTH PURSUING",
+    "strategy": "WIN NOW",
+    "state": "CHECKED",
+    "count": 2,
+    "search_evidence": {
+      "full_evaluations": 3,
+      "evaluation_budget": 3,
+      "bounded": true
+    }
+  },
+  "custom": {
+    "requested_mode": "WALK_AWAY",
+    "preview_only": true,
+    "original_proposal": {
+      "active_roster_id": 1,
+      "partner_roster_id": 2,
+      "assets_sent": [
+        "nix",
+        "young",
+        "2028-R3-1"
+      ],
+      "assets_received": [
+        "burrow",
+        "skattebo"
+      ]
+    },
+    "results": [
+      {
+        "proposal": {
+          "workflow": "adjust",
+          "active_roster_id": 1,
+          "partner_roster_id": 2,
+          "assets_sent": [
+            "nix",
+            "young",
+            "2028-R3-1",
+            "2028-R3-2"
+          ],
+          "assets_received": [
+            "burrow",
+            "skattebo"
+          ],
+          "package_type": "Assisted Addition"
+        },
+        "asset": {
+          "asset_id": "2028-R3-2",
+          "label": "2028 Round 3 (Unknown)",
+          "kind": "pick",
+          "year": 2028,
+          "round": 3,
+          "original_franchise": 2,
+          "exact_slot": null
+        },
+        "market_cost": 211,
+        "custom_cost": 189,
+        "custom_method": "personal-current-market-slot-curve-v1",
+        "impact": {
+          "week": 12,
+          "lineup": {
+            "delta": 0.0,
+            "provisional": true
+          },
+          "reserves": {
+            "delta": 0.0,
+            "provisional": true
+          }
+        },
+        "verdict": "WORTH PURSUING",
+        "classification": "CREDIBLE RECOMMENDATION",
+        "owner_assessment": "WORTH PURSUING",
+        "credible": true,
+        "reason": "Win-now fit: this costs future flexibility, and materially improves the optimal legal lineup. Any reserve loss remains a disclosed cost. Addresses supported QB, RB lineup/depth context; package effects remain separate. Provisional: check dates and player availability.",
+        "partner_limit": null
+      },
+      {
+        "proposal": {
+          "workflow": "adjust",
+          "active_roster_id": 1,
+          "partner_roster_id": 2,
+          "assets_sent": [
+            "nix",
+            "young",
+            "2028-R3-1",
+            "active-qb"
+          ],
+          "assets_received": [
+            "burrow",
+            "skattebo"
+          ],
+          "package_type": "Assisted Addition"
+        },
+        "asset": {
+          "asset_id": "active-qb",
+          "label": "Fixture QB A",
+          "kind": "player",
+          "year": null,
+          "round": null,
+          "original_franchise": null,
+          "exact_slot": null
+        },
+        "market_cost": 800,
+        "custom_cost": 800,
+        "custom_method": "personal-current-market-slot-curve-v1",
+        "impact": {
+          "week": 12,
+          "lineup": {
+            "delta": -3.0,
+            "provisional": true
+          },
+          "reserves": {
+            "delta": -10.0,
+            "provisional": true
+          }
+        },
+        "verdict": "NOT WORTH IT",
+        "classification": "STRATEGICALLY POOR",
+        "owner_assessment": "NOT WORTH IT",
+        "credible": false,
+        "reason": "Win Now fit is weak: the supported benefit does not justify the production, capital or personal valuation cost under this strategy. Addresses supported QB, RB lineup/depth context; package effects remain separate. Provisional: check dates and player availability.",
+        "partner_limit": null
+      }
+    ],
+    "cutoff_asset_id": "active-qb",
+    "quiet_state": "By Custom value, the smaller addition still fits. The larger tested addition goes past your walk-away point.",
+    "evaluation": {
+      "provenance": {
+        "inputs": {
+          "league_id": "league-1",
+          "active_roster_id": 1,
+          "partner_roster_id": 2,
+          "assets_sent": [
+            "2028-R3-1",
+            "nix",
+            "young"
+          ],
+          "assets_received": [
+            "burrow",
+            "skattebo"
+          ],
+          "market_generation": "current",
+          "projection_generation": "9023e79f9f14701c57a24303b58b1cbe27ad77c4354015d0ccc89a6547372ab3",
+          "projection_evidence": {
+            "generation": "9023e79f9f14701c57a24303b58b1cbe27ad77c4354015d0ccc89a6547372ab3",
+            "availability": "published",
+            "league_id": "league-1",
+            "season": 2026,
+            "week": 12,
+            "scoring_profile_id": "ea70ddee4bfa71df6cf409a516416eca62c90896c5008563b5d7134bc3e98afa",
+            "canonical_provider": "Sleeper",
+            "projection_snapshot_id": "9023e79f9f14701c57a24303b58b1cbe27ad77c4354015d0ccc89a6547372ab3",
+            "horizon_generation": "9023e79f9f14701c57a24303b58b1cbe27ad77c4354015d0ccc89a6547372ab3",
+            "horizon_snapshot_ids": {
+              "12": "8f0751a6e63fdeb6fea68798abe67454a1b3c71a4c4f91b1e64b38586cbdea17",
+              "13": "15ba23efc0da0f7c35d321f64551f41c0592c215b388864c649fc1a4a876cdf0",
+              "14": "dfea709a9c616c2ba511ae1979607e161fad2de8c024d8711ac8dff88c027da7",
+              "15": "74323adb8abeb1da49870637abbad6cdbe0c7cb1d569c66d0d10760812e7e89e"
+            },
+            "sleeper_evidence_snapshot_id": "4dd81d2b66aca9525be9767ee7db792feda56642eb90a55debefd7ba5a84d7ac",
+            "schema_version": "2.0",
+            "model_version": "sleeper-canonical-weekly-1",
+            "contract_version": "2",
+            "semantic_policy_version": "7"
+          },
+          "historical_generation": "current",
+          "result_digest": "2bcad807dd3f4f0b2eebb246d68f2c14a193633b436ed56d2dd5ed476d176b1a",
+          "evaluator": "bilateral_trade_v3"
+        }
+      }
+    },
+    "current_verdict": "WORTH PURSUING",
+    "strategy": "WIN NOW",
+    "state": "CHECKED",
+    "count": 2,
+    "search_evidence": {
+      "full_evaluations": 3,
+      "evaluation_budget": 3,
+      "bounded": true
+    }
+  },
+  "one_checked": {
+    "requested_mode": "WALK_AWAY",
+    "preview_only": true,
+    "original_proposal": {
+      "active_roster_id": 1,
+      "partner_roster_id": 2,
+      "assets_sent": [
+        "nix",
+        "young",
+        "2028-R3-1"
+      ],
+      "assets_received": [
+        "burrow",
+        "skattebo"
+      ]
+    },
+    "results": [
+      {
+        "proposal": {
+          "workflow": "adjust",
+          "active_roster_id": 1,
+          "partner_roster_id": 2,
+          "assets_sent": [
+            "nix",
+            "young",
+            "2028-R3-1",
+            "2028-R3-2"
+          ],
+          "assets_received": [
+            "burrow",
+            "skattebo"
+          ],
+          "package_type": "Assisted Addition"
+        },
+        "asset": {
+          "asset_id": "2028-R3-2",
+          "label": "2028 Round 3 (Unknown)",
+          "kind": "pick",
+          "year": 2028,
+          "round": 3,
+          "original_franchise": 2,
+          "exact_slot": null
+        },
+        "market_cost": 211,
+        "custom_cost": null,
+        "custom_method": null,
+        "impact": {
+          "week": 12,
+          "lineup": {
+            "delta": 0.0,
+            "provisional": true
+          },
+          "reserves": {
+            "delta": 0.0,
+            "provisional": true
+          }
+        },
+        "verdict": "WORTH PURSUING",
+        "classification": "CREDIBLE RECOMMENDATION",
+        "owner_assessment": "WORTH PURSUING",
+        "credible": true,
+        "reason": "Win-now fit: this costs future flexibility, and materially improves the optimal legal lineup. Any reserve loss remains a disclosed cost. Addresses supported QB, RB lineup/depth context; package effects remain separate. Provisional: check dates and player availability.",
+        "partner_limit": null
+      }
+    ],
+    "cutoff_asset_id": null,
+    "quiet_state": "The checked additions establish no clear walk-away point.",
+    "evaluation": {
+      "provenance": {
+        "inputs": {
+          "league_id": "league-1",
+          "active_roster_id": 1,
+          "partner_roster_id": 2,
+          "assets_sent": [
+            "2028-R3-1",
+            "nix",
+            "young"
+          ],
+          "assets_received": [
+            "burrow",
+            "skattebo"
+          ],
+          "market_generation": "current",
+          "projection_generation": "9023e79f9f14701c57a24303b58b1cbe27ad77c4354015d0ccc89a6547372ab3",
+          "projection_evidence": {
+            "generation": "9023e79f9f14701c57a24303b58b1cbe27ad77c4354015d0ccc89a6547372ab3",
+            "availability": "published",
+            "league_id": "league-1",
+            "season": 2026,
+            "week": 12,
+            "scoring_profile_id": "ea70ddee4bfa71df6cf409a516416eca62c90896c5008563b5d7134bc3e98afa",
+            "canonical_provider": "Sleeper",
+            "projection_snapshot_id": "9023e79f9f14701c57a24303b58b1cbe27ad77c4354015d0ccc89a6547372ab3",
+            "horizon_generation": "9023e79f9f14701c57a24303b58b1cbe27ad77c4354015d0ccc89a6547372ab3",
+            "horizon_snapshot_ids": {
+              "12": "8f0751a6e63fdeb6fea68798abe67454a1b3c71a4c4f91b1e64b38586cbdea17",
+              "13": "15ba23efc0da0f7c35d321f64551f41c0592c215b388864c649fc1a4a876cdf0",
+              "14": "dfea709a9c616c2ba511ae1979607e161fad2de8c024d8711ac8dff88c027da7",
+              "15": "74323adb8abeb1da49870637abbad6cdbe0c7cb1d569c66d0d10760812e7e89e"
+            },
+            "sleeper_evidence_snapshot_id": "4dd81d2b66aca9525be9767ee7db792feda56642eb90a55debefd7ba5a84d7ac",
+            "schema_version": "2.0",
+            "model_version": "sleeper-canonical-weekly-1",
+            "contract_version": "2",
+            "semantic_policy_version": "7"
+          },
+          "historical_generation": "current",
+          "result_digest": "9f1c7469992c973387b318e65de71c2f1c6b580d16f7d7582d61206886321394",
+          "evaluator": "bilateral_trade_v3"
+        }
+      }
+    },
+    "current_verdict": "WORTH PURSUING",
+    "strategy": "WIN NOW",
+    "state": "CHECKED",
+    "count": 1,
+    "search_evidence": {
+      "full_evaluations": 2,
+      "evaluation_budget": 3,
+      "bounded": true
+    }
+  },
+  "missing_projection": {
+    "requested_mode": "WALK_AWAY",
+    "preview_only": true,
+    "original_proposal": {
+      "active_roster_id": 1,
+      "partner_roster_id": 2,
+      "assets_sent": [
+        "nix",
+        "young",
+        "2028-R3-1"
+      ],
+      "assets_received": [
+        "burrow",
+        "skattebo"
+      ]
+    },
+    "results": [
+      {
+        "proposal": {
+          "workflow": "adjust",
+          "active_roster_id": 1,
+          "partner_roster_id": 2,
+          "assets_sent": [
+            "nix",
+            "young",
+            "2028-R3-1",
+            "2028-R3-2"
+          ],
+          "assets_received": [
+            "burrow",
+            "skattebo"
+          ],
+          "package_type": "Assisted Addition"
+        },
+        "asset": {
+          "asset_id": "2028-R3-2",
+          "label": "2028 Round 3 (Unknown)",
+          "kind": "pick",
+          "year": 2028,
+          "round": 3,
+          "original_franchise": 2,
+          "exact_slot": null
+        },
+        "market_cost": 211,
+        "custom_cost": 189,
+        "custom_method": "personal-current-market-slot-curve-v1",
+        "impact": {
+          "week": 12,
+          "lineup": {
+            "delta": 0.0,
+            "provisional": true
+          },
+          "reserves": null
+        },
+        "verdict": "WORTH PURSUING",
+        "classification": "CREDIBLE RECOMMENDATION",
+        "owner_assessment": "WORTH PURSUING",
+        "credible": true,
+        "reason": "Win-now fit: this costs future flexibility, and materially improves the optimal legal lineup. Any reserve loss remains a disclosed cost. Roster comparison cannot be verified; review projections, scoring and availability.",
+        "partner_limit": null
+      },
+      {
+        "proposal": {
+          "workflow": "adjust",
+          "active_roster_id": 1,
+          "partner_roster_id": 2,
+          "assets_sent": [
+            "nix",
+            "young",
+            "2028-R3-1",
+            "active-qb"
+          ],
+          "assets_received": [
+            "burrow",
+            "skattebo"
+          ],
+          "package_type": "Assisted Addition"
+        },
+        "asset": {
+          "asset_id": "active-qb",
+          "label": "Fixture QB A",
+          "kind": "player",
+          "year": null,
+          "round": null,
+          "original_franchise": null,
+          "exact_slot": null
+        },
+        "market_cost": 800,
+        "custom_cost": 800,
+        "custom_method": "personal-current-market-slot-curve-v1",
+        "impact": {
+          "week": 12,
+          "lineup": null,
+          "reserves": null
+        },
+        "verdict": "Evidence incomplete",
+        "classification": "STRATEGICALLY POOR",
+        "owner_assessment": null,
+        "credible": false,
+        "reason": "No supported Sleeper projection for Week 12: no matching player-week record was supplied.",
+        "partner_limit": null
+      }
+    ],
+    "cutoff_asset_id": null,
+    "quiet_state": "The checked additions establish no clear walk-away point.",
+    "evaluation": {
+      "provenance": {
+        "inputs": {
+          "league_id": "league-1",
+          "active_roster_id": 1,
+          "partner_roster_id": 2,
+          "assets_sent": [
+            "2028-R3-1",
+            "nix",
+            "young"
+          ],
+          "assets_received": [
+            "burrow",
+            "skattebo"
+          ],
+          "market_generation": "current",
+          "projection_generation": "52ab5145dd785f8cbb7e41ccbd52eb950baf718a4d7d73905a3332fd54229f24",
+          "projection_evidence": {
+            "generation": "52ab5145dd785f8cbb7e41ccbd52eb950baf718a4d7d73905a3332fd54229f24",
+            "availability": "published",
+            "league_id": "league-1",
+            "season": 2026,
+            "week": 12,
+            "scoring_profile_id": "ea70ddee4bfa71df6cf409a516416eca62c90896c5008563b5d7134bc3e98afa",
+            "canonical_provider": "Sleeper",
+            "projection_snapshot_id": "52ab5145dd785f8cbb7e41ccbd52eb950baf718a4d7d73905a3332fd54229f24",
+            "horizon_generation": "52ab5145dd785f8cbb7e41ccbd52eb950baf718a4d7d73905a3332fd54229f24",
+            "horizon_snapshot_ids": {
+              "12": "6dd5b68948e2c1a0918c467d513578af1cba2a0fbb38d51489c54bc4de9c5b24",
+              "13": "23e2a14db812a5a0a50bc0eb3a5212a557d958393b23c16f81d1253f0f5ee18b",
+              "14": "1b04b3898caad5545de7cd2840fb354c2cc3262bdd5a00654a07e11cd8002def",
+              "15": "01a466070633f5d57f1962d5241e9aad3eb66677bebf13f01b6dc6c1060fc9d6"
+            },
+            "sleeper_evidence_snapshot_id": "31a1e202dde00eebab6bf5290d38c5c9b1f1e1460bd777d06260dae73c3e403d",
+            "schema_version": "2.0",
+            "model_version": "sleeper-canonical-weekly-1",
+            "contract_version": "2",
+            "semantic_policy_version": "7"
+          },
+          "historical_generation": "current",
+          "result_digest": "cf15c66294d1971e5686339437d20a0c9ea7b5633da929556da05ed97bf05d2f",
+          "evaluator": "bilateral_trade_v3"
+        }
+      }
+    },
+    "current_verdict": "WORTH PURSUING",
+    "strategy": "WIN NOW",
+    "state": "CHECKED",
+    "count": 2,
+    "search_evidence": {
+      "full_evaluations": 3,
+      "evaluation_budget": 3,
+      "bounded": true
+    }
+  },
+  "burrow": {
+    "neutral": {
+      "sent": 1166.0,
+      "received": 1166.0,
+      "ratio": 1.0
+    },
+    "verdict": {
+      "headline": "COUNTERPARTY LIMITED",
+      "classification": "COUNTERPARTY LIMITED",
+      "qualified": false,
+      "side_assessment": "WORTH PURSUING",
+      "qualification": "Not a qualified bilateral recommendation. Your side has supported upside, but the other team's benefit or compensation is not established. This does not predict acceptance."
+    },
+    "recommended": false,
+    "published_revisions": [
+      {
+        "assets_sent": [
+          "nix",
+          "young",
+          "2028-R3-1",
+          "active-rb"
+        ],
+        "assets_received": [
+          "burrow",
+          "skattebo"
+        ],
+        "legal": true,
+        "totals": {
+          "sent": 1266.0,
+          "received": 1166.0,
+          "ratio": 0.921
+        },
+        "lineup": -17.1,
+        "verdict": {
+          "headline": "COUNTERPARTY LIMITED",
+          "classification": "COUNTERPARTY LIMITED",
+          "qualified": false,
+          "side_assessment": "WORTH PURSUING",
+          "qualification": "Not a qualified bilateral recommendation. Your side has supported upside, but the other team's benefit or compensation is not established. This does not predict acceptance."
+        },
+        "recommended": false
+      },
+      {
+        "assets_sent": [
+          "nix",
+          "young",
+          "2028-R3-1"
+        ],
+        "assets_received": [
+          "burrow"
+        ],
+        "legal": true,
+        "totals": {
+          "sent": 1166.0,
+          "received": 776.0,
+          "ratio": 0.666
+        },
+        "lineup": -17.1,
+        "verdict": {
+          "headline": "COUNTERPARTY LIMITED",
+          "classification": "COUNTERPARTY LIMITED",
+          "qualified": false,
+          "side_assessment": "WORTH PURSUING",
+          "qualification": "Not a qualified bilateral recommendation. Your side has supported upside, but the other team's benefit or compensation is not established. This does not predict acceptance."
+        },
+        "recommended": false
+      }
+    ],
+    "walk_away": {
+      "requested_mode": "WALK_AWAY",
+      "preview_only": true,
+      "original_proposal": {
+        "active_roster_id": 1,
+        "partner_roster_id": 2,
+        "assets_sent": [
+          "nix",
+          "young",
+          "2028-R3-1"
+        ],
+        "assets_received": [
+          "burrow",
+          "skattebo"
+        ]
+      },
+      "results": [
+        {
+          "proposal": {
+            "workflow": "adjust",
+            "active_roster_id": 1,
+            "partner_roster_id": 2,
+            "assets_sent": [
+              "nix",
+              "young",
+              "2028-R3-1",
+              "active-qb"
+            ],
+            "assets_received": [
+              "burrow",
+              "skattebo"
+            ],
+            "package_type": "Assisted Addition"
+          },
+          "asset": {
+            "asset_id": "active-qb",
+            "label": "Fixture QB A",
+            "kind": "player",
+            "year": null,
+            "round": null,
+            "original_franchise": null,
+            "exact_slot": null
+          },
+          "market_cost": 100,
+          "custom_cost": null,
+          "custom_method": null,
+          "impact": {
+            "week": 12,
+            "lineup": {
+              "delta": -3.0,
+              "provisional": true
+            },
+            "reserves": {
+              "delta": -10.0,
+              "provisional": true
+            }
+          },
+          "verdict": "COUNTERPARTY LIMITED",
+          "classification": "COUNTERPARTY LIMITED",
+          "owner_assessment": "WORTH PURSUING",
+          "credible": false,
+          "reason": "Win-now fit: this costs future flexibility, and materially improves the optimal legal lineup. Any reserve loss remains a disclosed cost. Addresses supported QB, RB lineup/depth context; package effects remain separate. Provisional: check dates and player availability.",
+          "partner_limit": "Gives up Joe Burrow. Gives up projected lineup points. The return adds draft capital and a Market premium. There is no supported benefit that makes up for the loss, and this team\u2019s direction is unconfirmed. Adds 1 to the active roster. No drop value is assumed."
+        },
+        {
+          "proposal": {
+            "workflow": "adjust",
+            "active_roster_id": 1,
+            "partner_roster_id": 2,
+            "assets_sent": [
+              "nix",
+              "young",
+              "2028-R3-1",
+              "active-rb"
+            ],
+            "assets_received": [
+              "burrow",
+              "skattebo"
+            ],
+            "package_type": "Assisted Addition"
+          },
+          "asset": {
+            "asset_id": "active-rb",
+            "label": "Fixture RB A",
+            "kind": "player",
+            "year": null,
+            "round": null,
+            "original_franchise": null,
+            "exact_slot": null
+          },
+          "market_cost": 100,
+          "custom_cost": null,
+          "custom_method": null,
+          "impact": {
+            "week": 12,
+            "lineup": {
+              "delta": 0.0,
+              "provisional": true
+            },
+            "reserves": {
+              "delta": -10.0,
+              "provisional": true
+            }
+          },
+          "verdict": "COUNTERPARTY LIMITED",
+          "classification": "COUNTERPARTY LIMITED",
+          "owner_assessment": "WORTH PURSUING",
+          "credible": false,
+          "reason": "Win-now fit: this costs future flexibility, and materially improves the optimal legal lineup. Any reserve loss remains a disclosed cost. Addresses supported QB, RB lineup/depth context; package effects remain separate. Provisional: check dates and player availability.",
+          "partner_limit": "Gives up Joe Burrow. Gives up projected lineup points. The return adds draft capital and a Market premium. There is no supported benefit that makes up for the loss, and this team\u2019s direction is unconfirmed. Adds 1 to the active roster. No drop value is assumed."
+        }
+      ],
+      "cutoff_asset_id": null,
+      "quiet_state": "The checked additions establish no clear walk-away point.",
+      "evaluation": {
+        "provenance": {
+          "inputs": {
+            "league_id": "league-1",
+            "active_roster_id": 1,
+            "partner_roster_id": 2,
+            "assets_sent": [
+              "2028-R3-1",
+              "nix",
+              "young"
+            ],
+            "assets_received": [
+              "burrow",
+              "skattebo"
+            ],
+            "market_generation": "current",
+            "projection_generation": "9023e79f9f14701c57a24303b58b1cbe27ad77c4354015d0ccc89a6547372ab3",
+            "projection_evidence": {
+              "generation": "9023e79f9f14701c57a24303b58b1cbe27ad77c4354015d0ccc89a6547372ab3",
+              "availability": "published",
+              "league_id": "league-1",
+              "season": 2026,
+              "week": 12,
+              "scoring_profile_id": "ea70ddee4bfa71df6cf409a516416eca62c90896c5008563b5d7134bc3e98afa",
+              "canonical_provider": "Sleeper",
+              "projection_snapshot_id": "9023e79f9f14701c57a24303b58b1cbe27ad77c4354015d0ccc89a6547372ab3",
+              "horizon_generation": "9023e79f9f14701c57a24303b58b1cbe27ad77c4354015d0ccc89a6547372ab3",
+              "horizon_snapshot_ids": {
+                "12": "8f0751a6e63fdeb6fea68798abe67454a1b3c71a4c4f91b1e64b38586cbdea17",
+                "13": "15ba23efc0da0f7c35d321f64551f41c0592c215b388864c649fc1a4a876cdf0",
+                "14": "dfea709a9c616c2ba511ae1979607e161fad2de8c024d8711ac8dff88c027da7",
+                "15": "74323adb8abeb1da49870637abbad6cdbe0c7cb1d569c66d0d10760812e7e89e"
+              },
+              "sleeper_evidence_snapshot_id": "4dd81d2b66aca9525be9767ee7db792feda56642eb90a55debefd7ba5a84d7ac",
+              "schema_version": "2.0",
+              "model_version": "sleeper-canonical-weekly-1",
+              "contract_version": "2",
+              "semantic_policy_version": "7"
+            },
+            "historical_generation": "current",
+            "result_digest": "fdce8aa9032a161317a8f2c50f0e9ea8afaa0802c02a40e9c29173e15d193213",
+            "evaluator": "bilateral_trade_v3"
+          }
+        }
+      },
+      "current_verdict": "COUNTERPARTY LIMITED",
+      "strategy": "WIN NOW",
+      "state": "CHECKED",
+      "count": 2,
+      "search_evidence": {
+        "full_evaluations": 3,
+        "evaluation_budget": 3,
+        "bounded": true
+      }
+    }
+  }
+}

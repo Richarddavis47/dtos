@@ -1,0 +1,634 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index e2406bb..485e401 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,3 +1,8 @@
++## v1.22.71 / build 2286 — Trade For walk-away price
++
++- Check up to two exact outgoing additions from Trade For Review. Preview the added cost, projected lineup and depth changes, and whether both teams still pass the trade checks.
++- Show a walk-away point when the tested additions support one. Keep the exact target, protections and draft intact.
++
+ ## v1.22.70 / build 2285 — Better counterparty fit
+ 
+ - Require a supported benefit for the other team when a trade costs that team significant projected lineup points and its direction is unknown.
+diff --git a/RELEASE_NOTES.md b/RELEASE_NOTES.md
+index 0e56569..29478e0 100644
+--- a/RELEASE_NOTES.md
++++ b/RELEASE_NOTES.md
+@@ -1,3 +1,8 @@
++## v1.22.71 / build 2286 — Trade For walk-away price
++
++- Ask “What can I afford to add?” in Trade For Review. Compare up to two single-asset additions to the current package, including what they cost and how they affect projected lineup points and depth.
++- The preview shows a walk-away point only when a smaller tested addition passes the checks for both teams and a larger tested addition no longer fits your side. Neutral Market and Custom costs appear separately. Your draft stays intact.
++
+ ## v1.22.70 / build 2285 — Better counterparty fit
+ 
+ - Trade For and better-offer revisions look for a concrete reason a team would give up significant projected lineup points. Price and picks alone cannot establish that fit when the team's direction is unknown.
+diff --git a/app_metadata.py b/app_metadata.py
+index 7c46a5f..ec5e727 100644
+--- a/app_metadata.py
++++ b/app_metadata.py
+@@ -7,10 +7,10 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ APPLICATION_NAME = "DTOS"
+-VERSION = "1.22.70"
+-PRODUCT_VERSION = "1.22.70"
+-BUILD_NUMBER = 2285
+-RELEASE_CODENAME = "Better Counterparty Fit"
++VERSION = "1.22.71"
++PRODUCT_VERSION = "1.22.71"
++BUILD_NUMBER = 2286
++RELEASE_CODENAME = "Trade For Walk-Away Price"
+ APPLICATION_STARTED_AT = datetime.now(timezone.utc).isoformat()
+ 
+ _REPOSITORY_ROOT = Path(__file__).resolve().parent
+diff --git a/services/trade_intelligence.py b/services/trade_intelligence.py
+index 5e029eb..6cbf832 100644
+--- a/services/trade_intelligence.py
++++ b/services/trade_intelligence.py
+@@ -25,6 +25,7 @@ class RepairMode(StrEnum):
+     ALTERNATIVE_CONSTRUCTION = "ALTERNATIVE_CONSTRUCTION"
+     ALTERNATIVE_TARGET = "ALTERNATIVE_TARGET"
+     BETTER_OFFER = "BETTER_OFFER"
++    WALK_AWAY = "WALK_AWAY"
+ 
+ 
+ _REPAIR_MODE_ALIASES = {
+@@ -35,6 +36,7 @@ _REPAIR_MODE_ALIASES = {
+     "alternative target": RepairMode.ALTERNATIVE_TARGET,
+     "alternative_target": RepairMode.ALTERNATIVE_TARGET,
+     "better_offer": RepairMode.BETTER_OFFER,
++    "walk_away": RepairMode.WALK_AWAY,
+ }
+ 
+ 
+@@ -628,6 +630,16 @@ def _bounded_adjustment_candidates(
+                            and (not payload.get('replacement_position') or a.kind == 'pick'
+                                 or a.position == payload['replacement_position'])
+                            and (not payload.get('replacement_kind') or a.kind == payload['replacement_kind']))
++    if payload.get('repair_mode') == RepairMode.WALK_AWAY:
++        # Sample two independent single-asset additions at the ends of the
++        # priced range. Same return package, partner and exact terms in both.
++        neutral = {asset.asset_id: asset.trade_value for asset in workspace.get('neutral_pools', pools)[active_id]}
++        additions = sorted((asset for asset in allowed_active if asset.asset_id not in sent_ids
++                            and asset.trade_value is not None and neutral[asset.asset_id] is not None),
++                           key=lambda asset: (asset.trade_value, asset.asset_id))
++        sample = additions if len(additions) < 2 else (additions[0], additions[-1])
++        return tuple(TradeProposal(active_id, partner_id, (*sent, asset), received, 'Assisted Addition')
++                     for asset in sample)
+     allowed_ids = {a.asset_id for a in allowed_active}
+     sent = tuple(a for a in sent if a.asset_id in allowed_ids)
+     allowed_partner = tuple(a for a in pools[partner_id] if a.asset_id not in excluded)
+@@ -822,6 +834,131 @@ def _better_offer_revisions(data, payload, workspace, evidence, reader, boundary
+     return finish(state, 'No credible revision found in this search. ' + ' '.join(reasons))
+ 
+ 
++def _walk_away_impact(before, after, week):
++    """Compare the two completed assessments with the same retained baseline."""
++    def compare(old, new):
++        if old.get('delta') is None or new.get('delta') is None:
++            return None
++        return {'delta': round(new['delta'] - old['delta'], 2),
++                'provisional': any(row.get('state', row.get('conclusion_state')) == 'provisional'
++                                   for row in (old, new))}
++
++    def lineup(evaluation):
++        row = evaluation['decision_context']['lineup_comparisons'].get('current_week') or {}
++        return row if row.get('weeks') == [week] and row.get('state') in ('supported', 'provisional') else {}
++
++    def reserves(evaluation):
++        rows = evaluation['dimensions']['strategic_fit']['active']['reserve_quality_by_week']
++        return rows.get(week) or rows.get(str(week)) or {}
++
++    return {'week': week, 'lineup': compare(lineup(before), lineup(after)),
++            'reserves': compare(reserves(before), reserves(after))}
++
++
++def _walk_away_checks(data, payload, workspace, evidence, reader, boundary):
++    from services.trade_search_policy import supported_exploration
++
++    keys = ('active_roster_id', 'partner_roster_id', 'assets_sent', 'assets_received')
++    original = {key: payload[key] for key in keys}
++    sent, received = set(original['assets_sent']), set(original['assets_received'])
++    anchor = payload.get('origin_asset_id')
++    if payload.get('origin_workflow') != 'trade_for' or not isinstance(anchor, str) or anchor not in received:
++        raise TradeInputError('invalid_proposal', 'Keep the exact Trade For target in this offer before checking additions.')
++    protected, excluded = set(payload.get('protected_assets') or ()), set(payload.get('excluded_assets') or ())
++    response = {'requested_mode': RepairMode.WALK_AWAY.value, 'preview_only': True,
++                'original_proposal': original, 'results': [], 'cutoff_asset_id': None,
++                'quiet_state': 'The checked additions establish no clear walk-away point.'}
++    evaluated = 0
++
++    def finish(state):
++        trade_checkpoint()
++        if _trade_search_boundary(data) != boundary:
++            raise TradeInputError('canonical_evidence_changed', 'The league evidence changed during the price check. Try again.')
++        return {**response, 'state': state, 'count': len(response['results']),
++                'search_evidence': {'full_evaluations': evaluated, 'evaluation_budget': 3, 'bounded': True}}
++
++    if sent & protected or (sent | received) & excluded:
++        response['quiet_state'] = 'The current offer conflicts with a protection or exclusion. Your exact locks are intact.'
++        return finish('CONSTRAINT_CONFLICT')
++
++    def assess(proposal):
++        nonlocal evaluated
++        evaluated += 1
++        return evaluate_trade_request(data, {**proposal, 'workflow': 'adjust', 'strategy': payload.get('strategy'),
++            'protected_assets': payload.get('protected_assets'), 'excluded_assets': payload.get('excluded_assets')},
++            workspace=workspace, evidence_context=evidence, projection_reader=reader)
++
++    try:
++        before = assess(original)['evaluation']
++    except TradeInputError as exc:
++        if exc.code not in {'market_evidence_unavailable', 'personal_evidence_unavailable'}:
++            raise
++        response['quiet_state'] = str(exc)
++        return finish('MISSING_REQUIRED_EVIDENCE')
++    inputs = before['provenance']['inputs']
++    week = (inputs.get('projection_evidence') or {}).get('week')
++    decision = before['decision_context']
++    response.update(evaluation={'provenance': {'inputs': inputs}},
++                    current_verdict=decision['final_decision']['headline'], strategy=decision['strategy']['resolved'])
++    proposals = _bounded_adjustment_candidates(workspace, {**payload, 'repair_mode': RepairMode.WALK_AWAY})
++    if not proposals:
++        response['quiet_state'] = 'No priced additions are available under your ownership and exact protections. No walk-away point was established.'
++        return finish('NO_OPTIONS')
++
++    candidates = []
++    for proposal in proposals:
++        revised = _proposal_payload(proposal)
++        try:
++            row = assess(revised)
++        except TradeInputError as exc:
++            if exc.code not in {'market_evidence_unavailable', 'personal_evidence_unavailable'}:
++                raise
++            continue  # An incompatible price cannot establish either side of a cutoff.
++        evaluation = row['evaluation']
++        final = evaluation['decision_context']['final_decision']
++        facts = row['proposal_presentation']['send'][-1]
++        added_projection = (facts.get('player_facts') or {}).get('projection') or {}
++        addition_projection_missing = facts['kind'] == 'player' and (
++            added_projection.get('week') != week or added_projection.get('value') is None)
++        supported = (not addition_projection_missing and supported_exploration(evaluation)
++                     and final['classification'] != 'MISSING REQUIRED EVIDENCE')
++        execution_blocked = final['classification'] == 'HARD INVALID'
++        credible = supported and final['qualified'] and _trade_for_eligible(evaluation)
++        fails_goal = supported and final['side_assessment'] in ('NOT WORTH IT', 'REJECT')
++        personal = evaluation.get('personal_value_evidence') or {}
++        # The incoming package and existing outgoing terms are fixed, so the
++        # provider quote and the personal slot price remain separate.
++        custom_price = proposal.assets_sent[-1].trade_value if personal else None
++        verdict, reason = 'Evidence incomplete', evaluation['decision_context'].get('blocker') or 'Compatible evidence is incomplete.'
++        if execution_blocked:
++            verdict, reason = 'Roster issue', evaluation['major_drawback']
++        elif supported:
++            verdict, reason = final['headline'], evaluation['why_you_would_do_it']
++        elif addition_projection_missing:
++            reason = added_projection.get('reason') or 'A supported projection for the added player is unavailable.'
++        change = {'proposal': revised, 'asset': {key: facts[key] for key in
++                  ('asset_id', 'label', 'kind', 'year', 'round', 'original_franchise', 'exact_slot')},
++                  'market_cost': facts['market_value'], 'custom_cost': custom_price, 'custom_method': personal.get('method'),
++                  'impact': ({'week': week, 'lineup': None, 'reserves': None} if addition_projection_missing
++                             else _walk_away_impact(before, evaluation, week)),
++                  'verdict': verdict, 'classification': final['classification'],
++                  'owner_assessment': final['side_assessment'] if supported else None, 'credible': credible,
++                  'reason': reason,
++                  'partner_limit': evaluation['why_they_would_do_it'] if final['classification'] == 'COUNTERPARTY LIMITED' else None}
++        response['results'].append(change)
++        candidates.append((proposal.assets_sent[-1].trade_value, credible, fails_goal, change))
++
++    if len(candidates) == 2 and supported_exploration(before):
++        smaller, larger = candidates
++        if smaller[0] < larger[0] and smaller[1] and larger[2] and all(item[3]['impact']['lineup'] for item in candidates):
++            response['cutoff_asset_id'] = larger[3]['asset']['asset_id']
++            basis = 'Custom value' if larger[3]['custom_cost'] is not None else 'Neutral Market cost'
++            response['quiet_state'] = f'By {basis}, the smaller addition still fits. The larger tested addition goes past your walk-away point.'
++    if not candidates:
++        response['quiet_state'] = 'Compatible prices were unavailable for the checked additions. No walk-away point was established.'
++    return finish('CHECKED' if candidates else 'MISSING_REQUIRED_EVIDENCE')
++
++
+ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[str, Any]:
+     """Return calculated repair/adjustment options, never static action labels."""
+     trade_checkpoint()
+@@ -844,6 +981,8 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
+     requested_mode = _repair_mode(payload, instruction)
+     if requested_mode is RepairMode.BETTER_OFFER:
+         return _better_offer_revisions(data, payload, workspace, evidence_context, reader, boundary)
++    if requested_mode is RepairMode.WALK_AWAY:
++        return _walk_away_checks(data, payload, workspace, evidence_context, reader, boundary)
+     cheaper = 'cheaper' in lowered
+     younger_target_change = 'younger' in lowered and payload.get('origin_workflow') not in ('shop', 'trade_for')
+     target_preservation_required = cheaper or payload.get('origin_workflow') == 'trade_for' or (requested_mode is not RepairMode.ALTERNATIVE_TARGET and not younger_target_change)
+diff --git a/static/css/trade_workspace.css b/static/css/trade_workspace.css
+index ba6335a..e8a7077 100644
+--- a/static/css/trade_workspace.css
++++ b/static/css/trade_workspace.css
+@@ -167,7 +167,7 @@ body:has(#trade-builder) .ds-page-header>div:first-child{display:flex;flex-wrap:
+ .tw-offer-summary .tw-offer-verdict{font-weight:700;margin:0;color:var(--text-primary)}
+ .tw-offer-summary .tw-offer-effects{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .tw-review-verdict{margin:6px 0 10px;color:var(--text-primary)}
+-.tw-better-offer>button,.tw-revision-grid button{min-height:44px;scroll-margin-block-end:calc(5rem + env(safe-area-inset-bottom))}
++.tw-better-offer>button,.tw-walk-away>button,.tw-revision-grid button{min-height:44px;scroll-margin-block-end:calc(5rem + env(safe-area-inset-bottom))}
+ .tw-revision-grid:not([hidden]){display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin-block-start:8px}
+ .tw-revision-grid>.tw-offer{min-width:0;margin:0}
+ @media(min-width:850px){.tw-revision-grid:not([hidden]){grid-template-columns:repeat(auto-fit,minmax(18rem,1fr))}}
+diff --git a/static/js/trade_workspace.js b/static/js/trade_workspace.js
+index 5173d6c..31249bb 100644
+--- a/static/js/trade_workspace.js
++++ b/static/js/trade_workspace.js
+@@ -580,7 +580,7 @@
+     return valuationGauge({mode, sent: amount('sent'), received: amount('received'),
+       comparison: valid ? {difference: totals[1] - totals[0], totals, scale} : null, retained});
+   }
+-  function evaluationOverview(e, proposal, presentation, retained, betterOffer = null) {
++  function evaluationOverview(e, proposal, presentation, retained, betterOffer = null, walkAway = null) {
+     const header = node('section', null, 'tw-evaluation-overview');
+     const packages = node('div', null, 'tw-review-packages');
+     for (const [title, ids, facts] of [['You send', proposal.assets_sent, presentation?.send],
+@@ -617,6 +617,7 @@
+       header.append(summary);
+     }
+     if (betterOffer) header.append(betterOffer);
++    if (walkAway) header.append(walkAway);
+     const table = node('table', null, 'tw-projected-table');
+     const caption = node('caption', retained ? 'Projected points at the recorded assessment' : 'Compared with keeping each current roster');
+     const heads = node('thead'), heading = node('tr');
+@@ -1217,7 +1218,8 @@
+       const proposal = {active_roster_id: active, partner_roster_id: partner(), assets_sent: [...selected.sent], assets_received: [...selected.received]};
+       const betterOffer = retained ? null : betterOfferControl(e, proposal, context);
+       if (betterOffer) out.append(node('h3', finalVerdict(e), 'tw-review-verdict'));
+-      out.append(evaluationOverview(e, proposal, context?.proposal_presentation, retained, betterOffer));
++      out.append(evaluationOverview(e, proposal, context?.proposal_presentation, retained, betterOffer,
++        retained ? null : betterOfferControl(e, proposal, context, true)));
+     }
+     if (retained && !e.explanation_html) appendRecordedLineups(out, context);
+     out.append(capitalDisclosure(context?.draft_capital_record || e.draft_capital_record, retained));
+@@ -1483,14 +1485,15 @@
+     const context = {...assessmentContext(row), stale_reason: 'Package adopted for editing; its assessment has not been revalidated'};
+     changed(); session.currentAssessment = context; persist(); review(); showEvaluation(row.evaluation || context.evaluation || {}, row.opportunity || context.opportunity, context); focusResult();
+   }
+-  function betterOfferControl(evaluation, original, context) {
+-    if (evaluation.legal !== true || evaluation.generated_trade_eligible !== false
+-        || !(evaluation.recommendation || evaluation.decision_context?.blocker)) return null;
+-    const panel = node('section', null, 'tw-trade-essentials tw-better-offer');
+-    const search = node('button', 'Show me a better offer', 'ds-action'); search.type = 'button';
++  function betterOfferControl(evaluation, original, context, walkAway = false) {
++    if (evaluation.legal !== true) return null;
++    if (walkAway ? session.originWorkflow !== 'trade_for' || !original.assets_received.includes(session.requiredIncomingAsset)
++      : evaluation.generated_trade_eligible !== false || !(evaluation.recommendation || evaluation.decision_context?.blocker)) return null;
++    const panel = node('section', null, 'tw-trade-essentials ' + (walkAway ? 'tw-walk-away' : 'tw-better-offer'));
++    const search = node('button', walkAway ? 'What can I afford to add?' : 'Show me a better offer', 'ds-action'); search.type = 'button';
+     search.dataset.betterOfferAction = 'true'; search.disabled = busy;
+     const status = node('p'); status.setAttribute('role', 'status'); status.hidden = true;
+-    const results = node('div', null, 'tw-revision-grid'); results.hidden = true;
++    const results = node('div', null, walkAway ? null : 'tw-revision-grid'); results.hidden = true;
+     panel.append(search, status, results);
+     const report = (text, state) => { status.hidden = false; status.textContent = text; panel.dataset.state = state; };
+     search.onclick = async () => {
+@@ -1498,26 +1501,41 @@
+         if (!busy) report('Reevaluate this exact package before checking revisions.', 'stale');
+         return;
+       }
+-      const requestPayload = {...payload(), ...original, repair_mode: 'BETTER_OFFER',
++      const mode = walkAway ? 'WALK_AWAY' : 'BETTER_OFFER';
++      const requestPayload = {...payload(), ...original, repair_mode: mode,
+         origin_workflow: session.requiredIncomingAsset ? 'trade_for' : session.requiredOutgoingAsset ? 'shop' : 'create',
+         origin_asset_id: session.requiredIncomingAsset || session.requiredOutgoingAsset || null};
+       const started = revision, controller = new AbortController();
+       activeRequest = controller; busy = true;
+-      betterSearch = {cancelled: () => report('Search cancelled. Your draft is intact.', 'cancelled')};
++      betterSearch = {button: search, cancelled: () => report('Search cancelled. Your draft is intact.', 'cancelled')};
+       let timedOut = false;
+       const timeout = setTimeout(() => { timedOut = true; controller.abort(); }, 120000);
+       results.replaceChildren(); results.hidden = true;
+-      report('Checking revisions for both teams. Your draft is intact.', 'loading'); paint();
++      report(walkAway ? 'Checking additions for both teams. Your draft is intact.' : 'Checking revisions for both teams. Your draft is intact.', 'loading'); paint();
+       try {
+         const body = await post('assist', requestPayload, controller.signal);
+         if (activeRequest !== controller || started !== revision || !panel.isConnected) return;
+-        if (body.requested_mode !== 'BETTER_OFFER' || body.preview_only !== true || !body.original_proposal
++        if (body.requested_mode !== mode || body.preview_only !== true || !body.original_proposal
+             || packageIdentity(body.original_proposal) !== packageIdentity(original) || !Array.isArray(body.results)
+-            || body.results.length > 2 || body.results.some(row => !qualifiedOffer(row) || offerConflict(row)
+-              || row.proposal.active_roster_id !== active || row.proposal.partner_roster_id !== original.partner_roster_id)) {
++            || body.results.length > 2 || body.results.some(row => !row.proposal || offerConflict(row)
++              || row.proposal.active_roster_id !== active || row.proposal.partner_roster_id !== original.partner_roster_id
++              || (walkAway ? !row.asset || packageIdentity(row.proposal) !== packageIdentity({...original,
++                assets_sent: [...original.assets_sent, row.asset.asset_id]}) : !qualifiedOffer(row)))) {
+           throw new Error('The revision result could not be verified. Your draft is intact.');
+         }
+         observeEvidence(body);
++        if (walkAway) {
++          if (contextQualification(context, original)) return report('Reevaluate this exact package before checking additions.', 'stale');
++          if (!body.results.length) return report(body.quiet_state, body.state);
++          report(body.quiet_state, body.state);
++          const current = node('p', 'Current offer: ' + body.current_verdict + (body.strategy ? ' · ' + body.strategy : '') +
++            '. Each preview adds one asset. Your draft is intact.');
++          const cards = node('div', null, 'tw-revision-grid');
++          for (const row of body.results) cards.append(walkAwayCard(row, body.cutoff_asset_id));
++          results.append(current, cards, node('small', 'Only these additions were checked. Other assets can change your lineup and depth differently.'));
++          results.hidden = false;
++          return;
++        }
+         if (!body.results.length) return report(body.quiet_state || 'No credible revision found in this search.', body.state);
+         for (const [index, row] of body.results.entries()) {
+           const card = revisionCard(row, original, index + 1);
+@@ -1544,6 +1562,30 @@
+     };
+     return panel;
+   }
++  function walkAwayCard(row, cutoff) {
++    const card = node('article', null, 'tw-offer');
++    card.append(node('h4', 'Add ' + packageText([row.asset.asset_id], [row.asset], false)));
++    const verdict = row.asset.asset_id === cutoff ? 'Past your walk-away point'
++      : row.credible ? 'Still fits · both teams pass' : row.partner_limit ? 'Partner benefit unconfirmed' : row.verdict;
++    card.append(node('p', verdict, 'tw-offer-verdict'), node('p', 'Added Neutral Market cost: ' + displayMarket(row.market_cost)));
++    if (row.custom_cost != null) {
++      const method = row.custom_method === 'personal-relative-priced-order-v1' ? 'Relative priced order'
++        : row.custom_method === 'personal-current-market-slot-curve-v1' ? 'Absolute slot' : 'method not recorded';
++      card.append(node('p', 'Added Custom cost · ' + method + ': ' + displayMarket(row.custom_cost)));
++    }
++    const effect = (label, comparison) => label + ': ' + (comparison
++      ? (comparison.delta > 0 ? '+' : '') + displayPoints(comparison.delta) + ' projected points' + (comparison.provisional ? ' · provisional' : '')
++      : 'Change not established');
++    if (row.impact.week != null) card.append(node('small', 'Week ' + row.impact.week + ' compared with your current offer'));
++    card.append(node('p', effect('Starting lineup', row.impact.lineup)), node('p', effect('Eligible backups', row.impact.reserves)));
++    if (row.partner_limit) card.append(node('p', customerText(row.partner_limit)));
++    if (row.reason) {
++      const explanation = node('p', (row.partner_limit ? 'Your team: ' : '') + customerText(row.reason));
++      if (row.verdict === 'Evidence incomplete' || row.verdict === 'Roster issue') card.append(explanation);
++      else card.append(disclosure('Why this result', explanation));
++    }
++    return card;
++  }
+   function revisionCard(row, original, number) {
+     const e = row.evaluation, d = decisionPresentation(e), card = node('article', null, 'tw-offer');
+     card.append(node('h4', 'Revision ' + number), node('p', finalVerdict(e), 'tw-offer-verdict'));
+@@ -1749,7 +1791,8 @@
+     const partnerName = context.identity?.counterparty || (retained ? 'Franchise #' + row.proposal.partner_roster_id + ' · recorded name unavailable' : team(row.proposal.partner_roster_id)?.team_name || 'the selected partner');
+     card.append(node('h3', partnerName, 'tw-offer-partner'), node('p', finalVerdict(e), 'tw-offer-verdict'));
+     if (preview) card.append(evaluationOverview(e, row.proposal, row.proposal_presentation || row.proposal.preview_presentation, retained,
+-      retained || session.originWorkflow !== 'trade_for' ? null : betterOfferControl(e, row.proposal, context)));
++      retained || session.originWorkflow !== 'trade_for' ? null : betterOfferControl(e, row.proposal, context),
++      retained ? null : betterOfferControl(e, row.proposal, context, true)));
+     if (!preview) card.append(node('p', 'You send: ' + packageText(row.proposal.assets_sent, (row.proposal_presentation || row.proposal.preview_presentation)?.send, retained), 'tw-offer-package'),
+       node('p', 'You receive: ' + packageText(row.proposal.assets_received, (row.proposal_presentation || row.proposal.preview_presentation)?.receive, retained), 'tw-offer-package'));
+     if (decision.qualification) card.append(node('p', customerText(decision.qualification), 'tw-verdict-qualification'));
+@@ -2110,9 +2153,9 @@
+   el('trade-run').onclick = () => run('evaluate'); el('trade-find').onclick = () => run('generate');
+   el('trade-cancel').onclick = () => {
+     if (!activeRequest) return;
+-    const revising = Boolean(betterSearch);
++    const revisionAction = betterSearch?.button;
+     cancelBalance();
+-    if (revising) { paint(); root.querySelector('.tw-better-offer > button')?.focus(); return; }
++    if (revisionAction) { paint(); revisionAction.focus(); return; }
+     operationStatus('Cancelled. Your exact offer is unchanged; choose Generate or Evaluate to try again.', 'cancelled');
+     message('Operation cancelled. Your selected assets, target and protections are unchanged.');
+     paint(); (['recommended', 'shop', 'trade_for'].includes(flow) ? el('trade-find') : el('trade-run')).focus();
+diff --git a/tests/test_trade_walk_away.py b/tests/test_trade_walk_away.py
+new file mode 100644
+index 0000000..8f51f16
+--- /dev/null
++++ b/tests/test_trade_walk_away.py
+@@ -0,0 +1,238 @@
++"""Exact-offer price checks over the published Burrow replay fixture."""
++import copy
++import unittest
++from unittest.mock import patch
++
++from services.trade_intelligence import assist_trade_request, build_trade_workspace
++from tests import test_trade_package_adjustment as burrow
++
++
++class TradeWalkAwayTests(unittest.TestCase):
++    def setUp(self):
++        self.fixture = burrow.TradePackageAdjustmentTests()
++        self.addCleanup(self.fixture.doCleanups)
++        self.fixture.setUp()
++
++    def prepare_supported_offer(self):
++        self.fixture.data['teams'][1]['strategy'] = 'REBUILD'
++        self.fixture.change_player('active-qb', value=800)
++        self.fixture.change_player('active-rb', value=450)
++        self.fixture.data['teams'][0]['picks_owned'].append(
++            {'year': 2028, 'round': 3, 'original_roster_id': 2, 'current_owner_id': 1})
++        self.fixture.publish()
++
++    def test_win_now_additions_bracket_the_tested_walk_away_point(self):
++        self.prepare_supported_offer()
++        additions = dict(repair_mode='WALK_AWAY', protected_assets=['active-rb'])
++        terms = self.fixture.revision_request(**additions)
++        unchanged = copy.deepcopy(terms)
++        with patch('services.trade_intelligence._trade_projection_service', return_value=self.fixture.projections):
++            response = assist_trade_request(self.fixture.data, terms)
++        smaller, larger = response['results']
++        self.assertTrue(response['preview_only'])
++        self.assertEqual(response['strategy'], 'WIN NOW')
++        self.assertEqual(terms, unchanged)
++        self.assertEqual(response['cutoff_asset_id'], 'active-qb')
++        self.assertEqual(smaller['asset']['asset_id'], '2028-R3-2')
++        self.assertEqual(smaller['asset']['original_franchise'], 2)
++        self.assertEqual(smaller['market_cost'], 211)
++        self.assertTrue(smaller['credible'])
++        self.assertEqual(smaller['impact']['lineup']['delta'], 0)
++        self.assertEqual(smaller['impact']['reserves']['delta'], 0)
++        self.assertEqual(larger['market_cost'], 800)
++        self.assertFalse(larger['credible'])
++        self.assertEqual(larger['owner_assessment'], 'NOT WORTH IT')
++        self.assertEqual(larger['impact']['lineup']['delta'], -3)
++        self.assertEqual(larger['impact']['reserves']['delta'], -10)
++        for change in response['results']:
++            self.assertEqual(change['impact']['week'], 12)
++            self.assertEqual(change['proposal']['assets_sent'], [*terms['assets_sent'], change['asset']['asset_id']])
++            self.assertEqual(change['proposal']['assets_received'], terms['assets_received'])
++        self.assertEqual(response['search_evidence'], dict(full_evaluations=3, evaluation_budget=3, bounded=True))
++
++    def test_equal_cost_or_only_one_tested_option_establishes_no_cutoff(self):
++        self.prepare_supported_offer()
++        self.fixture.change_player('active-qb', value=211)
++        self.fixture.publish()
++        same_price = self.fixture.revise(repair_mode='WALK_AWAY', protected_assets=['active-rb'])
++        self.assertEqual([row['market_cost'] for row in same_price['results']], [211, 211])
++        self.assertIsNone(same_price['cutoff_asset_id'])
++        one = self.fixture.revise(repair_mode='WALK_AWAY', protected_assets=['active-rb', 'active-qb'])
++        self.assertEqual([row['asset']['asset_id'] for row in one['results']], ['2028-R3-2'])
++        self.assertIsNone(one['cutoff_asset_id'])
++        self.assertIn('no clear walk-away point', one['quiet_state'])
++        conflict = self.fixture.revise(repair_mode='WALK_AWAY', protected_assets=[burrow.PICK])
++        self.assertEqual(conflict['state'], 'CONSTRAINT_CONFLICT')
++        self.assertEqual(conflict['search_evidence']['full_evaluations'], 0)
++
++    def test_custom_cost_is_separate_and_prepared_projection_gaps_withhold_cutoff(self):
++        self.prepare_supported_offer()
++        prices = {asset.asset_id: asset.trade_value
++                  for pool in build_trade_workspace(self.fixture.data, 1)['pools'].values() for asset in pool}
++        custom = {'mode': 'custom', 'method': 'personal-current-market-slot-curve-v1', 'revision': 1,
++                  'values': {**prices, '2028-R3-2': 189}, 'neutral_values': prices,
++                  'preferences': {'active-rb': {'protect': True}}}
++        response = self.fixture.revise(repair_mode='WALK_AWAY', _personal_context=custom)
++        smaller, larger = response['results']
++        self.assertEqual((smaller['asset']['asset_id'], smaller['market_cost'], smaller['custom_cost']), ('2028-R3-2', 211, 189))
++        self.assertEqual(smaller['custom_method'], custom['method'])
++        self.assertEqual(larger['asset']['asset_id'], 'active-qb')
++        self.assertEqual(response['cutoff_asset_id'], 'active-qb')
++
++        publish = self.fixture.projections.publish_horizon
++        def omit_projection(payloads, **kwargs):
++            return publish({week: [row for row in observations if row['player_id'] != 'active-qb']
++                            for week, observations in payloads.items()}, **kwargs)
++
++        with patch.object(self.fixture.projections, 'publish_horizon', side_effect=omit_projection):
++            self.fixture.publish()
++        missing = self.fixture.revise(repair_mode='WALK_AWAY', _personal_context=custom)
++        self.assertIsNone(missing['cutoff_asset_id'])
++        smaller, larger = missing['results']
++        self.assertTrue(smaller['credible'])
++        self.assertEqual(smaller['impact']['lineup']['delta'], 0)
++        self.assertIsNone(smaller['impact']['reserves'])
++        self.assertFalse(larger['credible'])
++        self.assertIsNone(larger['impact']['lineup'])
++        self.assertIsNone(larger['impact']['reserves'])
++        self.assertIn('No supported Sleeper projection', larger['reason'])
++
++    def test_unknown_burrow_partner_has_no_cutoff_or_recommendation(self):
++        original = self.fixture.evaluate()
++        self.assertEqual(original['market_evidence']['difference'], 0)
++        self.assertFalse(original['generated_trade_eligible'])
++        for sent, received in ((('nix', 'young', burrow.PICK, 'active-rb'), ('burrow', 'skattebo')),
++                               (('nix', 'young', burrow.PICK), ('burrow',))):
++            evaluation = self.fixture.evaluate(sent, received)
++            self.assertTrue(evaluation['legal'])
++            self.assertTrue(evaluation['package_adjustment']['partner']['blocks_recommendation'])
++            self.assertFalse(evaluation['generated_trade_eligible'])
++        response = self.fixture.revise(repair_mode='WALK_AWAY')
++        self.assertEqual(response['current_verdict'], 'COUNTERPARTY LIMITED')
++        self.assertIsNone(response['cutoff_asset_id'])
++        self.assertTrue(response['results'])
++        self.assertTrue(all(not row['credible'] for row in response['results']))
++        rb = next(row for row in response['results'] if row['asset']['asset_id'] == 'active-rb')
++        self.assertEqual(rb['verdict'], 'COUNTERPARTY LIMITED')
++        self.assertIn('projected lineup points', rb['partner_limit'])
++
++    def test_rendered_review_price_check_leaves_draft_in_place_on_phones(self):
++        import json
++        import os
++        from contextlib import nullcontext
++        from pathlib import Path
++        from types import SimpleNamespace
++        from unittest.mock import AsyncMock
++        from urllib.parse import urlsplit
++
++        import dtos_app
++        from fastapi import FastAPI
++        from fastapi.staticfiles import StaticFiles
++        from fastapi.testclient import TestClient
++        from playwright.sync_api import expect, sync_playwright
++        from routes.trades import create_trades_router
++        from tools.validation.browser_runtime import launch_chromium
++
++        self.prepare_supported_offer()
++        app = FastAPI()
++        app.include_router(create_trades_router(ensure_fresh=AsyncMock(), require_data=lambda: self.fixture.data,
++                                               page=dtos_app.page))
++        app.mount('/static', StaticFiles(directory='static'), name='static')
++        account = SimpleNamespace(account_id='fixture', session_id='walk-away-replay', csrf_token='fixture-only',
++            display_name='Manager', membership=SimpleNamespace(league_id='league-1', roster_id=1,
++                league_name='Dynasty Best Ball', franchise_name='The tankers'))
++
++        with TestClient(app) as http, patch('src.core.projection_intelligence.projection_service', self.fixture.projections), \
++                patch('dtos_app.current_account', return_value=account), \
++                patch.object(dtos_app.account_store, 'memberships', return_value=[]), \
++                patch('routes.trades.current_account', return_value=account), \
++                patch('services.trade_workspace_context.current_account', return_value=account), sync_playwright() as engine:
++            for width, height in ((320, 432), (390, 844)):
++                with self.subTest(width=width):
++                    browser = launch_chromium(engine, headless=True)
++                    try:
++                        page = browser.new_page(viewport={'width': width, 'height': height}, has_touch=True)
++                        requests, responses = [], []
++                        workspace = {}
++
++                        def render(intercept):
++                            request = intercept.request
++                            url = urlsplit(request.url)
++                            if url.netloc != 'dtos.test':
++                                return intercept.abort()
++                            pin = patch('services.trade_intelligence.generate_proposals', side_effect=self.fixture.burrow_construction)
++                            with pin if url.path == '/api/trades/generate' else nullcontext():
++                                reply = http.request(request.method, url.path+'?'+url.query, content=request.post_data,
++                                    headers={key: value for key, value in request.headers.items() if key == 'content-type'})
++                            if url.path == '/api/trades/workspace':
++                                workspace.update(reply.json())
++                            if url.path == '/api/trades/assist':
++                                requests.append(json.loads(request.post_data))
++                                responses.append(reply.json())
++                            intercept.fulfill(status=reply.status_code, headers=dict(reply.headers), body=reply.content)
++
++                        def draft():
++                            key = 'dtos-trade-workspace:' + workspace['workspace_context']['binding']
++                            return page.evaluate('key => JSON.parse(sessionStorage.getItem(key)).currentProposal', key)
++
++                        page.route('**/*', render)
++                        page.goto('https://dtos.test/trades/trade-for?asset_id=burrow&front_office=1')
++                        page.get_by_label('Trade strategy', exact=True).select_option('WIN NOW')
++                        page.locator('#trade-find').click()
++                        page.get_by_role('button', name='Review trade', exact=True).click()
++                        if width == 390:
++                            page.get_by_role('button', name='Use this offer in my draft', exact=True).click()
++                            page.locator('#trade-run').click()
++                        panel = page.locator('.tw-walk-away')
++                        action = panel.get_by_role('button', name='What can I afford to add?')
++                        expect(action).to_be_visible()
++                        old_draft = draft()
++                        if width == 390:
++                            self.assertEqual(old_draft['sent'], ['nix', 'young', burrow.PICK])
++                            self.assertEqual(old_draft['received'], ['burrow', 'skattebo'])
++                        self.assertFalse(requests)
++                        action.evaluate("e=>e.scrollIntoView({block:'center'})")
++                        self.assertTrue(action.evaluate('''e => {
++                            const r = e.getBoundingClientRect();
++                            const nav = document.querySelector('.manager-nav').getBoundingClientRect();
++                            return r.height >= 44 && r.top >= 0 && r.bottom <= Math.min(innerHeight, nav.top)
++                                && e.contains(document.elementFromPoint(r.x + r.width/2, r.y + r.height/2));
++                        }'''))
++                        if width == 320:
++                            action.tap()
++                        else:
++                            action.press('Enter')
++                        expect(panel).to_have_attribute('data-state', 'CHECKED')
++                        expect(panel).to_contain_text('Past your walk-away point')
++                        expect(panel).to_contain_text('Still fits · both teams pass')
++                        expect(panel).to_contain_text('originally Crayon Eaters (#2)')
++                        expect(panel).to_contain_text('Starting lineup: -3')
++                        expect(panel).to_contain_text('Eligible backups: -10')
++                        choices = panel.locator('article')
++                        self.assertEqual(choices.count(), 2)
++                        self.assertEqual(panel.get_by_role('button', name='Use this offer in my draft').count(), 0)
++                        detail = choices.last.locator('summary')
++                        detail.evaluate("e=>e.scrollIntoView({block:'center'})")
++                        self.assertTrue(detail.evaluate('''e => {
++                            const box = e.getBoundingClientRect();
++                            return box.top >= 0 && box.bottom <= document.querySelector('.manager-nav').getBoundingClientRect().top;
++                        }'''))
++                        detail.press('Enter')
++                        expect(choices.last.get_by_text('Win Now fit is weak', exact=False)).to_be_visible()
++                        detail.press('Enter')
++                        self.assertEqual(requests[0]['origin_asset_id'], 'burrow')
++                        self.assertEqual(requests[0]['assets_sent'], ['nix', 'young', burrow.PICK])
++                        self.assertEqual(draft(), old_draft)
++                        self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), width)
++                        if directory := os.environ.get('DTOS_WALK_AWAY_EVIDENCE'):
++                            path = Path(directory)
++                            path.mkdir(parents=True, exist_ok=True)
++                            panel.screenshot(path=str(path/f'walk-away-{width}.png'))
++                            if width == 390:
++                                (path/'rendered-response.json').write_text(json.dumps(responses[0], indent=2))
++                        page.reload()
++                        expect(page.locator('#trade-target')).to_be_visible()
++                        self.assertEqual(draft(), old_draft)
++                        self.assertEqual(len(requests), 1)
++                    finally:
++                        browser.close()
