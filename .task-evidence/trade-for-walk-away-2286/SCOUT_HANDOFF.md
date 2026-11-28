@@ -9,3 +9,9 @@ PR #375. Candidate 3f3a19689b70beb01b1b5e9eb8e885917a83a094. Candidate tree 9f5d
 5. Replay the unknown-direction Burrow original and both build 2284 revisions. All remain legal to evaluate and counterparty limited. This input establishes no walk-away point. Verify the separate supported rebuild and best-ball depth controls in the original consoles.
 
 The phone checks use responsive Chromium and prepared data. A signed-in observation needs safely admitted owner access, and physical iPhone Safari needs a real device. Keep actual trades, lineups, saved strategies and rankings intact.
+
+## Release status and independent evidence
+
+The proposed v1.22.71 / build 2286 release is held. Production is still on 2285. Inspect the fixture from the draft PR or recorded responses. Confirm the smaller addition passes both sides, the larger addition fails on the manager’s side, and the three Burrow packages remain counterparty limited. A search with no results alone does not demonstrate that the original package and both revisions were evaluated.
+
+Check the two screenshots and their exact-tree receipt. Compare the decision trace with the original focused console, canonical attempt 2 on GitHub, and records of the four local attempts. The latest local Rebuild request had 365,006,848 bytes of headroom versus the unchanged 402,653,184-byte reserve. The final publisher remains pending a valid full local pass. [Decision trace](DECISION_TRACE.md) · [Exact source receipt](exact-source-fixtures/receipt.json) · [Original logs and release hold](RELEASE_HOLD.md) · [Checksums](SHA256SUMS)
