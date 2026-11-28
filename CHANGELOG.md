@@ -1,3 +1,8 @@
+## v1.22.71 / build 2286 — Trade For walk-away price
+
+- Check up to two exact outgoing additions from Trade For Review. Preview the added cost, projected lineup and depth changes, and whether both teams still pass the trade checks.
+- Show a walk-away point when the tested additions support one. Keep the exact target, protections and draft intact.
+
 ## v1.22.70 / build 2285 — Better counterparty fit
 
 - Require a supported benefit for the other team when a trade costs that team significant projected lineup points and its direction is unknown.

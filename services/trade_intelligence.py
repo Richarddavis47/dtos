@@ -25,6 +25,7 @@ class RepairMode(StrEnum):
     ALTERNATIVE_CONSTRUCTION = "ALTERNATIVE_CONSTRUCTION"
     ALTERNATIVE_TARGET = "ALTERNATIVE_TARGET"
     BETTER_OFFER = "BETTER_OFFER"
+    WALK_AWAY = "WALK_AWAY"
 
 
 _REPAIR_MODE_ALIASES = {
@@ -35,6 +36,7 @@ _REPAIR_MODE_ALIASES = {
     "alternative target": RepairMode.ALTERNATIVE_TARGET,
     "alternative_target": RepairMode.ALTERNATIVE_TARGET,
     "better_offer": RepairMode.BETTER_OFFER,
+    "walk_away": RepairMode.WALK_AWAY,
 }
 
 
@@ -628,6 +630,16 @@ def _bounded_adjustment_candidates(
                            and (not payload.get('replacement_position') or a.kind == 'pick'
                                 or a.position == payload['replacement_position'])
                            and (not payload.get('replacement_kind') or a.kind == payload['replacement_kind']))
+    if payload.get('repair_mode') == RepairMode.WALK_AWAY:
+        # Sample two independent single-asset additions at the ends of the
+        # priced range. Same return package, partner and exact terms in both.
+        neutral = {asset.asset_id: asset.trade_value for asset in workspace.get('neutral_pools', pools)[active_id]}
+        additions = sorted((asset for asset in allowed_active if asset.asset_id not in sent_ids
+                            and asset.trade_value is not None and neutral[asset.asset_id] is not None),
+                           key=lambda asset: (asset.trade_value, asset.asset_id))
+        sample = additions if len(additions) < 2 else (additions[0], additions[-1])
+        return tuple(TradeProposal(active_id, partner_id, (*sent, asset), received, 'Assisted Addition')
+                     for asset in sample)
     allowed_ids = {a.asset_id for a in allowed_active}
     sent = tuple(a for a in sent if a.asset_id in allowed_ids)
     allowed_partner = tuple(a for a in pools[partner_id] if a.asset_id not in excluded)
@@ -822,6 +834,131 @@ def _better_offer_revisions(data, payload, workspace, evidence, reader, boundary
     return finish(state, 'No credible revision found in this search. ' + ' '.join(reasons))
 
 
+def _walk_away_impact(before, after, week):
+    """Compare the two completed assessments with the same retained baseline."""
+    def compare(old, new):
+        if old.get('delta') is None or new.get('delta') is None:
+            return None
+        return {'delta': round(new['delta'] - old['delta'], 2),
+                'provisional': any(row.get('state', row.get('conclusion_state')) == 'provisional'
+                                   for row in (old, new))}
+
+    def lineup(evaluation):
+        row = evaluation['decision_context']['lineup_comparisons'].get('current_week') or {}
+        return row if row.get('weeks') == [week] and row.get('state') in ('supported', 'provisional') else {}
+
+    def reserves(evaluation):
+        rows = evaluation['dimensions']['strategic_fit']['active']['reserve_quality_by_week']
+        return rows.get(week) or rows.get(str(week)) or {}
+
+    return {'week': week, 'lineup': compare(lineup(before), lineup(after)),
+            'reserves': compare(reserves(before), reserves(after))}
+
+
+def _walk_away_checks(data, payload, workspace, evidence, reader, boundary):
+    from services.trade_search_policy import supported_exploration
+
+    keys = ('active_roster_id', 'partner_roster_id', 'assets_sent', 'assets_received')
+    original = {key: payload[key] for key in keys}
+    sent, received = set(original['assets_sent']), set(original['assets_received'])
+    anchor = payload.get('origin_asset_id')
+    if payload.get('origin_workflow') != 'trade_for' or not isinstance(anchor, str) or anchor not in received:
+        raise TradeInputError('invalid_proposal', 'Keep the exact Trade For target in this offer before checking additions.')
+    protected, excluded = set(payload.get('protected_assets') or ()), set(payload.get('excluded_assets') or ())
+    response = {'requested_mode': RepairMode.WALK_AWAY.value, 'preview_only': True,
+                'original_proposal': original, 'results': [], 'cutoff_asset_id': None,
+                'quiet_state': 'The checked additions establish no clear walk-away point.'}
+    evaluated = 0
+
+    def finish(state):
+        trade_checkpoint()
+        if _trade_search_boundary(data) != boundary:
+            raise TradeInputError('canonical_evidence_changed', 'The league evidence changed during the price check. Try again.')
+        return {**response, 'state': state, 'count': len(response['results']),
+                'search_evidence': {'full_evaluations': evaluated, 'evaluation_budget': 3, 'bounded': True}}
+
+    if sent & protected or (sent | received) & excluded:
+        response['quiet_state'] = 'The current offer conflicts with a protection or exclusion. Your exact locks are intact.'
+        return finish('CONSTRAINT_CONFLICT')
+
+    def assess(proposal):
+        nonlocal evaluated
+        evaluated += 1
+        return evaluate_trade_request(data, {**proposal, 'workflow': 'adjust', 'strategy': payload.get('strategy'),
+            'protected_assets': payload.get('protected_assets'), 'excluded_assets': payload.get('excluded_assets')},
+            workspace=workspace, evidence_context=evidence, projection_reader=reader)
+
+    try:
+        before = assess(original)['evaluation']
+    except TradeInputError as exc:
+        if exc.code not in {'market_evidence_unavailable', 'personal_evidence_unavailable'}:
+            raise
+        response['quiet_state'] = str(exc)
+        return finish('MISSING_REQUIRED_EVIDENCE')
+    inputs = before['provenance']['inputs']
+    week = (inputs.get('projection_evidence') or {}).get('week')
+    decision = before['decision_context']
+    response.update(evaluation={'provenance': {'inputs': inputs}},
+                    current_verdict=decision['final_decision']['headline'], strategy=decision['strategy']['resolved'])
+    proposals = _bounded_adjustment_candidates(workspace, {**payload, 'repair_mode': RepairMode.WALK_AWAY})
+    if not proposals:
+        response['quiet_state'] = 'No priced additions are available under your ownership and exact protections. No walk-away point was established.'
+        return finish('NO_OPTIONS')
+
+    candidates = []
+    for proposal in proposals:
+        revised = _proposal_payload(proposal)
+        try:
+            row = assess(revised)
+        except TradeInputError as exc:
+            if exc.code not in {'market_evidence_unavailable', 'personal_evidence_unavailable'}:
+                raise
+            continue  # An incompatible price cannot establish either side of a cutoff.
+        evaluation = row['evaluation']
+        final = evaluation['decision_context']['final_decision']
+        facts = row['proposal_presentation']['send'][-1]
+        added_projection = (facts.get('player_facts') or {}).get('projection') or {}
+        addition_projection_missing = facts['kind'] == 'player' and (
+            added_projection.get('week') != week or added_projection.get('value') is None)
+        supported = (not addition_projection_missing and supported_exploration(evaluation)
+                     and final['classification'] != 'MISSING REQUIRED EVIDENCE')
+        execution_blocked = final['classification'] == 'HARD INVALID'
+        credible = supported and final['qualified'] and _trade_for_eligible(evaluation)
+        fails_goal = supported and final['side_assessment'] in ('NOT WORTH IT', 'REJECT')
+        personal = evaluation.get('personal_value_evidence') or {}
+        # The incoming package and existing outgoing terms are fixed, so the
+        # provider quote and the personal slot price remain separate.
+        custom_price = proposal.assets_sent[-1].trade_value if personal else None
+        verdict, reason = 'Evidence incomplete', evaluation['decision_context'].get('blocker') or 'Compatible evidence is incomplete.'
+        if execution_blocked:
+            verdict, reason = 'Roster issue', evaluation['major_drawback']
+        elif supported:
+            verdict, reason = final['headline'], evaluation['why_you_would_do_it']
+        elif addition_projection_missing:
+            reason = added_projection.get('reason') or 'A supported projection for the added player is unavailable.'
+        change = {'proposal': revised, 'asset': {key: facts[key] for key in
+                  ('asset_id', 'label', 'kind', 'year', 'round', 'original_franchise', 'exact_slot')},
+                  'market_cost': facts['market_value'], 'custom_cost': custom_price, 'custom_method': personal.get('method'),
+                  'impact': ({'week': week, 'lineup': None, 'reserves': None} if addition_projection_missing
+                             else _walk_away_impact(before, evaluation, week)),
+                  'verdict': verdict, 'classification': final['classification'],
+                  'owner_assessment': final['side_assessment'] if supported else None, 'credible': credible,
+                  'reason': reason,
+                  'partner_limit': evaluation['why_they_would_do_it'] if final['classification'] == 'COUNTERPARTY LIMITED' else None}
+        response['results'].append(change)
+        candidates.append((proposal.assets_sent[-1].trade_value, credible, fails_goal, change))
+
+    if len(candidates) == 2 and supported_exploration(before):
+        smaller, larger = candidates
+        if smaller[0] < larger[0] and smaller[1] and larger[2] and all(item[3]['impact']['lineup'] for item in candidates):
+            response['cutoff_asset_id'] = larger[3]['asset']['asset_id']
+            basis = 'Custom value' if larger[3]['custom_cost'] is not None else 'Neutral Market cost'
+            response['quiet_state'] = f'By {basis}, the smaller addition still fits. The larger tested addition goes past your walk-away point.'
+    if not candidates:
+        response['quiet_state'] = 'Compatible prices were unavailable for the checked additions. No walk-away point was established.'
+    return finish('CHECKED' if candidates else 'MISSING_REQUIRED_EVIDENCE')
+
+
 def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[str, Any]:
     """Return calculated repair/adjustment options, never static action labels."""
     trade_checkpoint()
@@ -844,6 +981,8 @@ def assist_trade_request(data: dict[str, Any], payload: dict[str, Any]) -> dict[
     requested_mode = _repair_mode(payload, instruction)
     if requested_mode is RepairMode.BETTER_OFFER:
         return _better_offer_revisions(data, payload, workspace, evidence_context, reader, boundary)
+    if requested_mode is RepairMode.WALK_AWAY:
+        return _walk_away_checks(data, payload, workspace, evidence_context, reader, boundary)
     cheaper = 'cheaper' in lowered
     younger_target_change = 'younger' in lowered and payload.get('origin_workflow') not in ('shop', 'trade_for')
     target_preservation_required = cheaper or payload.get('origin_workflow') == 'trade_for' or (requested_mode is not RepairMode.ALTERNATIVE_TARGET and not younger_target_change)

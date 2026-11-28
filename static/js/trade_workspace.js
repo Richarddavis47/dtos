@@ -580,7 +580,7 @@
     return valuationGauge({mode, sent: amount('sent'), received: amount('received'),
       comparison: valid ? {difference: totals[1] - totals[0], totals, scale} : null, retained});
   }
-  function evaluationOverview(e, proposal, presentation, retained, betterOffer = null) {
+  function evaluationOverview(e, proposal, presentation, retained, betterOffer = null, walkAway = null) {
     const header = node('section', null, 'tw-evaluation-overview');
     const packages = node('div', null, 'tw-review-packages');
     for (const [title, ids, facts] of [['You send', proposal.assets_sent, presentation?.send],
@@ -617,6 +617,7 @@
       header.append(summary);
     }
     if (betterOffer) header.append(betterOffer);
+    if (walkAway) header.append(walkAway);
     const table = node('table', null, 'tw-projected-table');
     const caption = node('caption', retained ? 'Projected points at the recorded assessment' : 'Compared with keeping each current roster');
     const heads = node('thead'), heading = node('tr');
@@ -1217,7 +1218,8 @@
       const proposal = {active_roster_id: active, partner_roster_id: partner(), assets_sent: [...selected.sent], assets_received: [...selected.received]};
       const betterOffer = retained ? null : betterOfferControl(e, proposal, context);
       if (betterOffer) out.append(node('h3', finalVerdict(e), 'tw-review-verdict'));
-      out.append(evaluationOverview(e, proposal, context?.proposal_presentation, retained, betterOffer));
+      out.append(evaluationOverview(e, proposal, context?.proposal_presentation, retained, betterOffer,
+        retained ? null : betterOfferControl(e, proposal, context, true)));
     }
     if (retained && !e.explanation_html) appendRecordedLineups(out, context);
     out.append(capitalDisclosure(context?.draft_capital_record || e.draft_capital_record, retained));
@@ -1483,14 +1485,15 @@
     const context = {...assessmentContext(row), stale_reason: 'Package adopted for editing; its assessment has not been revalidated'};
     changed(); session.currentAssessment = context; persist(); review(); showEvaluation(row.evaluation || context.evaluation || {}, row.opportunity || context.opportunity, context); focusResult();
   }
-  function betterOfferControl(evaluation, original, context) {
-    if (evaluation.legal !== true || evaluation.generated_trade_eligible !== false
-        || !(evaluation.recommendation || evaluation.decision_context?.blocker)) return null;
-    const panel = node('section', null, 'tw-trade-essentials tw-better-offer');
-    const search = node('button', 'Show me a better offer', 'ds-action'); search.type = 'button';
+  function betterOfferControl(evaluation, original, context, walkAway = false) {
+    if (evaluation.legal !== true) return null;
+    if (walkAway ? session.originWorkflow !== 'trade_for' || !original.assets_received.includes(session.requiredIncomingAsset)
+      : evaluation.generated_trade_eligible !== false || !(evaluation.recommendation || evaluation.decision_context?.blocker)) return null;
+    const panel = node('section', null, 'tw-trade-essentials ' + (walkAway ? 'tw-walk-away' : 'tw-better-offer'));
+    const search = node('button', walkAway ? 'What can I afford to add?' : 'Show me a better offer', 'ds-action'); search.type = 'button';
     search.dataset.betterOfferAction = 'true'; search.disabled = busy;
     const status = node('p'); status.setAttribute('role', 'status'); status.hidden = true;
-    const results = node('div', null, 'tw-revision-grid'); results.hidden = true;
+    const results = node('div', null, walkAway ? null : 'tw-revision-grid'); results.hidden = true;
     panel.append(search, status, results);
     const report = (text, state) => { status.hidden = false; status.textContent = text; panel.dataset.state = state; };
     search.onclick = async () => {
@@ -1498,26 +1501,41 @@
         if (!busy) report('Reevaluate this exact package before checking revisions.', 'stale');
         return;
       }
-      const requestPayload = {...payload(), ...original, repair_mode: 'BETTER_OFFER',
+      const mode = walkAway ? 'WALK_AWAY' : 'BETTER_OFFER';
+      const requestPayload = {...payload(), ...original, repair_mode: mode,
         origin_workflow: session.requiredIncomingAsset ? 'trade_for' : session.requiredOutgoingAsset ? 'shop' : 'create',
         origin_asset_id: session.requiredIncomingAsset || session.requiredOutgoingAsset || null};
       const started = revision, controller = new AbortController();
       activeRequest = controller; busy = true;
-      betterSearch = {cancelled: () => report('Search cancelled. Your draft is intact.', 'cancelled')};
+      betterSearch = {button: search, cancelled: () => report('Search cancelled. Your draft is intact.', 'cancelled')};
       let timedOut = false;
       const timeout = setTimeout(() => { timedOut = true; controller.abort(); }, 120000);
       results.replaceChildren(); results.hidden = true;
-      report('Checking revisions for both teams. Your draft is intact.', 'loading'); paint();
+      report(walkAway ? 'Checking additions for both teams. Your draft is intact.' : 'Checking revisions for both teams. Your draft is intact.', 'loading'); paint();
       try {
         const body = await post('assist', requestPayload, controller.signal);
         if (activeRequest !== controller || started !== revision || !panel.isConnected) return;
-        if (body.requested_mode !== 'BETTER_OFFER' || body.preview_only !== true || !body.original_proposal
+        if (body.requested_mode !== mode || body.preview_only !== true || !body.original_proposal
             || packageIdentity(body.original_proposal) !== packageIdentity(original) || !Array.isArray(body.results)
-            || body.results.length > 2 || body.results.some(row => !qualifiedOffer(row) || offerConflict(row)
-              || row.proposal.active_roster_id !== active || row.proposal.partner_roster_id !== original.partner_roster_id)) {
+            || body.results.length > 2 || body.results.some(row => !row.proposal || offerConflict(row)
+              || row.proposal.active_roster_id !== active || row.proposal.partner_roster_id !== original.partner_roster_id
+              || (walkAway ? !row.asset || packageIdentity(row.proposal) !== packageIdentity({...original,
+                assets_sent: [...original.assets_sent, row.asset.asset_id]}) : !qualifiedOffer(row)))) {
           throw new Error('The revision result could not be verified. Your draft is intact.');
         }
         observeEvidence(body);
+        if (walkAway) {
+          if (contextQualification(context, original)) return report('Reevaluate this exact package before checking additions.', 'stale');
+          if (!body.results.length) return report(body.quiet_state, body.state);
+          report(body.quiet_state, body.state);
+          const current = node('p', 'Current offer: ' + body.current_verdict + (body.strategy ? ' · ' + body.strategy : '') +
+            '. Each preview adds one asset. Your draft is intact.');
+          const cards = node('div', null, 'tw-revision-grid');
+          for (const row of body.results) cards.append(walkAwayCard(row, body.cutoff_asset_id));
+          results.append(current, cards, node('small', 'Only these additions were checked. Other assets can change your lineup and depth differently.'));
+          results.hidden = false;
+          return;
+        }
         if (!body.results.length) return report(body.quiet_state || 'No credible revision found in this search.', body.state);
         for (const [index, row] of body.results.entries()) {
           const card = revisionCard(row, original, index + 1);
@@ -1543,6 +1561,30 @@
       }
     };
     return panel;
+  }
+  function walkAwayCard(row, cutoff) {
+    const card = node('article', null, 'tw-offer');
+    card.append(node('h4', 'Add ' + packageText([row.asset.asset_id], [row.asset], false)));
+    const verdict = row.asset.asset_id === cutoff ? 'Past your walk-away point'
+      : row.credible ? 'Still fits · both teams pass' : row.partner_limit ? 'Partner benefit unconfirmed' : row.verdict;
+    card.append(node('p', verdict, 'tw-offer-verdict'), node('p', 'Added Neutral Market cost: ' + displayMarket(row.market_cost)));
+    if (row.custom_cost != null) {
+      const method = row.custom_method === 'personal-relative-priced-order-v1' ? 'Relative priced order'
+        : row.custom_method === 'personal-current-market-slot-curve-v1' ? 'Absolute slot' : 'method not recorded';
+      card.append(node('p', 'Added Custom cost · ' + method + ': ' + displayMarket(row.custom_cost)));
+    }
+    const effect = (label, comparison) => label + ': ' + (comparison
+      ? (comparison.delta > 0 ? '+' : '') + displayPoints(comparison.delta) + ' projected points' + (comparison.provisional ? ' · provisional' : '')
+      : 'Change not established');
+    if (row.impact.week != null) card.append(node('small', 'Week ' + row.impact.week + ' compared with your current offer'));
+    card.append(node('p', effect('Starting lineup', row.impact.lineup)), node('p', effect('Eligible backups', row.impact.reserves)));
+    if (row.partner_limit) card.append(node('p', customerText(row.partner_limit)));
+    if (row.reason) {
+      const explanation = node('p', (row.partner_limit ? 'Your team: ' : '') + customerText(row.reason));
+      if (row.verdict === 'Evidence incomplete' || row.verdict === 'Roster issue') card.append(explanation);
+      else card.append(disclosure('Why this result', explanation));
+    }
+    return card;
   }
   function revisionCard(row, original, number) {
     const e = row.evaluation, d = decisionPresentation(e), card = node('article', null, 'tw-offer');
@@ -1749,7 +1791,8 @@
     const partnerName = context.identity?.counterparty || (retained ? 'Franchise #' + row.proposal.partner_roster_id + ' · recorded name unavailable' : team(row.proposal.partner_roster_id)?.team_name || 'the selected partner');
     card.append(node('h3', partnerName, 'tw-offer-partner'), node('p', finalVerdict(e), 'tw-offer-verdict'));
     if (preview) card.append(evaluationOverview(e, row.proposal, row.proposal_presentation || row.proposal.preview_presentation, retained,
-      retained || session.originWorkflow !== 'trade_for' ? null : betterOfferControl(e, row.proposal, context)));
+      retained || session.originWorkflow !== 'trade_for' ? null : betterOfferControl(e, row.proposal, context),
+      retained ? null : betterOfferControl(e, row.proposal, context, true)));
     if (!preview) card.append(node('p', 'You send: ' + packageText(row.proposal.assets_sent, (row.proposal_presentation || row.proposal.preview_presentation)?.send, retained), 'tw-offer-package'),
       node('p', 'You receive: ' + packageText(row.proposal.assets_received, (row.proposal_presentation || row.proposal.preview_presentation)?.receive, retained), 'tw-offer-package'));
     if (decision.qualification) card.append(node('p', customerText(decision.qualification), 'tw-verdict-qualification'));
@@ -2110,9 +2153,9 @@
   el('trade-run').onclick = () => run('evaluate'); el('trade-find').onclick = () => run('generate');
   el('trade-cancel').onclick = () => {
     if (!activeRequest) return;
-    const revising = Boolean(betterSearch);
+    const revisionAction = betterSearch?.button;
     cancelBalance();
-    if (revising) { paint(); root.querySelector('.tw-better-offer > button')?.focus(); return; }
+    if (revisionAction) { paint(); revisionAction.focus(); return; }
     operationStatus('Cancelled. Your exact offer is unchanged; choose Generate or Evaluate to try again.', 'cancelled');
     message('Operation cancelled. Your selected assets, target and protections are unchanged.');
     paint(); (['recommended', 'shop', 'trade_for'].includes(flow) ? el('trade-find') : el('trade-run')).focus();
